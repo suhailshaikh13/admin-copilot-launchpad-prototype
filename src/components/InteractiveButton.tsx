@@ -1,4 +1,5 @@
-import { useState, useRef, MouseEvent, ReactNode } from 'react'
+import { useState, useRef } from 'react'
+import type { MouseEvent, ReactNode } from 'react'
 import styled from 'styled-components'
 
 interface InteractiveButtonProps {

@@ -188,8 +188,8 @@ function App() {
           <RescueRingFillIcon />
         </Header.IconButton>
         <ProfileMenu name="User">
-          <ProfileMenu.Item>My profile</ProfileMenu.Item>
-          <ProfileMenu.Item>Sign out</ProfileMenu.Item>
+          <ProfileMenu.Item value="profile">My profile</ProfileMenu.Item>
+          <ProfileMenu.Item value="signout">Sign out</ProfileMenu.Item>
         </ProfileMenu>
       </Header>
       <Nav>

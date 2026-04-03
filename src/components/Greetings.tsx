@@ -47,32 +47,6 @@ const SuggestionRow = styled.div`
   gap: 8px;
 `
 
-const SuggestionPill = styled.button<{ $highlighted?: boolean }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 40px;
-  padding: 10px 16px;
-  border-radius: 99px;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 20px;
-  letter-spacing: -0.154px;
-  color: #313131;
-  background: ${({ $highlighted }) =>
-    $highlighted
-      ? 'rgba(125, 120, 103, 0.16)'
-      : 'rgba(125, 120, 103, 0.08)'};
-  position: relative;
-  overflow: hidden;
-
-  &:hover {
-    background: rgba(125, 120, 103, 0.16);
-  }
-`
-
 const OverflowButton = styled(IconButton)`
   border-radius: 99px;
 `

@@ -1,6 +1,5 @@
 import styled from 'styled-components'
 import { Anchor, Button, IconButton } from '@zendeskgarden/react-buttons'
-import { Tag } from '@zendeskgarden/react-tags'
 import OverflowVerticalStrokeIcon from '@zendeskgarden/svg-icons/src/16/overflow-vertical-stroke.svg?react'
 
 const Container = styled.div`
