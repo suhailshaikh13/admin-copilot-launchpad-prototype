@@ -17,8 +17,14 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 25
           cache: npm
+
+      - name: Set up Artifactory credentials
+        run: curl -u "${ARTIFACTORY_USERNAME}:${ARTIFACTORY_API_KEY}" --fail https://zdrepo.jfrog.io/zdrepo/api/npm/npm/auth/zendesk >> ~/.npmrc
+        env:
+          ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
+          ARTIFACTORY_API_KEY: ${{ secrets.ARTIFACTORY_API_KEY }}
 
       - name: Install dependencies
         run: npm ci
