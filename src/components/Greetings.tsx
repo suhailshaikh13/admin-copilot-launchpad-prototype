@@ -49,6 +49,19 @@ const SuggestionRow = styled.div`
 
 const OverflowButton = styled(IconButton)`
   border-radius: 99px;
+
+  &:hover {
+    background-color: rgba(136, 91, 179, 0.16);
+  }
+
+  &:focus-visible {
+    background-color: rgba(136, 91, 179, 0.08);
+    box-shadow: inset 0 0 0 3px #4f6bbf, inset 0 0 0 4px white;
+  }
+
+  &:active {
+    background-color: rgba(136, 91, 179, 0.24);
+  }
 `
 
 export default function Greetings() {

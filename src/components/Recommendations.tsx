@@ -1,6 +1,10 @@
+import { ComponentType } from 'react'
 import styled from 'styled-components'
 import { Anchor, Button, IconButton } from '@zendeskgarden/react-buttons'
 import OverflowVerticalStrokeIcon from '@zendeskgarden/svg-icons/src/16/overflow-vertical-stroke.svg?react'
+import FlowFillIcon from '@zendesk-ui/assets/icons/20px/flow-fill.svg?react'
+import BookOpenFillIcon from '@zendesk-ui/assets/icons/20px/book-open-fill.svg?react'
+import MonitorFillIcon from '@zendesk-ui/assets/icons/20px/monitor-fill.svg?react'
 
 const Container = styled.div`
   display: flex;
@@ -92,7 +96,7 @@ const ColorTag = styled.span<{ $bg: string; $color: string }>`
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 10px;
+  padding: 2px 8px;
   border-radius: 16px;
   background: ${({ $bg }) => $bg};
   font-size: 12px;
@@ -100,12 +104,17 @@ const ColorTag = styled.span<{ $bg: string; $color: string }>`
   line-height: 16px;
   color: ${({ $color }) => $color};
   white-space: nowrap;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
 `
 
 interface RecommendationData {
   title: string
   description: string
-  tags: { label: string; bg: string; color: string; hasIcon?: boolean }[]
+  tags: { label: string; bg: string; color: string; Icon?: ComponentType }[]
 }
 
 const recommendations: RecommendationData[] = [
@@ -113,7 +122,7 @@ const recommendations: RecommendationData[] = [
     title: 'Route specific tickets to assignee: EMEA Group',
     description: 'Resolution time could improve by 2h 45min',
     tags: [
-      { label: 'Triggers', bg: '#e4e8f6', color: '#304073', hasIcon: true },
+      { label: 'Triggers', bg: '#e4e8f6', color: '#304073', Icon: FlowFillIcon },
       { label: 'Optimization', bg: '#eae8e7', color: '#313131' },
     ],
   },
@@ -121,7 +130,7 @@ const recommendations: RecommendationData[] = [
     title: 'Change ticket status for intent: Unsolicited marketing',
     description: 'Resolution time could improve by 1h 05min',
     tags: [
-      { label: 'Procedures', bg: '#e2edd4', color: '#344914', hasIcon: true },
+      { label: 'Procedures', bg: '#e2edd4', color: '#344914', Icon: BookOpenFillIcon },
       { label: 'Optimization', bg: '#eae8e7', color: '#313131' },
       { label: 'Previously declined', bg: '#eae8e7', color: '#313131' },
     ],
@@ -130,7 +139,7 @@ const recommendations: RecommendationData[] = [
     title: 'Turn on suggested macros',
     description: 'Resolution time could improve by 50min',
     tags: [
-      { label: 'Macros', bg: '#dceeed', color: '#034a4b', hasIcon: true },
+      { label: 'Macros', bg: '#dceeed', color: '#034a4b', Icon: MonitorFillIcon },
       { label: 'Maintenance', bg: '#eae8e7', color: '#313131' },
     ],
   },
@@ -156,6 +165,7 @@ export default function Recommendations() {
                 <TagRow>
                   {rec.tags.map((tag, tagIndex) => (
                     <ColorTag key={tagIndex} $bg={tag.bg} $color={tag.color}>
+                      {tag.Icon && <tag.Icon />}
                       {tag.label}
                     </ColorTag>
                   ))}
