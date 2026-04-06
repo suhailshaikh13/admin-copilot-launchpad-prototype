@@ -120,6 +120,16 @@ const InputContainer = styled.div`
   background: white;
   box-shadow: 0px 2px 8px 0px #c5afda, 0px 8px 20px 0px #e2dbed;
   padding-left: 8px;
+  transition: border-color 150ms ease-in-out, box-shadow 150ms ease-in-out;
+
+  &:hover {
+    border-color: #a89dc4;
+  }
+
+  &:focus-within {
+    border-color: #885BB3;
+    box-shadow: 0px 2px 8px 0px #c5afda, 0px 8px 20px 0px #e2dbed, 0 0 0 3px rgba(136, 91, 179, 0.2);
+  }
 `
 
 const InputIconButton = styled.button`
@@ -138,6 +148,24 @@ const InputIconButton = styled.button`
   svg {
     width: 16px;
     height: 16px;
+  }
+
+  transition: background-color 150ms ease-in-out, color 150ms ease-in-out;
+
+  &:hover {
+    background: rgba(136, 91, 179, 0.08);
+    color: #885BB3;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #885BB3;
+    outline-offset: -2px;
+    background: rgba(136, 91, 179, 0.08);
+  }
+
+  &:active {
+    background: rgba(136, 91, 179, 0.16);
+    color: #7b61c2;
   }
 `
 
@@ -177,6 +205,22 @@ const SendButton = styled.button`
     width: 16px;
     height: 16px;
     color: white;
+  }
+
+  transition: background-color 150ms ease-in-out, transform 100ms ease-in-out;
+
+  &:hover {
+    background: #49484a;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #885BB3;
+    outline-offset: 2px;
+  }
+
+  &:active {
+    background: #1a1a1a;
+    transform: scale(0.95);
   }
 `
 

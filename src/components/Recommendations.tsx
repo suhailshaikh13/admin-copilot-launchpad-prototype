@@ -1,7 +1,6 @@
 import type { ComponentType } from 'react'
 import styled from 'styled-components'
-import { Anchor, Button, IconButton } from '@zendeskgarden/react-buttons'
-import OverflowVerticalStrokeIcon from '@zendeskgarden/svg-icons/src/16/overflow-vertical-stroke.svg?react'
+import { Anchor, Button } from '@zendeskgarden/react-buttons'
 import FlowFillIcon from '@zendesk-ui/assets/icons/20px/flow-fill.svg?react'
 import BookOpenFillIcon from '@zendesk-ui/assets/icons/20px/book-open-fill.svg?react'
 import MonitorFillIcon from '@zendesk-ui/assets/icons/20px/monitor-fill.svg?react'
@@ -85,13 +84,6 @@ const TagRow = styled.div`
   align-items: center;
 `
 
-const ActionGroup = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-`
-
 const ColorTag = styled.span<{ $bg: string; $color: string }>`
   display: inline-flex;
   align-items: center;
@@ -171,12 +163,7 @@ export default function Recommendations() {
                   ))}
                 </TagRow>
               </Content>
-              <ActionGroup>
-                <Button isBasic>View details</Button>
-                <IconButton isBasic size="medium" aria-label="More options">
-                  <OverflowVerticalStrokeIcon />
-                </IconButton>
-              </ActionGroup>
+              <Button isBasic>View details</Button>
             </RecommendationItem>
             {index < recommendations.length - 1 && <Divider />}
           </div>
