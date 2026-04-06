@@ -7,6 +7,7 @@ interface InteractiveButtonProps {
   size?: 'medium' | 'small'
   children: ReactNode
   icon?: ReactNode
+  onClick?: () => void
 }
 
 const COLORS = {
@@ -86,7 +87,7 @@ const IconWrapper = styled.span<{ $small?: boolean }>`
   }
 `
 
-export function InteractiveButton({ variant = 'neutral', size = 'medium', children, icon }: InteractiveButtonProps) {
+export function InteractiveButton({ variant = 'neutral', size = 'medium', children, icon, onClick }: InteractiveButtonProps) {
   const isSmall = size === 'small'
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [isHovered, setIsHovered] = useState(false)
@@ -167,6 +168,7 @@ export function InteractiveButton({ variant = 'neutral', size = 'medium', childr
       onMouseLeave={handleMouseLeave}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
+      onClick={onClick}
     >
       {/* Hover gradient */}
       <GradientLayer
