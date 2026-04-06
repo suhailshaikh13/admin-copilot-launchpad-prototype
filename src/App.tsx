@@ -85,6 +85,7 @@ const StyledMain = styled(Main)`
     box-shadow: none;
     border-radius: 0;
     overflow: visible;
+    min-height: 0;
   }
 `
 
@@ -113,7 +114,19 @@ const PanelSlider = styled.div<{ $open: boolean }>`
               box-shadow 0.35s ease 0.05s;
 `
 
-const HomeContent = styled.div<{ $roundedRight?: boolean }>`
+const HomeContentWrapper = styled.div<{ $roundedRight?: boolean }>`
+  flex: 1;
+  min-width: 0;
+  background: white;
+  border-radius: ${({ $roundedRight }) => ($roundedRight ? '24px 24px 0 0' : '24px 0 0 0')};
+  box-shadow: 0px 0px 4px 0px rgba(10, 13, 14, 0.16);
+  transition: border-radius 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+`
+
+const HomeContent = styled.div`
   padding: 40px;
   overflow-y: auto;
   display: flex;
@@ -121,10 +134,6 @@ const HomeContent = styled.div<{ $roundedRight?: boolean }>`
   align-items: center;
   gap: 40px;
   flex: 1;
-  background: white;
-  border-radius: ${({ $roundedRight }) => ($roundedRight ? '24px 24px 0 0' : '24px 0 0 0')};
-  box-shadow: 0px 0px 4px 0px rgba(10, 13, 14, 0.16);
-  transition: border-radius 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 `
 
 const HomeInner = styled.div`
@@ -205,13 +214,15 @@ function App() {
       </Nav>
       <StyledMain>
         <MainWrapper $hasCopilot={copilotOpen}>
-          <HomeContent $roundedRight={copilotOpen}>
-            <HomeInner>
-              <Greetings />
-              <LatestInsights />
-              <Recommendations />
-            </HomeInner>
-          </HomeContent>
+          <HomeContentWrapper $roundedRight={copilotOpen}>
+            <HomeContent>
+              <HomeInner>
+                <Greetings />
+                <LatestInsights />
+                <Recommendations />
+              </HomeInner>
+            </HomeContent>
+          </HomeContentWrapper>
           <PanelSlider $open={copilotOpen}>
             <CopilotPanel onClose={() => setCopilotOpen(false)} />
           </PanelSlider>

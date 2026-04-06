@@ -123,7 +123,7 @@ const recommendations: RecommendationData[] = [
     description: 'Resolution time could improve by 2h 45min',
     tags: [
       { label: 'Triggers', bg: '#e4e8f6', color: '#304073', Icon: FlowFillIcon },
-      { label: 'Optimization', bg: '#eae8e7', color: '#313131' },
+      { label: 'Optimization', bg: '#F6F5F4', color: '#313131' },
     ],
   },
   {
@@ -131,8 +131,8 @@ const recommendations: RecommendationData[] = [
     description: 'Resolution time could improve by 1h 05min',
     tags: [
       { label: 'Procedures', bg: '#e2edd4', color: '#344914', Icon: BookOpenFillIcon },
-      { label: 'Optimization', bg: '#eae8e7', color: '#313131' },
-      { label: 'Previously declined', bg: '#eae8e7', color: '#313131' },
+      { label: 'Optimization', bg: '#F6F5F4', color: '#313131' },
+      { label: 'Previously declined', bg: '#F6F5F4', color: '#313131' },
     ],
   },
   {
@@ -140,7 +140,7 @@ const recommendations: RecommendationData[] = [
     description: 'Resolution time could improve by 50min',
     tags: [
       { label: 'Macros', bg: '#dceeed', color: '#034a4b', Icon: MonitorFillIcon },
-      { label: 'Maintenance', bg: '#eae8e7', color: '#313131' },
+      { label: 'Maintenance', bg: '#F6F5F4', color: '#313131' },
     ],
   },
 ]
