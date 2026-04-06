@@ -161,6 +161,7 @@ const products = [
 
 function App() {
   const [copilotOpen, setCopilotOpen] = useState(false)
+  const [copilotOpenCount, setCopilotOpenCount] = useState(0)
   const [hovering, setHovering] = useState(false)
   const copilotRef = useRef<CopilotPanelHandle>(null)
 
@@ -193,7 +194,10 @@ function App() {
             $isOpen={copilotOpen}
             $animateHover={hovering}
             onClick={() => {
-              setCopilotOpen(prev => !prev)
+              setCopilotOpen(prev => {
+                if (!prev) setCopilotOpenCount(c => c + 1)
+                return !prev
+              })
               setHovering(false)
             }}
             onMouseEnter={() => setHovering(true)}
@@ -233,7 +237,7 @@ function App() {
             </HomeContent>
           </HomeContentWrapper>
           <PanelSlider $open={copilotOpen}>
-            <CopilotPanel ref={copilotRef} onClose={() => setCopilotOpen(false)} />
+            <CopilotPanel ref={copilotRef} openCount={copilotOpenCount} onClose={() => setCopilotOpen(false)} />
           </PanelSlider>
         </MainWrapper>
       </StyledMain>

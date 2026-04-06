@@ -1,8 +1,9 @@
 import { useState, useCallback } from 'react'
-import styled, { keyframes } from 'styled-components'
+import styled from 'styled-components'
 import CopilotIcon from '../assets/sparkle-fill.svg?react'
 import { BasicButton } from './BasicButton'
 import { InteractiveButton } from './InteractiveButton'
+import FloatIn from './FloatIn'
 
 const Container = styled.div`
   display: flex;
@@ -45,15 +46,6 @@ const SuggestionRow = styled.div`
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 8px;
-`
-
-const floatIn = keyframes`
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-`
-
-const SuggestionItem = styled.div`
-  animation: ${floatIn} 250ms ease-out;
 `
 
 const ExtraSuggestion = styled.div<{ $visible: boolean }>`
@@ -120,22 +112,24 @@ export default function Greetings({ onSuggestionClick }: GreetingsProps) {
       </div>
       <SuggestionRow>
         {suggestions.map((label, i) => (
-          <SuggestionItem key={label}>
+          <FloatIn key={label} $delay={100 + i * 200}>
             <InteractiveButton onClick={() => handleClick(label, 'main', i)}>
               {label}
             </InteractiveButton>
-          </SuggestionItem>
+          </FloatIn>
         ))}
         {!expanded && (
-          <BasicButton onClick={() => setExpanded(true)}>Show more</BasicButton>
+          <FloatIn $delay={700}>
+            <BasicButton onClick={() => setExpanded(true)}>Show more</BasicButton>
+          </FloatIn>
         )}
         {expanded && extras.map((label, i) => (
           <ExtraSuggestion key={label} $visible={expanded}>
-            <SuggestionItem key={label}>
+            <FloatIn $delay={100 + i * 200}>
               <InteractiveButton onClick={() => handleClick(label, 'extra', i)}>
                 {label}
               </InteractiveButton>
-            </SuggestionItem>
+            </FloatIn>
           </ExtraSuggestion>
         ))}
       </SuggestionRow>

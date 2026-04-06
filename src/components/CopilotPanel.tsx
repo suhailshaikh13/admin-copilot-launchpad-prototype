@@ -9,6 +9,7 @@ import PaperPlaneIcon from '@zendesk-ui/assets/icons/20px/paper-plane-fill.svg?r
 import CopilotIcon from '../assets/sparkle-fill.svg?react'
 import { InteractiveButton } from './InteractiveButton'
 import Markdown from 'react-markdown'
+import FloatIn from './FloatIn'
 import AuroraGlow from './AuroraGlow'
 import { streamChat, parseSuggestions } from '../services/bedrock'
 import type { ChatMessage } from '../services/bedrock'
@@ -371,10 +372,11 @@ export interface CopilotPanelHandle {
 }
 
 interface CopilotPanelProps {
+  openCount: number
   onClose: () => void
 }
 
-const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function CopilotPanel({ onClose }, ref) {
+const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function CopilotPanel({ openCount, onClose }, ref) {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
@@ -394,7 +396,6 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
 
     setInputValue('')
 
-    // Clear suggestions from last assistant message
     setMessages(prev => {
       const lastAssistantIdx = prev.findLastIndex(m => m.role === 'assistant')
       if (lastAssistantIdx === -1 || !prev[lastAssistantIdx].suggestions?.length) return prev
@@ -528,16 +529,22 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
               <SparkleIcon />
               <Heading>How can I help?</Heading>
             </Title>
-            <Suggestions>
-              <InteractiveButton onClick={() => handleSend('Route specific ticket to assignee')}>
-                Route specific ticket to assignee
-              </InteractiveButton>
-              <InteractiveButton onClick={() => handleSend('Create a view of pending status tickets')}>
-                Create a view of pending status tickets
-              </InteractiveButton>
-              <InteractiveButton onClick={() => handleSend('Explain intent')}>
-                Explain intent
-              </InteractiveButton>
+            <Suggestions key={openCount}>
+              <FloatIn $delay={250}>
+                <InteractiveButton onClick={() => handleSend('Route specific ticket to assignee')}>
+                  Route specific ticket to assignee
+                </InteractiveButton>
+              </FloatIn>
+              <FloatIn $delay={450}>
+                <InteractiveButton onClick={() => handleSend('Create a view of pending status tickets')}>
+                  Create a view of pending status tickets
+                </InteractiveButton>
+              </FloatIn>
+              <FloatIn $delay={650}>
+                <InteractiveButton onClick={() => handleSend('Explain intent')}>
+                  Explain intent
+                </InteractiveButton>
+              </FloatIn>
             </Suggestions>
           </Content>
 
