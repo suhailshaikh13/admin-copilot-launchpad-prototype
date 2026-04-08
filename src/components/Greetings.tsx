@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import styled from 'styled-components'
 import CopilotIcon from '../assets/sparkle-fill.svg?react'
-import OverflowVerticalStrokeIcon from '@zendeskgarden/svg-icons/src/16/overflow-vertical-stroke.svg?react'
+import OverflowStrokeIcon from '@zendeskgarden/svg-icons/src/16/overflow-stroke.svg?react'
 import { IconButton } from '@zendeskgarden/react-buttons'
 import { InteractiveButton } from './InteractiveButton'
 
@@ -58,16 +58,16 @@ const OverflowButton = styled(IconButton)`
   border-radius: 99px;
 
   &:hover {
-    background-color: rgba(136, 91, 179, 0.16);
+    background-color: rgba(100, 104, 100, 0.08);
   }
 
   &:focus-visible {
-    background-color: rgba(136, 91, 179, 0.08);
-    box-shadow: inset 0 0 0 3px #4f6bbf, inset 0 0 0 4px white;
+    background-color: rgba(100, 104, 100, 0.08);
+    box-shadow: inset 0 0 0 3px #406cc4, inset 0 0 0 4px white;
   }
 
   &:active {
-    background-color: rgba(136, 91, 179, 0.24);
+    background-color: rgba(100, 104, 100, 0.16);
   }
 `
 
@@ -95,7 +95,7 @@ export default function Greetings() {
         <InteractiveButton>Learn about admin copilot</InteractiveButton>
         {!expanded && (
           <OverflowButton size="medium" aria-label="More suggestions" onClick={() => setExpanded(true)}>
-            <OverflowVerticalStrokeIcon />
+            <OverflowStrokeIcon />
           </OverflowButton>
         )}
         {expanded && extraSuggestions.map((label) => (

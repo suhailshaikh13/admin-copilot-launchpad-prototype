@@ -34,6 +34,28 @@ const Header = styled.div`
   color: #706f6e;
 `
 
+const HeaderIconButton = styled(IconButton)`
+  border-radius: 99px;
+
+  && svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    background-color: rgba(100, 104, 100, 0.08);
+  }
+
+  &:focus-visible {
+    background-color: rgba(100, 104, 100, 0.08);
+    box-shadow: inset 0 0 0 3px #406cc4, inset 0 0 0 4px white;
+  }
+
+  &:active {
+    background-color: rgba(100, 104, 100, 0.16);
+  }
+`
+
 const Content = styled.div`
   flex: 1;
   display: flex;
@@ -232,15 +254,15 @@ export default function CopilotPanel({ onClose }: CopilotPanelProps) {
   return (
     <Panel>
       <Header>
-        <IconButton size="small" aria-label="History">
+        <HeaderIconButton size="small" aria-label="History">
           <HistoryIcon />
-        </IconButton>
-        <IconButton size="small" aria-label="Open in new window">
+        </HeaderIconButton>
+        <HeaderIconButton size="small" aria-label="Open in new window">
           <EditIcon />
-        </IconButton>
-        <IconButton size="small" aria-label="Close" onClick={onClose}>
+        </HeaderIconButton>
+        <HeaderIconButton size="small" aria-label="Close" onClick={onClose}>
           <XIcon />
-        </IconButton>
+        </HeaderIconButton>
       </Header>
 
       <AuroraGlow />
