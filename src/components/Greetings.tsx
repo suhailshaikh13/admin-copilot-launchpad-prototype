@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react'
 import styled, { keyframes } from 'styled-components'
 import CopilotIcon from '../assets/sparkle-fill.svg?react'
-import { BasicButton } from './BasicButton'
+import OverflowStrokeIcon from '@zendeskgarden/svg-icons/src/16/overflow-stroke.svg?react'
+import { IconButton } from '@zendeskgarden/react-buttons'
 import { InteractiveButton } from './InteractiveButton'
 
 const Container = styled.div`
@@ -60,6 +61,23 @@ const ExtraSuggestion = styled.div<{ $visible: boolean }>`
   opacity: ${({ $visible }) => ($visible ? 1 : 0)};
   transform: translateY(${({ $visible }) => ($visible ? '0' : '-8px')});
   transition: opacity 200ms ease-out, transform 200ms ease-out;
+`
+
+const OverflowButton = styled(IconButton)`
+  border-radius: 99px;
+
+  &:hover {
+    background-color: rgba(100, 104, 100, 0.08);
+  }
+
+  &:focus-visible {
+    background-color: rgba(100, 104, 100, 0.08);
+    box-shadow: inset 0 0 0 3px #406cc4, inset 0 0 0 4px white;
+  }
+
+  &:active {
+    background-color: rgba(100, 104, 100, 0.16);
+  }
 `
 
 const initialSuggestions = [
@@ -127,7 +145,9 @@ export default function Greetings({ onSuggestionClick }: GreetingsProps) {
           </SuggestionItem>
         ))}
         {!expanded && (
-          <BasicButton onClick={() => setExpanded(true)}>Show more</BasicButton>
+          <OverflowButton size="medium" aria-label="More suggestions" onClick={() => setExpanded(true)}>
+            <OverflowStrokeIcon />
+          </OverflowButton>
         )}
         {expanded && extras.map((label, i) => (
           <ExtraSuggestion key={label} $visible={expanded}>
