@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react'
 import styled from 'styled-components'
-import { Anchor, Button } from '@zendeskgarden/react-buttons'
+import { BasicButton } from './BasicButton'
 import FlowFillIcon from '@zendesk-ui/assets/icons/20px/flow-fill.svg?react'
 import BookOpenFillIcon from '@zendesk-ui/assets/icons/20px/book-open-fill.svg?react'
 import MonitorFillIcon from '@zendesk-ui/assets/icons/20px/monitor-fill.svg?react'
@@ -26,10 +26,29 @@ const SectionTitle = styled.p`
   margin: 0;
 `
 
-const StyledAnchor = styled(Anchor)`
-  && {
-    font-size: 14px;
-    line-height: 20px;
+const FloraAnchor = styled.a`
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.154px;
+  color: #406cc4;
+  text-decoration: underline;
+  text-decoration-skip-ink: none;
+  cursor: pointer;
+
+  &:hover {
+    color: #284173;
+  }
+
+  &:active {
+    color: #1f335a;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px #406cc4, 0 0 0 4px white;
+    border-radius: 8px;
   }
 `
 
@@ -142,7 +161,7 @@ export default function Recommendations() {
     <Container>
       <HeaderRow>
         <SectionTitle>Recommendations</SectionTitle>
-        <StyledAnchor href="#" isUnderlined={false}>View all recommendations</StyledAnchor>
+        <FloraAnchor href="#">View all recommendations</FloraAnchor>
       </HeaderRow>
 
       <ListContainer>
@@ -163,7 +182,7 @@ export default function Recommendations() {
                   ))}
                 </TagRow>
               </Content>
-              <Button isBasic>View details</Button>
+              <BasicButton>View details</BasicButton>
             </RecommendationItem>
             {index < recommendations.length - 1 && <Divider />}
           </div>

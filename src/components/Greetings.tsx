@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import styled from 'styled-components'
 import CopilotIcon from '../assets/sparkle-fill.svg?react'
-import OverflowStrokeIcon from '@zendeskgarden/svg-icons/src/16/overflow-stroke.svg?react'
-import { IconButton } from '@zendeskgarden/react-buttons'
+import { BasicButton } from './BasicButton'
 import { InteractiveButton } from './InteractiveButton'
 
 const Container = styled.div`
@@ -54,23 +53,6 @@ const ExtraSuggestion = styled.div<{ $visible: boolean }>`
   transition: opacity 200ms ease-out, transform 200ms ease-out;
 `
 
-const OverflowButton = styled(IconButton)`
-  border-radius: 99px;
-
-  &:hover {
-    background-color: rgba(100, 104, 100, 0.08);
-  }
-
-  &:focus-visible {
-    background-color: rgba(100, 104, 100, 0.08);
-    box-shadow: inset 0 0 0 3px #406cc4, inset 0 0 0 4px white;
-  }
-
-  &:active {
-    background-color: rgba(100, 104, 100, 0.16);
-  }
-`
-
 const extraSuggestions = [
   'Enable Auto Assist for a top agents',
   'Write an AI procedure based on a PDF',
@@ -94,9 +76,7 @@ export default function Greetings() {
         <InteractiveButton>Create a view of pending tickets</InteractiveButton>
         <InteractiveButton>Learn about admin copilot</InteractiveButton>
         {!expanded && (
-          <OverflowButton size="medium" aria-label="More suggestions" onClick={() => setExpanded(true)}>
-            <OverflowStrokeIcon />
-          </OverflowButton>
+          <BasicButton onClick={() => setExpanded(true)}>Show more</BasicButton>
         )}
         {expanded && extraSuggestions.map((label) => (
           <ExtraSuggestion key={label} $visible={expanded}>
