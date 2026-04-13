@@ -156,24 +156,26 @@ const Footer = styled.div`
   z-index: 1;
 `
 
-const InputContainer = styled.div`
+const InputContainer = styled.div<{ $showPlus?: boolean; $disabled?: boolean; $glow?: boolean }>`
   display: flex;
   align-items: center;
   min-height: 48px;
-  border: 1px solid #b8b7b5;
+  border: 1px solid ${({ $disabled }) => ($disabled ? '#dcdcda' : '#b7b7b3')};
   border-radius: 99px;
-  background: white;
-  box-shadow: 0px 2px 8px 0px #c5afda, 0px 8px 20px 0px #e2dbed;
-  padding-left: 8px;
+  background: ${({ $disabled }) => ($disabled ? 'rgba(100, 104, 100, 0.08)' : 'white')};
+  box-shadow: ${({ $disabled, $glow }) => ($disabled || !$glow ? 'none' : '0px 2px 8px 0px #c5afda, 0px 8px 20px 0px #e2dbed')};
+  padding-left: ${({ $showPlus }) => ($showPlus ? '8px' : '20px')};
   transition: border-color 150ms ease-in-out, box-shadow 150ms ease-in-out;
+  cursor: ${({ $disabled }) => ($disabled ? 'not-allowed' : 'text')};
 
   &:hover {
-    border-color: #a89dc4;
+    border-color: ${({ $disabled }) => ($disabled ? '#dcdcda' : '#8d59b1')};
   }
 
   &:focus-within {
-    border-color: #885BB3;
-    box-shadow: 0px 2px 8px 0px #c5afda, 0px 8px 20px 0px #e2dbed, 0 0 0 3px rgba(136, 91, 179, 0.2);
+    border-color: ${({ $disabled }) => ($disabled ? '#dcdcda' : '#8d59b1')};
+    outline: ${({ $disabled }) => ($disabled ? 'none' : '2px solid #8d59b1')};
+    outline-offset: -1px;
   }
 `
 
@@ -214,7 +216,7 @@ const InputIconButton = styled.button`
   }
 `
 
-const InputField = styled.input`
+const InputField = styled.input<{ $showPlus?: boolean; $disabled?: boolean }>`
   flex: 1;
   border: none;
   outline: none;
@@ -223,11 +225,12 @@ const InputField = styled.input`
   line-height: 20px;
   letter-spacing: -0.154px;
   color: #313131;
-  padding: 10px 12px 10px 4px;
+  padding: 10px 12px 10px ${({ $showPlus }) => ($showPlus ? '4px' : '0')};
   background: transparent;
+  pointer-events: ${({ $disabled }) => ($disabled ? 'none' : 'auto')};
 
   &::placeholder {
-    color: #8d8c8b;
+    color: #8b8e89;
   }
 `
 
@@ -374,14 +377,16 @@ export interface CopilotPanelHandle {
 interface CopilotPanelProps {
   openCount: number
   onClose: () => void
+  showPlus?: boolean
 }
 
-const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function CopilotPanel({ openCount, onClose }, ref) {
+const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function CopilotPanel({ openCount, onClose, showPlus = false }, ref) {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const isConversation = messages.length > 0
   const conversationTitle = messages.find(m => m.role === 'user')?.content ?? ''
@@ -389,6 +394,12 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  useEffect(() => {
+    if (openCount > 0) {
+      inputRef.current?.focus()
+    }
+  }, [openCount])
 
   const handleSend = useCallback((text?: string) => {
     const content = (text ?? inputValue).trim()
@@ -600,11 +611,15 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
       )}
 
       <Footer>
-        <InputContainer>
-          <InputIconButton aria-label="Add attachment">
-            <PlusStrokeIcon />
-          </InputIconButton>
+        <InputContainer $showPlus={showPlus} $glow={!isConversation}>
+          {showPlus && (
+            <InputIconButton aria-label="Add attachment">
+              <PlusStrokeIcon />
+            </InputIconButton>
+          )}
           <InputField
+            ref={inputRef}
+            $showPlus={showPlus}
             placeholder="Ask admin copilot"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
