@@ -283,7 +283,6 @@ const MessagesContainer = styled.div`
 `
 
 const UserBubble = styled.div`
-  align-self: flex-end;
   background: #f9f5fa;
   border-radius: 16px 4px 16px 16px;
   padding: 10px 12px;
@@ -291,7 +290,6 @@ const UserBubble = styled.div`
   font-weight: 400;
   line-height: 20px;
   color: #313131;
-  max-width: 85%;
   word-wrap: break-word;
 `
 
@@ -574,7 +572,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
         <MessagesContainer>
           {messages.map((msg, i) => {
             if (msg.role === 'user') {
-              return <UserBubble key={i}>{msg.content}</UserBubble>
+              return <FloatIn key={i} style={{ alignSelf: 'flex-end', maxWidth: '85%' }}><UserBubble>{msg.content}</UserBubble></FloatIn>
             }
             if (msg.isStreaming && !msg.content) {
               return (
