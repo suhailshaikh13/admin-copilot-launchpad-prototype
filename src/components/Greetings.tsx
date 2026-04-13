@@ -48,12 +48,6 @@ const SuggestionRow = styled.div`
   gap: 8px 8px;
 `
 
-const ExtraSuggestion = styled.div<{ $visible: boolean }>`
-  opacity: ${({ $visible }) => ($visible ? 1 : 0)};
-  transform: translateY(${({ $visible }) => ($visible ? '0' : '-8px')});
-  transition: opacity 200ms ease-out, transform 200ms ease-out;
-`
-
 const initialSuggestions = [
   'What can copilot do?',
   'Create a view of pending tickets',
@@ -124,13 +118,11 @@ export default function Greetings({ onSuggestionClick }: GreetingsProps) {
           </FloatIn>
         )}
         {expanded && extras.map((label, i) => (
-          <ExtraSuggestion key={label} $visible={expanded}>
-            <FloatIn $delay={100 + i * 200}>
-              <InteractiveButton onClick={() => handleClick(label, 'extra', i)}>
-                {label}
-              </InteractiveButton>
-            </FloatIn>
-          </ExtraSuggestion>
+          <FloatIn key={label} $delay={i * 200}>
+            <InteractiveButton onClick={() => handleClick(label, 'extra', i)}>
+              {label}
+            </InteractiveButton>
+          </FloatIn>
         ))}
       </SuggestionRow>
     </Container>
