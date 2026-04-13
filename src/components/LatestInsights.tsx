@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { BasicButton } from './BasicButton'
+
 import CheckLgStrokeIcon from '@zendeskgarden/svg-icons/src/16/check-lg-stroke.svg?react'
 import ArrowTrendingStrokeIcon from '@zendeskgarden/svg-icons/src/16/arrow-trending-stroke.svg?react'
 import AlertWarningStrokeIcon from '@zendeskgarden/svg-icons/src/16/alert-warning-stroke.svg?react'
@@ -112,7 +112,7 @@ export default function LatestInsights() {
           <SectionTitle>Latest insights</SectionTitle>
           <DateText>Sep 20–Sep 28, 2025</DateText>
         </HeaderLeft>
-        <BasicButton>Give feedback</BasicButton>
+
       </HeaderRow>
 
       <CardGrid>

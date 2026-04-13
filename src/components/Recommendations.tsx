@@ -4,6 +4,7 @@ import { BasicButton } from './BasicButton'
 import FlowFillIcon from '@zendesk-ui/assets/icons/20px/flow-fill.svg?react'
 import BookOpenFillIcon from '@zendesk-ui/assets/icons/20px/book-open-fill.svg?react'
 import MonitorFillIcon from '@zendesk-ui/assets/icons/20px/monitor-fill.svg?react'
+import DotsVerticalIcon from '@zendesk-ui/assets/icons/20px/dots-vertical-fill.svg?react'
 
 const Container = styled.div`
   display: flex;
@@ -122,6 +123,45 @@ const ColorTag = styled.span<{ $bg: string; $color: string }>`
   }
 `
 
+const OverflowButton = styled.button`
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 24px;
+  background: transparent;
+  color: #646864;
+  cursor: pointer;
+  padding: 0;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    background-color: rgba(100, 104, 100, 0.08);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 3px #406cc4, inset 0 0 0 4px white;
+  }
+
+  &:active {
+    background-color: rgba(100, 104, 100, 0.16);
+  }
+`
+
+const ButtonGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`
+
 interface RecommendationData {
   title: string
   description: string
@@ -182,7 +222,12 @@ export default function Recommendations() {
                   ))}
                 </TagRow>
               </Content>
-              <BasicButton>View details</BasicButton>
+              <ButtonGroup>
+                <BasicButton>View details</BasicButton>
+                <OverflowButton aria-label="More options">
+                  <DotsVerticalIcon />
+                </OverflowButton>
+              </ButtonGroup>
             </RecommendationItem>
             {index < recommendations.length - 1 && <Divider />}
           </div>

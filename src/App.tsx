@@ -25,6 +25,9 @@ import ProductAdminCenterIcon from '@zendesk-ui/assets/icons/20px/product-admin-
 import Greetings from './components/Greetings'
 import LatestInsights from './components/LatestInsights'
 import Recommendations from './components/Recommendations'
+import Usage from './components/Usage'
+import ZendeskUpdates from './components/ZendeskUpdates'
+import FeatureUsage from './components/FeatureUsage'
 import CopilotPanel from './components/CopilotPanel'
 import type { CopilotPanelHandle } from './components/CopilotPanel'
 import SearchSuggestions from './components/SearchSuggestions'
@@ -233,6 +236,9 @@ function App() {
                 <Greetings onSuggestionClick={handleSuggestionClick} />
                 <LatestInsights />
                 <Recommendations />
+                <Usage />
+                <ZendeskUpdates />
+                <FeatureUsage />
               </HomeInner>
             </HomeContent>
           </HomeContentWrapper>
