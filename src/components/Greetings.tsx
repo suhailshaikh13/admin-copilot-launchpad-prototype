@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import styled from 'styled-components'
+import { useState, useCallback } from 'react'
+import styled, { keyframes } from 'styled-components'
 import CopilotIcon from '../assets/sparkle-fill.svg?react'
 import { BasicButton } from './BasicButton'
 import { InteractiveButton } from './InteractiveButton'
@@ -47,20 +47,67 @@ const SuggestionRow = styled.div`
   gap: 8px 8px;
 `
 
+const floatIn = keyframes`
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+`
+
+const SuggestionItem = styled.div`
+  animation: ${floatIn} 250ms ease-out;
+`
+
 const ExtraSuggestion = styled.div<{ $visible: boolean }>`
   opacity: ${({ $visible }) => ($visible ? 1 : 0)};
   transform: translateY(${({ $visible }) => ($visible ? '0' : '-8px')});
   transition: opacity 200ms ease-out, transform 200ms ease-out;
 `
 
+const initialSuggestions = [
+  'What can copilot do?',
+  'Create a view of pending tickets',
+  'Learn about admin copilot',
+]
+
 const extraSuggestions = [
-  'Enable Auto Assist for a top agents',
+  'Enable Auto Assist for top agents',
   'Write an AI procedure based on a PDF',
   'Escalate tickets with negative sentiment',
 ]
 
-export default function Greetings() {
+const replacementPool = [
+  'Set up ticket routing rules',
+  'Configure SLA policies',
+  'Create a macro for common replies',
+  'Automate ticket tagging',
+  'Set up a custom ticket form',
+  'View agent performance metrics',
+]
+
+interface GreetingsProps {
+  onSuggestionClick?: (text: string) => void
+}
+
+export default function Greetings({ onSuggestionClick }: GreetingsProps) {
   const [expanded, setExpanded] = useState(false)
+  const [suggestions, setSuggestions] = useState(initialSuggestions)
+  const [extras, setExtras] = useState(extraSuggestions)
+  const [, setPool] = useState(replacementPool)
+
+  const handleClick = useCallback((text: string, list: 'main' | 'extra', index: number) => {
+    onSuggestionClick?.(text)
+
+    const setList = list === 'main' ? setSuggestions : setExtras
+    setPool(prev => {
+      if (prev.length > 0) {
+        const randomIdx = Math.floor(Math.random() * prev.length)
+        const replacement = prev[randomIdx]
+        setList(items => items.map((s, i) => i === index ? replacement : s))
+        return prev.filter((_, i) => i !== randomIdx)
+      }
+      setList(items => items.filter((_, i) => i !== index))
+      return prev
+    })
+  }, [onSuggestionClick])
 
   return (
     <Container>
@@ -72,15 +119,23 @@ export default function Greetings() {
         </SubheadingRow>
       </div>
       <SuggestionRow>
-        <InteractiveButton>What can copilot do?</InteractiveButton>
-        <InteractiveButton>Create a view of pending tickets</InteractiveButton>
-        <InteractiveButton>Learn about admin copilot</InteractiveButton>
+        {suggestions.map((label, i) => (
+          <SuggestionItem key={label}>
+            <InteractiveButton onClick={() => handleClick(label, 'main', i)}>
+              {label}
+            </InteractiveButton>
+          </SuggestionItem>
+        ))}
         {!expanded && (
           <BasicButton onClick={() => setExpanded(true)}>Show more</BasicButton>
         )}
-        {expanded && extraSuggestions.map((label) => (
+        {expanded && extras.map((label, i) => (
           <ExtraSuggestion key={label} $visible={expanded}>
-            <InteractiveButton>{label}</InteractiveButton>
+            <SuggestionItem key={label}>
+              <InteractiveButton onClick={() => handleClick(label, 'extra', i)}>
+                {label}
+              </InteractiveButton>
+            </SuggestionItem>
           </ExtraSuggestion>
         ))}
       </SuggestionRow>

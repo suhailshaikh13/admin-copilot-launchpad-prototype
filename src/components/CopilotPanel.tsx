@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { IconButton } from '@zendeskgarden/react-buttons'
 import HistoryIcon from '../assets/history.svg?react'
@@ -10,13 +10,14 @@ import CopilotIcon from '../assets/sparkle-fill.svg?react'
 import { InteractiveButton } from './InteractiveButton'
 import Markdown from 'react-markdown'
 import AuroraGlow from './AuroraGlow'
-import { streamChat } from '../services/bedrock'
+import { streamChat, parseSuggestions } from '../services/bedrock'
 import type { ChatMessage } from '../services/bedrock'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
   isStreaming?: boolean
+  suggestions?: string[]
 }
 
 const Panel = styled.div`
@@ -333,6 +334,20 @@ const ThinkingIndicator = styled.div`
   }
 `
 
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+`
+
+const InlineSuggestions = styled.div`
+  align-self: flex-end;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  animation: ${fadeIn} 300ms ease-out;
+`
+
 const ThinkingText = styled.span`
   font-size: 14px;
   font-weight: 400;
@@ -351,11 +366,15 @@ const StopIcon = () => (
   </svg>
 )
 
+export interface CopilotPanelHandle {
+  sendMessage: (text: string) => void
+}
+
 interface CopilotPanelProps {
   onClose: () => void
 }
 
-export default function CopilotPanel({ onClose }: CopilotPanelProps) {
+const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function CopilotPanel({ onClose }, ref) {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
@@ -375,6 +394,15 @@ export default function CopilotPanel({ onClose }: CopilotPanelProps) {
 
     setInputValue('')
 
+    // Clear suggestions from last assistant message
+    setMessages(prev => {
+      const lastAssistantIdx = prev.findLastIndex(m => m.role === 'assistant')
+      if (lastAssistantIdx === -1 || !prev[lastAssistantIdx].suggestions?.length) return prev
+      const updated = [...prev]
+      updated[lastAssistantIdx] = { ...updated[lastAssistantIdx], suggestions: undefined }
+      return updated
+    })
+
     const userMessage: Message = { role: 'user', content }
     const assistantMessage: Message = { role: 'assistant', content: '', isStreaming: true }
 
@@ -386,7 +414,7 @@ export default function CopilotPanel({ onClose }: CopilotPanelProps) {
 
     const chatMessages: ChatMessage[] = [
       ...messages.filter(m => m.content),
-      { role: 'user', content },
+      { role: 'user' as const, content },
     ].map(({ role, content }) => ({ role, content }))
 
     streamChat(
@@ -406,7 +434,13 @@ export default function CopilotPanel({ onClose }: CopilotPanelProps) {
           const updated = [...prev]
           const last = updated[updated.length - 1]
           if (last.role === 'assistant') {
-            updated[updated.length - 1] = { ...last, isStreaming: false }
+            const parsed = parseSuggestions(last.content)
+            updated[updated.length - 1] = {
+              ...last,
+              content: parsed.content,
+              suggestions: parsed.suggestions,
+              isStreaming: false,
+            }
           }
           return updated
         })
@@ -433,6 +467,10 @@ export default function CopilotPanel({ onClose }: CopilotPanelProps) {
       controller.signal
     )
   }, [inputValue, isGenerating, messages])
+
+  useImperativeHandle(ref, () => ({
+    sendMessage: (text: string) => handleSend(text),
+  }), [handleSend])
 
   const handleStop = useCallback(() => {
     abortRef.current?.abort()
@@ -528,12 +566,26 @@ export default function CopilotPanel({ onClose }: CopilotPanelProps) {
               )
             }
             return (
-              <AssistantMessage key={i}>
-                <Markdown>{msg.content}</Markdown>
-                {msg.isStreaming && msg.content && (
-                  <ThinkingText> ●</ThinkingText>
+              <React.Fragment key={i}>
+                <AssistantMessage>
+                  <Markdown>{msg.content}</Markdown>
+                  {msg.isStreaming && msg.content && (
+                    <ThinkingText> ●</ThinkingText>
+                  )}
+                </AssistantMessage>
+                {!msg.isStreaming && msg.suggestions && msg.suggestions.length > 0 && i === messages.length - 1 && (
+                  <InlineSuggestions>
+                    {msg.suggestions.map((suggestion, j) => (
+                      <InteractiveButton
+                        key={j}
+                        onClick={() => handleSend(suggestion)}
+                      >
+                        {suggestion}
+                      </InteractiveButton>
+                    ))}
+                  </InlineSuggestions>
                 )}
-              </AssistantMessage>
+              </React.Fragment>
             )
           })}
           <div ref={messagesEndRef} />
@@ -568,4 +620,6 @@ export default function CopilotPanel({ onClose }: CopilotPanelProps) {
       </Footer>
     </Panel>
   )
-}
+})
+
+export default CopilotPanel

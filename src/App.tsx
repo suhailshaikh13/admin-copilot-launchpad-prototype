@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { Product, Header, Nav, Main, ProfileMenu } from '@zendesk-ui/navigation'
 import { Tooltip } from '@zendeskgarden/react-tooltips'
 import HomeFillIcon from '@zendesk-ui/assets/icons/20px/home-fill.svg?react'
@@ -26,6 +26,7 @@ import Greetings from './components/Greetings'
 import LatestInsights from './components/LatestInsights'
 import Recommendations from './components/Recommendations'
 import CopilotPanel from './components/CopilotPanel'
+import type { CopilotPanelHandle } from './components/CopilotPanel'
 import SearchSuggestions from './components/SearchSuggestions'
 import styled from 'styled-components'
 
@@ -161,6 +162,14 @@ const products = [
 function App() {
   const [copilotOpen, setCopilotOpen] = useState(false)
   const [hovering, setHovering] = useState(false)
+  const copilotRef = useRef<CopilotPanelHandle>(null)
+
+  const handleSuggestionClick = useCallback((text: string) => {
+    setCopilotOpen(true)
+    setHovering(false)
+    // Panel is always mounted, so ref is available immediately
+    copilotRef.current?.sendMessage(text)
+  }, [])
 
   return (
     <Product
@@ -217,14 +226,14 @@ function App() {
           <HomeContentWrapper $roundedRight={copilotOpen}>
             <HomeContent>
               <HomeInner>
-                <Greetings />
+                <Greetings onSuggestionClick={handleSuggestionClick} />
                 <LatestInsights />
                 <Recommendations />
               </HomeInner>
             </HomeContent>
           </HomeContentWrapper>
           <PanelSlider $open={copilotOpen}>
-            <CopilotPanel onClose={() => setCopilotOpen(false)} />
+            <CopilotPanel ref={copilotRef} onClose={() => setCopilotOpen(false)} />
           </PanelSlider>
         </MainWrapper>
       </StyledMain>
