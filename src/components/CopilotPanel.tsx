@@ -44,6 +44,16 @@ const Header = styled.div`
   gap: 4px;
   color: #706f6e;
 `
+const ConversationTitle = styled.span`
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: #313131;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`
 
 const HeaderIconButton = styled(IconButton)`
   border-radius: 99px;

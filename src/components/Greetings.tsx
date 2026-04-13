@@ -67,6 +67,7 @@ const initialSuggestions = [
   'Create a view of pending tickets',
   'Learn about admin copilot',
 ]
+
 const extraSuggestions = [
   'Enable Auto Assist for top agents',
   'Write an AI procedure based on a PDF',
