@@ -114,12 +114,19 @@ const Heading = styled.h2`
   width: 256px;
 `
 
-const Suggestions = styled.div`
+const fadeOut = keyframes`
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-4px); }
+`
+
+const Suggestions = styled.div<{ $exiting?: boolean }>`
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   position: relative;
   z-index: 1;
+  animation: ${({ $exiting }) => $exiting ? fadeOut : 'none'} 200ms ease-out;
+  animation-fill-mode: forwards;
 `
 
 const Disclaimer = styled.div`
@@ -341,13 +348,14 @@ const fadeIn = keyframes`
   to { opacity: 1; transform: translateY(0); }
 `
 
-const InlineSuggestions = styled.div`
+const InlineSuggestions = styled.div<{ $exiting?: boolean }>`
   align-self: flex-end;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
-  animation: ${fadeIn} 300ms ease-out;
+  animation: ${({ $exiting }) => $exiting ? fadeOut : fadeIn} ${({ $exiting }) => $exiting ? '200ms' : '300ms'} ease-out;
+  animation-fill-mode: forwards;
 `
 
 const ThinkingText = styled.span`
@@ -382,9 +390,11 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
+  const [suggestionsExiting, setSuggestionsExiting] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const pendingSendRef = useRef<string | null>(null)
 
   const isConversation = messages.length > 0
   const conversationTitle = messages.find(m => m.role === 'user')?.content ?? ''
@@ -502,7 +512,20 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
     setMessages([])
     setInputValue('')
     setIsGenerating(false)
+    setSuggestionsExiting(false)
   }, [])
+
+  const handleSuggestionClick = useCallback((text: string) => {
+    setSuggestionsExiting(true)
+    pendingSendRef.current = text
+    setTimeout(() => {
+      if (pendingSendRef.current) {
+        handleSend(pendingSendRef.current)
+        pendingSendRef.current = null
+      }
+      setSuggestionsExiting(false)
+    }, 200)
+  }, [handleSend])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -538,19 +561,19 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
               <SparkleIcon />
               <Heading>How can I help?</Heading>
             </Title>
-            <Suggestions key={openCount}>
+            <Suggestions key={openCount} $exiting={suggestionsExiting}>
               <FloatIn $delay={250}>
-                <InteractiveButton onClick={() => handleSend('Route specific ticket to assignee')}>
+                <InteractiveButton onClick={() => handleSuggestionClick('Route specific ticket to assignee')}>
                   Route specific ticket to assignee
                 </InteractiveButton>
               </FloatIn>
               <FloatIn $delay={450}>
-                <InteractiveButton onClick={() => handleSend('Create a view of pending status tickets')}>
+                <InteractiveButton onClick={() => handleSuggestionClick('Create a view of pending status tickets')}>
                   Create a view of pending status tickets
                 </InteractiveButton>
               </FloatIn>
               <FloatIn $delay={650}>
-                <InteractiveButton onClick={() => handleSend('Explain intent')}>
+                <InteractiveButton onClick={() => handleSuggestionClick('Explain intent')}>
                   Explain intent
                 </InteractiveButton>
               </FloatIn>
@@ -590,11 +613,11 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
                   )}
                 </AssistantMessage>
                 {!msg.isStreaming && msg.suggestions && msg.suggestions.length > 0 && i === messages.length - 1 && (
-                  <InlineSuggestions>
+                  <InlineSuggestions $exiting={suggestionsExiting}>
                     {msg.suggestions.map((suggestion, j) => (
                       <InteractiveButton
                         key={j}
-                        onClick={() => handleSend(suggestion)}
+                        onClick={() => handleSuggestionClick(suggestion)}
                       >
                         {suggestion}
                       </InteractiveButton>
