@@ -683,9 +683,6 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
               <React.Fragment key={i}>
                 <AssistantMessage>
                   <Markdown>{msg.content}</Markdown>
-                  {msg.isStreaming && msg.content && (
-                    <ThinkingText> ●</ThinkingText>
-                  )}
                 </AssistantMessage>
                 {!msg.isStreaming && msg.suggestions && msg.suggestions.length > 0 && i === messages.length - 1 && (
                   <InlineSuggestions $exiting={suggestionsExiting}>

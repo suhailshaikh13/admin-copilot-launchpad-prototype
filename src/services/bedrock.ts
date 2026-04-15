@@ -1,3 +1,5 @@
+import { parseAllMessages, concatBuffers } from './eventstream'
+
 export type ChatMessage = { role: 'user' | 'assistant'; content: string }
 
 const SYSTEM_PROMPT = `You are a helpful Zendesk Admin Center copilot. You assist Zendesk administrators with configuring their account, managing triggers, automations, views, macros, routing rules, and other admin tasks. Be concise and practical. When suggesting configurations, be specific about the steps needed.
@@ -45,13 +47,33 @@ export async function streamChat(
       throw new Error(`API error: ${response.status} ${body}`)
     }
 
-    const data = await response.json()
-    const text = data.content
-      ?.filter((block: { type: string }) => block.type === 'text')
-      .map((block: { text: string }) => block.text)
-      .join('') ?? ''
+    const reader = response.body?.getReader()
+    if (!reader) throw new Error('Response body is not readable')
 
-    onChunk(text)
+    let buffer: Uint8Array<ArrayBufferLike> = new Uint8Array(0)
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer = concatBuffers(buffer, value)
+      const { events, remaining } = parseAllMessages(buffer)
+      buffer = remaining
+
+      for (const event of events) {
+        if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta' && event.delta.text) {
+          onChunk(event.delta.text)
+        }
+        if (event.type === 'message_stop') {
+          onDone()
+          return
+        }
+        if (event.type === 'error') {
+          throw new Error(`Stream error: ${JSON.stringify(event.message)}`)
+        }
+      }
+    }
+
     onDone()
   } catch (error) {
     if (signal?.aborted) return

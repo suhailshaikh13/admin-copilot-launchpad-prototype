@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
         '/api/chat': {
           target: env.AWS_ENDPOINT_URL_BEDROCK_RUNTIME,
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api\/chat/, '/model/us.anthropic.claude-sonnet-4-20250514-v1:0/invoke'),
+          rewrite: (path) => path.replace(/^\/api\/chat/, '/model/us.anthropic.claude-sonnet-4-20250514-v1:0/invoke-with-response-stream'),
           configure: (proxy) => {
             proxy.on('proxyReq', (proxyReq) => {
               proxyReq.setHeader('Authorization', `Bearer ${env.AWS_BEARER_TOKEN_BEDROCK}`)
