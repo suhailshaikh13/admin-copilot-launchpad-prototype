@@ -289,6 +289,10 @@ const MessagesContainer = styled.div`
   gap: 16px;
 `
 
+const ScrollSpacer = styled.div`
+  flex-shrink: 0;
+`
+
 const UserBubble = styled.div`
   background: #f9f5fa;
   border-radius: 16px 4px 16px 16px;
@@ -392,16 +396,82 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   const [isGenerating, setIsGenerating] = useState(false)
   const [suggestionsExiting, setSuggestionsExiting] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+  const lastUserMessageRef = useRef<HTMLDivElement>(null)
+  const prevMessagesLenRef = useRef(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const pendingSendRef = useRef<string | null>(null)
+  const spacerRef = useRef<HTMLDivElement>(null)
+  const [spacerHeight, setSpacerHeight] = useState(0)
 
   const isConversation = messages.length > 0
   const conversationTitle = messages.find(m => m.role === 'user')?.content ?? ''
 
+  const updateSpacerHeight = useCallback(() => {
+    const container = messagesContainerRef.current
+    const userMsg = lastUserMessageRef.current
+    const spacer = spacerRef.current
+    if (!container || !userMsg || !spacer) return
+
+    // Temporarily collapse spacer so it doesn't affect measurement
+    const prevHeight = spacer.style.minHeight
+    spacer.style.minHeight = '0px'
+
+    const containerH = container.clientHeight
+    const userMsgTop = userMsg.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop
+    const contentHeight = container.scrollHeight
+    const contentBelowUserMsg = contentHeight - userMsgTop
+    const needed = Math.max(0, containerH - contentBelowUserMsg + 16)
+
+    spacer.style.minHeight = prevHeight
+    setSpacerHeight(needed)
+  }, [])
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    const prevLen = prevMessagesLenRef.current
+    prevMessagesLenRef.current = messages.length
+
+    if (messages.length === 0) return
+
+    const lastMessage = messages[messages.length - 1]
+
+    // User just sent a message (user + empty assistant added together)
+    // Scroll so the user message sits near the top with some padding
+    if (
+      messages.length >= 2 &&
+      messages.length - prevLen === 2 &&
+      lastMessage.role === 'assistant' &&
+      lastMessage.isStreaming &&
+      !lastMessage.content
+    ) {
+      requestAnimationFrame(() => {
+        updateSpacerHeight()
+        requestAnimationFrame(() => {
+          const container = messagesContainerRef.current
+          const userMsg = lastUserMessageRef.current
+          if (!container || !userMsg) return
+          const containerRect = container.getBoundingClientRect()
+          const msgRect = userMsg.getBoundingClientRect()
+          const scrollTarget = container.scrollTop + (msgRect.top - containerRect.top) - 16
+          container.scrollTo({ top: scrollTarget, behavior: 'smooth' })
+        })
+      })
+      return
+    }
+
+    // Content changed (response arrived) — recalculate spacer
+    requestAnimationFrame(() => updateSpacerHeight())
+  }, [messages, updateSpacerHeight])
+
+  useEffect(() => {
+    const container = messagesContainerRef.current
+    if (!container) return
+    const observer = new ResizeObserver(() => {
+      updateSpacerHeight()
+    })
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [isConversation, updateSpacerHeight])
 
   useEffect(() => {
     if (openCount > 0) {
@@ -592,10 +662,15 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
       )}
 
       {isConversation && (
-        <MessagesContainer>
+        <MessagesContainer ref={messagesContainerRef}>
           {messages.map((msg, i) => {
             if (msg.role === 'user') {
-              return <FloatIn key={i} style={{ alignSelf: 'flex-end', maxWidth: '85%' }}><UserBubble>{msg.content}</UserBubble></FloatIn>
+              const isLastUser = i === messages.findLastIndex(m => m.role === 'user')
+              return (
+                <FloatIn key={i} ref={isLastUser ? lastUserMessageRef : undefined} style={{ alignSelf: 'flex-end', maxWidth: '85%' }}>
+                  <UserBubble>{msg.content}</UserBubble>
+                </FloatIn>
+              )
             }
             if (msg.isStreaming && !msg.content) {
               return (
@@ -627,7 +702,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
               </React.Fragment>
             )
           })}
-          <div ref={messagesEndRef} />
+          <ScrollSpacer ref={spacerRef} style={{ minHeight: spacerHeight }} />
         </MessagesContainer>
       )}
 
