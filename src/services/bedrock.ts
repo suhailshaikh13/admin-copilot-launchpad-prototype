@@ -22,6 +22,10 @@ export function parseSuggestions(text: string): { content: string; suggestions: 
   return { content, suggestions: chips }
 }
 
+const BEDROCK_ENDPOINT = import.meta.env.VITE_BEDROCK_ENDPOINT
+const BEDROCK_TOKEN = import.meta.env.VITE_BEDROCK_TOKEN
+const MODEL_ID = 'us.anthropic.claude-sonnet-4-20250514-v1:0'
+
 export async function streamChat(
   messages: ChatMessage[],
   onChunk: (text: string) => void,
@@ -30,9 +34,12 @@ export async function streamChat(
   signal?: AbortSignal
 ): Promise<void> {
   try {
-    const response = await fetch('/api/chat', {
+    const response = await fetch(`${BEDROCK_ENDPOINT}/model/${MODEL_ID}/invoke`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${BEDROCK_TOKEN}`,
+      },
       body: JSON.stringify({
         anthropic_version: 'bedrock-2023-05-31',
         max_tokens: 4096,
