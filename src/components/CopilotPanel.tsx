@@ -125,7 +125,7 @@ const Suggestions = styled.div<{ $exiting?: boolean }>`
   gap: 8px;
   position: relative;
   z-index: 1;
-  animation: ${({ $exiting }) => $exiting ? fadeOut : 'none'} 200ms ease-out;
+  animation: ${({ $exiting }) => $exiting ? fadeOut : fadeIn} ${({ $exiting }) => $exiting ? '200ms' : '300ms'} ease-out;
   animation-fill-mode: forwards;
 `
 
@@ -359,8 +359,8 @@ const ThinkingIndicator = styled.div`
 `
 
 const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 `
 
 const InlineSuggestions = styled.div<{ $exiting?: boolean }>`
@@ -647,21 +647,15 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
               <Heading>How can I help?</Heading>
             </Title>
             <Suggestions key={openCount} $exiting={suggestionsExiting}>
-              <FloatIn $delay={150}>
-                <InteractiveButton onClick={() => handleSuggestionClick('Route specific ticket to assignee')}>
-                  Route specific ticket to assignee
-                </InteractiveButton>
-              </FloatIn>
-              <FloatIn $delay={210}>
-                <InteractiveButton onClick={() => handleSuggestionClick('Create a view of pending status tickets')}>
-                  Create a view of pending status tickets
-                </InteractiveButton>
-              </FloatIn>
-              <FloatIn $delay={270}>
-                <InteractiveButton onClick={() => handleSuggestionClick('Explain intent')}>
-                  Explain intent
-                </InteractiveButton>
-              </FloatIn>
+              <InteractiveButton onClick={() => handleSuggestionClick('Route specific ticket to assignee')}>
+                Route specific ticket to assignee
+              </InteractiveButton>
+              <InteractiveButton onClick={() => handleSuggestionClick('Create a view of pending status tickets')}>
+                Create a view of pending status tickets
+              </InteractiveButton>
+              <InteractiveButton onClick={() => handleSuggestionClick('Explain intent')}>
+                Explain intent
+              </InteractiveButton>
             </Suggestions>
           </Content>
 

@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import styled from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 import CopilotIcon from '../assets/sparkle-fill.svg?react'
 import { BasicButton } from './BasicButton'
 import { InteractiveButton } from './InteractiveButton'
-import FloatIn from './FloatIn'
 
 const Container = styled.div`
   display: flex;
@@ -48,6 +47,22 @@ const SuggestionRow = styled.div`
   gap: 8px 8px;
 `
 
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`
+
+const FadeIn = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  animation: ${fadeIn} 300ms ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+`
+
 const initialSuggestions = [
   'What can copilot do?',
   'Create a view of pending tickets',
@@ -76,27 +91,27 @@ export default function Greetings({ onSuggestionClick }: GreetingsProps) {
           <SparkleIcon />
         </SubheadingRow>
       </div>
-      <SuggestionRow>
-        {initialSuggestions.map((label, i) => (
-          <FloatIn key={label} $delay={80 + i * 60}>
-            <InteractiveButton onClick={() => onSuggestionClick?.(label)}>
+      <FadeIn>
+        <SuggestionRow>
+          {initialSuggestions.map((label) => (
+            <InteractiveButton key={label} onClick={() => onSuggestionClick?.(label)}>
               {label}
             </InteractiveButton>
-          </FloatIn>
-        ))}
-        {!expanded && (
-          <FloatIn $delay={260}>
+          ))}
+          {!expanded && (
             <BasicButton onClick={() => setExpanded(true)}>Show more</BasicButton>
-          </FloatIn>
-        )}
-        {expanded && extraSuggestions.map((label, i) => (
-          <FloatIn key={label} $delay={i * 60}>
-            <InteractiveButton onClick={() => onSuggestionClick?.(label)}>
-              {label}
-            </InteractiveButton>
-          </FloatIn>
-        ))}
-      </SuggestionRow>
+          )}
+          {expanded && (
+            <FadeIn>
+              {extraSuggestions.map((label) => (
+                <InteractiveButton key={label} onClick={() => onSuggestionClick?.(label)}>
+                  {label}
+                </InteractiveButton>
+              ))}
+            </FadeIn>
+          )}
+        </SuggestionRow>
+      </FadeIn>
     </Container>
   )
 }
