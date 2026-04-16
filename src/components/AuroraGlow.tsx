@@ -45,6 +45,10 @@ const AnimatedGroup = styled.div`
   inset: 0;
   animation: ${gradientPulse} 8s ease-in-out infinite;
   transform-origin: center center;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `
 
 const MainEllipseWrapper = styled.div`

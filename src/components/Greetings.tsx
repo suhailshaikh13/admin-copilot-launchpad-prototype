@@ -78,19 +78,19 @@ export default function Greetings({ onSuggestionClick }: GreetingsProps) {
       </div>
       <SuggestionRow>
         {initialSuggestions.map((label, i) => (
-          <FloatIn key={label} $delay={100 + i * 200}>
+          <FloatIn key={label} $delay={80 + i * 60}>
             <InteractiveButton onClick={() => onSuggestionClick?.(label)}>
               {label}
             </InteractiveButton>
           </FloatIn>
         ))}
         {!expanded && (
-          <FloatIn $delay={700}>
+          <FloatIn $delay={260}>
             <BasicButton onClick={() => setExpanded(true)}>Show more</BasicButton>
           </FloatIn>
         )}
         {expanded && extraSuggestions.map((label, i) => (
-          <FloatIn key={label} $delay={i * 200}>
+          <FloatIn key={label} $delay={i * 60}>
             <InteractiveButton onClick={() => onSuggestionClick?.(label)}>
               {label}
             </InteractiveButton>

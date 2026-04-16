@@ -183,7 +183,7 @@ const InputContainer = styled.div<{ $showPlus?: boolean; $disabled?: boolean; $g
   background: ${({ $disabled }) => ($disabled ? 'rgba(100, 104, 100, 0.08)' : 'white')};
   box-shadow: ${({ $disabled, $glow }) => ($disabled || !$glow ? 'none' : '0px 2px 8px 0px #c5afda, 0px 8px 20px 0px #e2dbed')};
   padding-left: ${({ $showPlus }) => ($showPlus ? '8px' : '20px')};
-  transition: border-color 150ms ease-in-out, box-shadow 150ms ease-in-out;
+  transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
   cursor: ${({ $disabled }) => ($disabled ? 'not-allowed' : 'text')};
 
   &:hover {
@@ -215,7 +215,7 @@ const InputIconButton = styled.button`
     height: 16px;
   }
 
-  transition: background-color 150ms ease-in-out, color 150ms ease-in-out;
+  transition: background-color 150ms ease-out, color 150ms ease-out;
 
   &:hover {
     background: rgba(136, 91, 179, 0.08);
@@ -274,7 +274,7 @@ const SendButton = styled.button<{ $disabled?: boolean }>`
     color: white;
   }
 
-  transition: background-color 150ms ease-in-out, transform 100ms ease-in-out, opacity 150ms ease-in-out;
+  transition: background-color 150ms ease-out, transform 100ms ease-out, opacity 150ms ease-out;
 
   &:hover {
     background: ${({ $disabled }) => $disabled ? '#313131' : '#49484a'};
@@ -383,6 +383,10 @@ const ThinkingText = styled.span`
   -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: ${shimmer} 2s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `
 
 const StopIcon = () => (
@@ -643,17 +647,17 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
               <Heading>How can I help?</Heading>
             </Title>
             <Suggestions key={openCount} $exiting={suggestionsExiting}>
-              <FloatIn $delay={250}>
+              <FloatIn $delay={150}>
                 <InteractiveButton onClick={() => handleSuggestionClick('Route specific ticket to assignee')}>
                   Route specific ticket to assignee
                 </InteractiveButton>
               </FloatIn>
-              <FloatIn $delay={450}>
+              <FloatIn $delay={210}>
                 <InteractiveButton onClick={() => handleSuggestionClick('Create a view of pending status tickets')}>
                   Create a view of pending status tickets
                 </InteractiveButton>
               </FloatIn>
-              <FloatIn $delay={650}>
+              <FloatIn $delay={270}>
                 <InteractiveButton onClick={() => handleSuggestionClick('Explain intent')}>
                   Explain intent
                 </InteractiveButton>

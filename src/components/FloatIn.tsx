@@ -12,7 +12,7 @@ const floatIn = keyframes`
 `
 
 const FloatIn = styled.div<{ $delay?: number }>`
-  animation: ${floatIn} 500ms cubic-bezier(0.23, 1, 0.32, 1) ${({ $delay = 0 }) => $delay}ms backwards;
+  animation: ${floatIn} 350ms cubic-bezier(0.23, 1, 0.32, 1) ${({ $delay = 0 }) => $delay}ms backwards;
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;

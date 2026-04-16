@@ -18,6 +18,7 @@ export const BasicButton = styled.button`
   letter-spacing: -0.154px;
   white-space: nowrap;
   cursor: pointer;
+  transition: background-color 150ms ease, transform 160ms ease-out;
 
   &:hover {
     background-color: rgba(100, 104, 100, 0.08);
@@ -30,5 +31,6 @@ export const BasicButton = styled.button`
 
   &:active {
     background-color: rgba(100, 104, 100, 0.16);
+    transform: scale(0.97);
   }
 `

@@ -38,6 +38,11 @@ const Button = styled.button<{ $bg: string; $small?: boolean }>`
   border: none;
   background: ${({ $bg }) => $bg};
   width: fit-content;
+  transition: transform 160ms ease-out;
+
+  &:active {
+    transform: scale(0.97);
+  }
 
   @keyframes gradient-expand {
     0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }

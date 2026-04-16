@@ -70,7 +70,7 @@ const RecommendationItem = styled.div<{ $active?: boolean }>`
   background: ${({ $active }) =>
     $active ? 'linear-gradient(90deg, #f8f9f9 0%, white 100%)' : 'white'};
   cursor: pointer;
-  transition: background-color 150ms ease-in-out;
+  transition: background-color 150ms ease;
 
   &:hover {
     background-color: rgba(64, 108, 196, 0.08);

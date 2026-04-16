@@ -43,7 +43,7 @@ const CopilotToggle = styled.button<{ $isOpen: boolean; $animateHover: boolean }
   border: none;
   cursor: pointer;
   padding: 0;
-  transition: background 0.15s ease;
+  transition: background 150ms ease-out, transform 160ms ease-out;
   background: ${({ $isOpen }) =>
     $isOpen
       ? 'linear-gradient(var(--gradient-angle, 135deg), #9256B1 30%, #1F73B7 100%)'
@@ -55,7 +55,7 @@ const CopilotToggle = styled.button<{ $isOpen: boolean; $animateHover: boolean }
     width: 20px;
     height: 20px;
     color: ${({ $isOpen }) => ($isOpen ? 'white' : '#885BB3')};
-    transition: transform 0.3s ease, filter 0.3s ease;
+    transition: transform 200ms ease-out;
   }
 
   ${({ $animateHover }) =>
@@ -63,23 +63,21 @@ const CopilotToggle = styled.button<{ $isOpen: boolean; $animateHover: boolean }
       ? `svg { animation: rotate-360 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }`
       : ''}
 
-  &:hover {
-    background: ${({ $isOpen }) =>
-      $isOpen
-        ? 'linear-gradient(var(--gradient-angle, 135deg), #9256B1 30%, #1F73B7 100%)'
-        : 'rgba(136, 91, 179, 0.08)'};
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: ${({ $isOpen }) =>
+        $isOpen
+          ? 'linear-gradient(var(--gradient-angle, 135deg), #9256B1 30%, #1F73B7 100%)'
+          : 'rgba(136, 91, 179, 0.08)'};
+    }
   }
 
   &:active {
-    animation: button-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: scale(0.97);
     background: ${({ $isOpen }) =>
       $isOpen
         ? 'linear-gradient(var(--gradient-angle, 135deg), #9256B1 30%, #1F73B7 100%)'
         : 'rgba(136, 91, 179, 0.16)'};
-  }
-
-  &:active > * {
-    transform: scale(0.909);
   }
 `
 
@@ -114,8 +112,8 @@ const PanelSlider = styled.div<{ $open: boolean }>`
   border-radius: 24px 24px 0 0;
   box-shadow: ${({ $open }) => ($open ? '0px 0px 4px 0px rgba(10, 13, 14, 0.16)' : 'none')};
   transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.35s ease 0.05s,
-              box-shadow 0.35s ease 0.05s;
+              opacity 0.2s ease-out 0.05s,
+              box-shadow 0.2s ease-out 0.05s;
 `
 
 const HomeContentWrapper = styled.div<{ $roundedRight?: boolean }>`
