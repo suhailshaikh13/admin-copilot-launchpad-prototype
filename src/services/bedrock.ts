@@ -25,7 +25,6 @@ export function parseSuggestions(text: string): { content: string; suggestions: 
 const BEDROCK_ENDPOINT = import.meta.env.VITE_BEDROCK_ENDPOINT
 const BEDROCK_TOKEN = import.meta.env.VITE_BEDROCK_TOKEN
 const MODEL_ID = 'us.anthropic.claude-sonnet-4-20250514-v1:0'
-const IS_DEV = import.meta.env.DEV
 
 export async function streamChat(
   messages: ChatMessage[],
@@ -35,13 +34,12 @@ export async function streamChat(
   signal?: AbortSignal
 ): Promise<void> {
   try {
-    const url = IS_DEV ? '/api/chat' : `${BEDROCK_ENDPOINT}/model/${MODEL_ID}/invoke-with-response-stream`
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-    if (!IS_DEV) headers['Authorization'] = `Bearer ${BEDROCK_TOKEN}`
-
-    const response = await fetch(url, {
+    const response = await fetch(`${BEDROCK_ENDPOINT}/model/${MODEL_ID}/invoke`, {
       method: 'POST',
-      headers,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${BEDROCK_TOKEN}`,
+      },
       body: JSON.stringify({
         anthropic_version: 'bedrock-2023-05-31',
         max_tokens: 4096,
