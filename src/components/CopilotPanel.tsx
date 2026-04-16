@@ -133,7 +133,7 @@ const Disclaimer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 20px 8px;
+  padding: 0 20px 96px;
   flex-shrink: 0;
   position: relative;
   z-index: 1;
@@ -156,11 +156,22 @@ const DisclaimerText = styled.p`
   text-align: center;
 `
 
-const Footer = styled.div`
-  padding: 20px;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1;
+const Footer = styled.div<{ $scrim?: boolean }>`
+  padding: ${({ $scrim }) => ($scrim ? '36px 20px 20px' : '20px')};
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  background: ${({ $scrim }) =>
+    $scrim
+      ? 'linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, white 50%)'
+      : 'transparent'};
+  pointer-events: none;
+
+  > * {
+    pointer-events: auto;
+  }
 `
 
 const InputContainer = styled.div<{ $showPlus?: boolean; $disabled?: boolean; $glow?: boolean }>`
@@ -283,7 +294,7 @@ const SendButton = styled.button<{ $disabled?: boolean }>`
 const MessagesContainer = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 0 20px 20px;
+  padding: 0 20px 88px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -703,7 +714,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
         </MessagesContainer>
       )}
 
-      <Footer>
+      <Footer $scrim={isConversation}>
         <InputContainer $showPlus={showPlus} $glow={!isConversation}>
           {showPlus && (
             <InputIconButton aria-label="Add attachment">
