@@ -35,16 +35,16 @@ test.describe('Admin Copilot Home', () => {
 
   test('renders recommendations section with 3 items', async ({ page }) => {
     await expect(page.getByText('Recommendations', { exact: true })).toBeVisible()
-    await expect(page.getByRole('link', { name: 'View all recommendations' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'View all', exact: true })).toBeVisible()
     await expect(page.getByText('Route specific tickets to assignee: EMEA Group')).toBeVisible()
     await expect(page.getByText('Change ticket status for intent: Unsolicited marketing')).toBeVisible()
     await expect(page.getByText('Turn on suggested macros')).toBeVisible()
   })
 
   test('renders recommendation tags correctly', async ({ page }) => {
-    await expect(page.getByText('Triggers')).toBeVisible()
+    await expect(page.getByText('Triggers').first()).toBeVisible()
     await expect(page.getByText('Optimization').first()).toBeVisible()
-    await expect(page.getByText('Procedures')).toBeVisible()
-    await expect(page.getByText('Macros', { exact: true })).toBeVisible()
+    await expect(page.getByText('Procedures').first()).toBeVisible()
+    await expect(page.getByText('Macros', { exact: true }).first()).toBeVisible()
   })
 })

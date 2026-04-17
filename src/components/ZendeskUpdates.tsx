@@ -28,6 +28,16 @@ const TitleLink = styled.a`
   &:hover {
     color: #284173;
   }
+
+  &:active {
+    color: #1f335a;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 1px white, 0 0 0 4px #406cc4;
+    border-radius: 8px;
+  }
 `
 
 const Card = styled.div`
@@ -106,6 +116,16 @@ const AnchorLink = styled.a`
   &:hover {
     color: #284173;
   }
+
+  &:active {
+    color: #1f335a;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 1px white, 0 0 0 4px #406cc4;
+    border-radius: 8px;
+  }
 `
 
 const ViewAllLink = styled(AnchorLink)`
@@ -114,7 +134,17 @@ const ViewAllLink = styled(AnchorLink)`
   text-decoration-skip-ink: none;
 
   &:hover {
-    color: #1a1a1a;
+    color: #404241;
+  }
+
+  &:active {
+    color: #646864;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 1px white, 0 0 0 4px #406cc4;
+    border-radius: 8px;
   }
 `
 

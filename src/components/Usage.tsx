@@ -36,13 +36,29 @@ const CardTitle = styled.p`
   font-weight: 600;
   line-height: 20px;
   letter-spacing: -0.154px;
-  color: #406cc4;
+  color: #2f3130;
   margin: 0;
 `
 
-const CardTitleLink = styled.span`
+const CardTitleLink = styled.a`
+  color: #406cc4;
   text-decoration: underline;
   text-decoration-skip-ink: none;
+  cursor: pointer;
+
+  &:hover {
+    color: #284173;
+  }
+
+  &:active {
+    color: #1f335a;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 1px white, 0 0 0 4px #406cc4;
+    border-radius: 8px;
+  }
 `
 
 const StatGroup = styled.div`
@@ -101,7 +117,7 @@ export default function Usage() {
       <SectionTitle>Usage</SectionTitle>
       <CardRow>
         <Card>
-          <CardTitle><CardTitleLink>Storage usage</CardTitleLink></CardTitle>
+          <CardTitle><CardTitleLink href="#">Storage usage</CardTitleLink></CardTitle>
           <StatGroup>
             <StatLabel>Ticket data storage</StatLabel>
             <ProgressBar>
@@ -124,7 +140,7 @@ export default function Usage() {
 
         <Card>
           <CardTitle>
-            <CardTitleLink>API usage</CardTitleLink>
+            <CardTitleLink href="#">API usage</CardTitleLink>
             {' '}
             <span style={{ color: '#2f3130', fontWeight: 400 }}>(last 7 days)</span>
           </CardTitle>
@@ -149,7 +165,7 @@ export default function Usage() {
         </Card>
 
         <Card>
-          <CardTitle><CardTitleLink>Automated resolutions usage</CardTitleLink></CardTitle>
+          <CardTitle><CardTitleLink href="#">Automated resolutions usage</CardTitleLink></CardTitle>
           <StatValue>
             <strong>2 of 9000</strong>
           </StatValue>

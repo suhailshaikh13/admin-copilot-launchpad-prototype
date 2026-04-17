@@ -64,6 +64,16 @@ const NameLink = styled.a`
   &:hover {
     color: #284173;
   }
+
+  &:active {
+    color: #1f335a;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 1px white, 0 0 0 4px #406cc4;
+    border-radius: 8px;
+  }
 `
 
 const features = [

@@ -29,28 +29,28 @@ const SectionTitle = styled.p`
   margin: 0;
 `
 
-const FloraAnchor = styled.a`
+const ViewAllLink = styled.a`
   font-family: inherit;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 400;
-  line-height: 20px;
-  letter-spacing: -0.154px;
-  color: #406cc4;
+  line-height: 16px;
+  letter-spacing: -0.0004px;
+  color: #2f3130;
   text-decoration: underline;
   text-decoration-skip-ink: none;
   cursor: pointer;
 
   &:hover {
-    color: #284173;
+    color: #404241;
   }
 
   &:active {
-    color: #1f335a;
+    color: #646864;
   }
 
   &:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px #406cc4, 0 0 0 4px white;
+    box-shadow: 0 0 0 1px white, 0 0 0 4px #406cc4;
     border-radius: 8px;
   }
 `
@@ -306,7 +306,7 @@ export default function Recommendations() {
     <Container>
       <HeaderRow>
         <SectionTitle>Recommendations</SectionTitle>
-        <FloraAnchor href="#">View all recommendations</FloraAnchor>
+        <ViewAllLink href="#">View all</ViewAllLink>
       </HeaderRow>
 
       <ListContainer>
