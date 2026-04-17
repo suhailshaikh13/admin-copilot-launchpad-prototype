@@ -1,26 +1,11 @@
 @import '@zendeskgarden/css-bedrock';
 
-@property --gradient-angle {
-  syntax: '<angle>';
-  initial-value: 135deg;
-  inherits: false;
-}
-
 @keyframes rotate-360 {
   from {
     transform: rotate(0deg);
   }
   to {
     transform: rotate(180deg);
-  }
-}
-
-@keyframes gradient-rotation {
-  0% {
-    --gradient-angle: 0deg;
-  }
-  100% {
-    --gradient-angle: 360deg;
   }
 }
 
