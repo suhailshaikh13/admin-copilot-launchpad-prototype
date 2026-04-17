@@ -108,6 +108,16 @@ const AnchorLink = styled.a`
   }
 `
 
+const ViewAllLink = styled(AnchorLink)`
+  color: #2f3130;
+  text-decoration: underline;
+  text-decoration-skip-ink: none;
+
+  &:hover {
+    color: #1a1a1a;
+  }
+`
+
 const tabs = ['Announcements', "What's new", 'Developer updates', 'Release notes', 'Service notifications']
 
 const announcements = [
@@ -149,10 +159,10 @@ export default function ZendeskUpdates() {
           ))}
         </List>
 
-        <AnchorLink href="#">
+        <ViewAllLink href="#">
           View all announcements
           <ExternalLinkIcon />
-        </AnchorLink>
+        </ViewAllLink>
       </Card>
     </Container>
   )

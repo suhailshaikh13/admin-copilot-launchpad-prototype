@@ -33,7 +33,7 @@ import type { CopilotPanelHandle } from './components/CopilotPanel'
 import SearchSuggestions from './components/SearchSuggestions'
 import styled from 'styled-components'
 
-const CopilotToggle = styled.button<{ $isOpen: boolean; $animateHover: boolean }>`
+const CopilotToggle = styled.button<{ $isOpen: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -57,11 +57,6 @@ const CopilotToggle = styled.button<{ $isOpen: boolean; $animateHover: boolean }
     color: ${({ $isOpen }) => ($isOpen ? 'white' : '#885BB3')};
     transition: transform 200ms ease-out;
   }
-
-  ${({ $animateHover }) =>
-    $animateHover
-      ? `svg { animation: rotate-360 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }`
-      : ''}
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
@@ -163,12 +158,10 @@ const products = [
 function App() {
   const [copilotOpen, setCopilotOpen] = useState(false)
   const [copilotOpenCount, setCopilotOpenCount] = useState(0)
-  const [hovering, setHovering] = useState(false)
   const copilotRef = useRef<CopilotPanelHandle>(null)
 
   const handleSuggestionClick = useCallback((text: string) => {
     setCopilotOpen(true)
-    setHovering(false)
     // Panel is always mounted, so ref is available immediately
     copilotRef.current?.sendMessage(text)
   }, [])
@@ -193,16 +186,12 @@ function App() {
         <Tooltip content="Copilot" placement="bottom" zIndex={100} appendToNode={document.body}>
           <CopilotToggle
             $isOpen={copilotOpen}
-            $animateHover={hovering}
             onClick={() => {
               setCopilotOpen(prev => {
                 if (!prev) setCopilotOpenCount(c => c + 1)
                 return !prev
               })
-              setHovering(false)
             }}
-            onMouseEnter={() => setHovering(true)}
-            onMouseLeave={() => setHovering(false)}
             aria-label="Copilot"
           >
             <CopilotIcon />

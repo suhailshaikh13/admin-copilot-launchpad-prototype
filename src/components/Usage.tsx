@@ -40,6 +40,11 @@ const CardTitle = styled.p`
   margin: 0;
 `
 
+const CardTitleLink = styled.span`
+  text-decoration: underline;
+  text-decoration-skip-ink: none;
+`
+
 const StatGroup = styled.div`
   display: flex;
   flex-direction: column;
@@ -96,7 +101,7 @@ export default function Usage() {
       <SectionTitle>Usage</SectionTitle>
       <CardRow>
         <Card>
-          <CardTitle>Storage usage</CardTitle>
+          <CardTitle><CardTitleLink>Storage usage</CardTitleLink></CardTitle>
           <StatGroup>
             <StatLabel>Ticket data storage</StatLabel>
             <ProgressBar>
@@ -119,7 +124,9 @@ export default function Usage() {
 
         <Card>
           <CardTitle>
-            API usage <span style={{ color: '#2f3130', fontWeight: 400 }}>(last 7 days)</span>
+            <CardTitleLink>API usage</CardTitleLink>
+            {' '}
+            <span style={{ color: '#2f3130', fontWeight: 400 }}>(last 7 days)</span>
           </CardTitle>
           <StatGroup>
             <StatLabelSubtle>429 errors</StatLabelSubtle>
@@ -142,7 +149,7 @@ export default function Usage() {
         </Card>
 
         <Card>
-          <CardTitle>Automated resolutions usage</CardTitle>
+          <CardTitle><CardTitleLink>Automated resolutions usage</CardTitleLink></CardTitle>
           <StatValue>
             <strong>2 of 9000</strong>
           </StatValue>
