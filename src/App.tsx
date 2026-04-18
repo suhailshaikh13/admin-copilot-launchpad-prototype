@@ -31,6 +31,7 @@ import FeatureUsage from './components/FeatureUsage'
 import CopilotPanel from './components/CopilotPanel'
 import type { CopilotPanelHandle } from './components/CopilotPanel'
 import SearchSuggestions from './components/SearchSuggestions'
+import { SetupGuide } from './components/SetupGuide'
 import styled from 'styled-components'
 
 const CopilotToggle = styled.button<{ $isOpen: boolean; $animateHover: boolean }>`
@@ -162,6 +163,7 @@ function App() {
   const [copilotOpen, setCopilotOpen] = useState(false)
   const [copilotOpenCount, setCopilotOpenCount] = useState(0)
   const [hovering, setHovering] = useState(false)
+  const [currentPage, setCurrentPage] = useState<'home' | 'setup-guide'>('home')
   const copilotRef = useRef<CopilotPanelHandle>(null)
 
   const handleSuggestionClick = useCallback((text: string) => {
@@ -169,6 +171,11 @@ function App() {
     setHovering(false)
     // Panel is always mounted, so ref is available immediately
     copilotRef.current?.sendMessage(text)
+  }, [])
+
+  const handleNavigateToSetupGuide = useCallback(() => {
+    setCurrentPage('setup-guide')
+    setCopilotOpen(false)
   }, [])
 
   return (
@@ -229,17 +236,29 @@ function App() {
           <HomeContentWrapper $roundedRight={copilotOpen}>
             <HomeContent>
               <HomeInner>
-                <Greetings onSuggestionClick={handleSuggestionClick} />
-                <LatestInsights />
-                <Recommendations />
-                <Usage />
-                <ZendeskUpdates />
-                <FeatureUsage />
+                {currentPage === 'home' && (
+                  <>
+                    <Greetings onSuggestionClick={handleSuggestionClick} />
+                    <LatestInsights />
+                    <Recommendations />
+                    <Usage />
+                    <ZendeskUpdates />
+                    <FeatureUsage />
+                  </>
+                )}
+                {currentPage === 'setup-guide' && (
+                  <SetupGuide onBack={() => setCurrentPage('home')} />
+                )}
               </HomeInner>
             </HomeContent>
           </HomeContentWrapper>
           <PanelSlider $open={copilotOpen}>
-            <CopilotPanel ref={copilotRef} openCount={copilotOpenCount} onClose={() => setCopilotOpen(false)} />
+            <CopilotPanel
+              ref={copilotRef}
+              openCount={copilotOpenCount}
+              onClose={() => setCopilotOpen(false)}
+              onNavigateToSetupGuide={handleNavigateToSetupGuide}
+            />
           </PanelSlider>
         </MainWrapper>
       </StyledMain>

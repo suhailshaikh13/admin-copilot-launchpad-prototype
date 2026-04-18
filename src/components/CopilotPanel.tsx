@@ -11,6 +11,7 @@ import { InteractiveButton } from './InteractiveButton'
 import Markdown from 'react-markdown'
 import FloatIn from './FloatIn'
 import AuroraGlow from './AuroraGlow'
+import { CopilotErrorMessage } from './CopilotErrorMessage'
 import { streamChat, parseSuggestions } from '../services/bedrock'
 import type { ChatMessage } from '../services/bedrock'
 
@@ -18,6 +19,7 @@ interface Message {
   role: 'user' | 'assistant'
   content: string
   isStreaming?: boolean
+  isError?: boolean
   suggestions?: string[]
 }
 
@@ -402,10 +404,11 @@ export interface CopilotPanelHandle {
 interface CopilotPanelProps {
   openCount: number
   onClose: () => void
+  onNavigateToSetupGuide?: () => void
   showPlus?: boolean
 }
 
-const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function CopilotPanel({ openCount, onClose, showPlus = false }, ref) {
+const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function CopilotPanel({ openCount, onClose, onNavigateToSetupGuide, showPlus = false }, ref) {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
@@ -559,7 +562,8 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
           if (last.role === 'assistant') {
             updated[updated.length - 1] = {
               ...last,
-              content: last.content + '\n\n[Error: Failed to get response]',
+              content: last.content || '',
+              isError: true,
               isStreaming: false,
             }
           }
@@ -691,7 +695,10 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
             return (
               <React.Fragment key={i}>
                 <AssistantMessage>
-                  <Markdown>{msg.content}</Markdown>
+                  {msg.content && <Markdown>{msg.content}</Markdown>}
+                  {msg.isError && onNavigateToSetupGuide && (
+                    <CopilotErrorMessage onViewSetupGuide={onNavigateToSetupGuide} />
+                  )}
                 </AssistantMessage>
                 {!msg.isStreaming && msg.suggestions && msg.suggestions.length > 0 && i === messages.length - 1 && (
                   <InlineSuggestions $exiting={suggestionsExiting}>
