@@ -27,7 +27,7 @@ export function CopilotErrorMessage({ onViewSetupGuide }: CopilotErrorMessagePro
       <AlertContent>
         <Alert.Title>Unable to connect to the AI service</Alert.Title>
         <Alert.Paragraph>
-          This app needs to run locally for the copilot to work.
+          This app needs to run locally for further responses from the copilot to work.
         </Alert.Paragraph>
         <StyledButton onClick={onViewSetupGuide} size="small" isPrimary>
           View setup guide

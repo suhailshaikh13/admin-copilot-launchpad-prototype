@@ -12,7 +12,7 @@ import Markdown from 'react-markdown'
 import FloatIn from './FloatIn'
 import AuroraGlow from './AuroraGlow'
 import { CopilotErrorMessage } from './CopilotErrorMessage'
-import { streamChat, parseSuggestions } from '../services/bedrock'
+import { streamChat, parseSuggestions, getCannedResponse } from '../services/bedrock'
 import type { ChatMessage } from '../services/bedrock'
 
 interface Message {
@@ -516,6 +516,46 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
 
     setMessages(prev => [...prev, userMessage, assistantMessage])
     setIsGenerating(true)
+
+    const cannedResponse = messages.length === 0 ? getCannedResponse(content) : undefined
+    if (cannedResponse) {
+      const parsed = parseSuggestions(cannedResponse)
+      let charIndex = 0
+      const interval = setInterval(() => {
+        const chunkSize = Math.floor(Math.random() * 12) + 4
+        const nextIndex = Math.min(charIndex + chunkSize, cannedResponse.length)
+        const chunk = cannedResponse.slice(charIndex, nextIndex)
+        charIndex = nextIndex
+
+        setMessages(prev => {
+          const updated = [...prev]
+          const last = updated[updated.length - 1]
+          if (last.role === 'assistant') {
+            updated[updated.length - 1] = { ...last, content: last.content + chunk }
+          }
+          return updated
+        })
+
+        if (charIndex >= cannedResponse.length) {
+          clearInterval(interval)
+          setMessages(prev => {
+            const updated = [...prev]
+            const last = updated[updated.length - 1]
+            if (last.role === 'assistant') {
+              updated[updated.length - 1] = {
+                ...last,
+                content: parsed.content,
+                suggestions: parsed.suggestions,
+                isStreaming: false,
+              }
+            }
+            return updated
+          })
+          setIsGenerating(false)
+        }
+      }, 15)
+      return
+    }
 
     const controller = new AbortController()
     abortRef.current = controller
