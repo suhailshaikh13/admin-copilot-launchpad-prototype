@@ -168,6 +168,7 @@ function App() {
 
   const handleSuggestionClick = useCallback((text: string) => {
     setCopilotOpen(true)
+    setCopilotOpenCount(c => c + 1)
     setHovering(false)
     // Panel is always mounted, so ref is available immediately
     copilotRef.current?.sendMessage(text)

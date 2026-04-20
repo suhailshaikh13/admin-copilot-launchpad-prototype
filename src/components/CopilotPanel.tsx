@@ -221,11 +221,11 @@ const InputIconButton = styled.button`
 
   &:hover {
     background: rgba(136, 91, 179, 0.08);
-    color: #885BB3;
+    color: #8D59B1;
   }
 
   &:focus-visible {
-    outline: 2px solid #885BB3;
+    outline: 2px solid #8D59B1;
     outline-offset: -2px;
     background: rgba(136, 91, 179, 0.08);
   }
@@ -283,7 +283,7 @@ const SendButton = styled.button<{ $disabled?: boolean }>`
   }
 
   &:focus-visible {
-    outline: 2px solid #885BB3;
+    outline: 2px solid #8D59B1;
     outline-offset: 2px;
   }
 
@@ -340,8 +340,8 @@ const AssistantMessage = styled.div`
 `
 
 const shimmer = keyframes`
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
+  0% { background-position: -400px center; }
+  100% { background-position: 400px center; }
 `
 
 const ThinkingIndicator = styled.div`
@@ -355,7 +355,7 @@ const ThinkingIndicator = styled.div`
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #885bb3;
+    background: #8D59B1;
     flex-shrink: 0;
   }
 `
@@ -379,17 +379,33 @@ const ThinkingText = styled.span`
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
-  background: linear-gradient(90deg, #885bb3 25%, #c5afda 50%, #885bb3 75%);
-  background-size: 200% auto;
+  background: linear-gradient(90deg, #8D59B1 25%,rgb(255, 255, 255) 50%, #8D59B1 75%);
+  background-size: 400px auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: ${shimmer} 2s linear infinite;
+  animation: ${shimmer} 3500ms ease-in-out infinite;
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;
   }
 `
+
+const THINKING_PHRASES = ['Thinking', 'Working on it', 'Getting there', 'Almost done'] as const
+const THINKING_PHRASE_MS = 3500
+
+function ThinkingStatusText() {
+  const [phraseIndex, setPhraseIndex] = useState(0)
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setPhraseIndex((i) => (i + 1) % THINKING_PHRASES.length)
+    }, THINKING_PHRASE_MS)
+    return () => clearInterval(id)
+  }, [])
+
+  return <ThinkingText>{THINKING_PHRASES[phraseIndex]}</ThinkingText>
+}
 
 const StopIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -728,7 +744,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
             if (msg.isStreaming && !msg.content) {
               return (
                 <ThinkingIndicator key={i}>
-                  <ThinkingText>Thinking…</ThinkingText>
+                  <ThinkingStatusText />
                 </ThinkingIndicator>
               )
             }
