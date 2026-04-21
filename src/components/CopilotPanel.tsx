@@ -23,6 +23,13 @@ interface Message {
   suggestions?: string[]
 }
 
+interface SavedConversation {
+  id: string
+  title: string
+  messages: Message[]
+  savedAt: number
+}
+
 const Panel = styled.div`
   width: 360px;
   min-width: 360px;
@@ -48,8 +55,9 @@ const Header = styled.div`
   color: #706f6e;
 `
 
-const HeaderIconButton = styled(IconButton)`
+const HeaderIconButton = styled(IconButton)<{ $active?: boolean }>`
   border-radius: 99px;
+  background-color: ${({ $active }) => ($active ? 'rgba(100, 104, 100, 0.16)' : 'transparent')};
 
   && svg {
     width: 20px;
@@ -57,7 +65,7 @@ const HeaderIconButton = styled(IconButton)`
   }
 
   &:hover {
-    background-color: rgba(100, 104, 100, 0.08);
+    background-color: ${({ $active }) => ($active ? 'rgba(100, 104, 100, 0.16)' : 'rgba(100, 104, 100, 0.08)')};
   }
 
   &:focus-visible {
@@ -306,6 +314,56 @@ const ScrollSpacer = styled.div`
   flex-shrink: 0;
 `
 
+const HistoryContainer = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-sizing: border-box;
+  width: 100%;
+`
+
+const HistorySectionHeader = styled.div`
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  color: #68737d;
+  padding: 12px 20px 4px 20px;
+`
+
+const HistoryItemButton = styled.button<{ $active?: boolean }>`
+  width: calc(100% - 40px);
+  margin: 0 20px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  background: ${({ $active }) => ($active ? 'rgba(100, 104, 100, 0.16)' : 'transparent')};
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: #2f3130;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color 150ms ease-out;
+  box-sizing: border-box;
+
+  &:hover {
+    background: ${({ $active }) =>
+      $active ? 'rgba(100, 104, 100, 0.16)' : 'rgba(100, 104, 100, 0.08)'};
+  }
+
+  &:focus-visible {
+    outline: 2px solid #8d59b1;
+    outline-offset: -2px;
+  }
+`
+
 const UserBubble = styled.div`
   background: #f9f5fa;
   border-radius: 16px 4px 16px 16px;
@@ -429,6 +487,9 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   const [inputValue, setInputValue] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [suggestionsExiting, setSuggestionsExiting] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
+  const [conversations, setConversations] = useState<SavedConversation[]>([])
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const lastUserMessageRef = useRef<HTMLDivElement>(null)
@@ -513,6 +574,52 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
     }
   }, [openCount])
 
+  // Sync current conversation to history as messages change
+  useEffect(() => {
+    if (activeConversationId && messages.length > 0) {
+      const cleanedMessages = messages.map(m =>
+        m.isStreaming ? { ...m, isStreaming: false } : m
+      )
+      setConversations(prev =>
+        prev.map(c =>
+          c.id === activeConversationId
+            ? { ...c, messages: cleanedMessages, savedAt: Date.now() }
+            : c
+        )
+      )
+    }
+  }, [messages, activeConversationId])
+
+  const saveCurrentConversation = useCallback(() => {
+    if (messages.length === 0) return
+
+    // Clean streaming flags before saving
+    const cleanedMessages = messages.map(m =>
+      m.isStreaming ? { ...m, isStreaming: false } : m
+    )
+
+    if (activeConversationId) {
+      // Update existing conversation in place
+      setConversations(prev =>
+        prev.map(c =>
+          c.id === activeConversationId
+            ? { ...c, messages: cleanedMessages, savedAt: Date.now() }
+            : c
+        )
+      )
+    } else {
+      // Save as new conversation
+      const title = messages.find(m => m.role === 'user')?.content ?? 'Untitled'
+      const newConversation: SavedConversation = {
+        id: crypto.randomUUID(),
+        title,
+        messages: cleanedMessages,
+        savedAt: Date.now(),
+      }
+      setConversations(prev => [newConversation, ...prev])
+    }
+  }, [messages, activeConversationId])
+
   const handleSend = useCallback((text?: string) => {
     const content = (text ?? inputValue).trim()
     if (!content || isGenerating) return
@@ -532,6 +639,18 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
 
     setMessages(prev => [...prev, userMessage, assistantMessage])
     setIsGenerating(true)
+
+    // Create conversation immediately on first message
+    if (messages.length === 0 && !activeConversationId) {
+      const newConversation: SavedConversation = {
+        id: crypto.randomUUID(),
+        title: content,
+        messages: [userMessage, assistantMessage],
+        savedAt: Date.now(),
+      }
+      setConversations(prev => [newConversation, ...prev])
+      setActiveConversationId(newConversation.id)
+    }
 
     const cannedResponse = messages.length === 0 ? getCannedResponse(content) : undefined
     if (cannedResponse) {
@@ -631,7 +750,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
       },
       controller.signal
     )
-  }, [inputValue, isGenerating, messages])
+  }, [inputValue, isGenerating, messages, activeConversationId])
 
   useImperativeHandle(ref, () => ({
     sendMessage: (text: string) => handleSend(text),
@@ -654,11 +773,17 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   const handleNewConversation = useCallback(() => {
     abortRef.current?.abort()
     abortRef.current = null
+
+    // Save current conversation before resetting
+    saveCurrentConversation()
+
     setMessages([])
     setInputValue('')
     setIsGenerating(false)
     setSuggestionsExiting(false)
-  }, [])
+    setShowHistory(false)
+    setActiveConversationId(null)
+  }, [saveCurrentConversation])
 
   const handleSuggestionClick = useCallback((text: string) => {
     setSuggestionsExiting(true)
@@ -672,6 +797,34 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
     }, 200)
   }, [handleSend])
 
+  const handleToggleHistory = useCallback(() => {
+    setShowHistory(prev => !prev)
+  }, [])
+
+  const handleHistoryItemClick = useCallback((id: string) => {
+    // Don't reload if already viewing this conversation
+    if (id === activeConversationId) return
+
+    // Abort any in-flight generation
+    abortRef.current?.abort()
+    abortRef.current = null
+
+    // Save current conversation before switching
+    saveCurrentConversation()
+
+    // Load the selected conversation
+    const conversation = conversations.find(c => c.id === id)
+    if (!conversation) return
+
+    setMessages([...conversation.messages])
+    setActiveConversationId(id)
+    setIsGenerating(false)
+    setSuggestionsExiting(false)
+    setShowHistory(false)
+    setInputValue('')
+  }, [activeConversationId, conversations, saveCurrentConversation])
+
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -684,12 +837,17 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   return (
     <Panel>
       <Header>
-        {isConversation && (
+        {showHistory && (
+          <ConversationTitle>Conversations</ConversationTitle>
+        )}
+        {!showHistory && isConversation && (
           <ConversationTitle>{conversationTitle}</ConversationTitle>
         )}
-        <HeaderIconButton size="small" aria-label="History">
-          <HistoryIcon />
-        </HeaderIconButton>
+        {conversations.length > 0 && (
+          <HeaderIconButton size="small" aria-label="History" $active={showHistory} onClick={handleToggleHistory}>
+            <HistoryIcon />
+          </HeaderIconButton>
+        )}
         <HeaderIconButton size="small" aria-label="New conversation" onClick={handleNewConversation}>
           <EditIcon />
         </HeaderIconButton>
@@ -698,7 +856,22 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
         </HeaderIconButton>
       </Header>
 
-      {!isConversation && (
+      {showHistory && (
+        <HistoryContainer>
+          <HistorySectionHeader>Today</HistorySectionHeader>
+          {conversations.map(conv => (
+            <HistoryItemButton
+              key={conv.id}
+              $active={activeConversationId === conv.id}
+              onClick={() => handleHistoryItemClick(conv.id)}
+            >
+              {conv.title}
+            </HistoryItemButton>
+          ))}
+        </HistoryContainer>
+      )}
+
+      {!showHistory && !isConversation && (
         <>
           <AuroraGlow />
           <Content>
@@ -730,7 +903,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
         </>
       )}
 
-      {isConversation && (
+      {!showHistory && isConversation && (
         <MessagesContainer ref={messagesContainerRef}>
           {messages.map((msg, i) => {
             if (msg.role === 'user') {
@@ -775,36 +948,38 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
         </MessagesContainer>
       )}
 
-      <Footer $scrim={isConversation}>
-        <InputContainer $showPlus={showPlus} $glow={!isConversation}>
-          {showPlus && (
-            <InputIconButton aria-label="Add attachment">
-              <PlusStrokeIcon />
-            </InputIconButton>
-          )}
-          <InputField
-            ref={inputRef}
-            $showPlus={showPlus}
-            placeholder="Ask admin copilot"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-          {isGenerating ? (
-            <SendButton aria-label="Stop" onClick={handleStop}>
-              <StopIcon />
-            </SendButton>
-          ) : (
-            <SendButton
-              aria-label="Send"
-              $disabled={!canSend}
-              onClick={() => canSend && handleSend()}
-            >
-              <PaperPlaneIcon />
-            </SendButton>
-          )}
-        </InputContainer>
-      </Footer>
+      {!showHistory && (
+        <Footer $scrim={isConversation}>
+          <InputContainer $showPlus={showPlus} $glow={!isConversation}>
+            {showPlus && (
+              <InputIconButton aria-label="Add attachment">
+                <PlusStrokeIcon />
+              </InputIconButton>
+            )}
+            <InputField
+              ref={inputRef}
+              $showPlus={showPlus}
+              placeholder="Ask admin copilot"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            {isGenerating ? (
+              <SendButton aria-label="Stop" onClick={handleStop}>
+                <StopIcon />
+              </SendButton>
+            ) : (
+              <SendButton
+                aria-label="Send"
+                $disabled={!canSend}
+                onClick={() => canSend && handleSend()}
+              >
+                <PaperPlaneIcon />
+              </SendButton>
+            )}
+          </InputContainer>
+        </Footer>
+      )}
     </Panel>
   )
 })
