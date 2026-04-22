@@ -397,27 +397,6 @@ const AssistantMessage = styled.div`
   strong { font-weight: 600; }
 `
 
-const shimmer = keyframes`
-  0% { background-position: -400px center; }
-  100% { background-position: 400px center; }
-`
-
-const ThinkingIndicator = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  align-self: flex-start;
-
-  &::before {
-    content: '';
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #8D59B1;
-    flex-shrink: 0;
-  }
-`
-
 const fadeIn = keyframes`
   from { opacity: 0; }
   to { opacity: 1; }
@@ -433,36 +412,93 @@ const InlineSuggestions = styled.div<{ $exiting?: boolean }>`
   animation-fill-mode: forwards;
 `
 
-const ThinkingText = styled.span`
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 20px;
-  background: linear-gradient(90deg, #8D59B1 25%,rgb(255, 255, 255) 50%, #8D59B1 75%);
-  background-size: 400px auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: ${shimmer} 3500ms ease-in-out infinite;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
+// LoaderMessage component from @zendesk-ui/ai-assistant-chat
+const getDotPulse = (color: string, faded: string) => keyframes`
+  0%, 100% {
+    transform: scale(1);
+    background-color: ${color};
+  }
+  50% {
+    transform: scale(0.4);
+    background-color: ${faded};
   }
 `
 
-const THINKING_PHRASES = ['Thinking', 'Working on it', 'Getting there', 'Almost done'] as const
-const THINKING_PHRASE_MS = 3500
+const textShimmer = keyframes`
+  0% {
+    background-position: 100% center;
+  }
+  50%, 100% {
+    background-position: 0% center;
+  }
+`
 
-function ThinkingStatusText() {
-  const [phraseIndex, setPhraseIndex] = useState(0)
+const LoaderWrapper = styled.output`
+  display: inline-flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.space.xxs};
+  align-self: flex-start;
+`
+
+const BASE_DURATION = 0.7
+
+const LoaderIndicator = styled.div`
+  width: ${({ theme }) => theme.space.base * 2}px;
+  height: ${({ theme }) => theme.space.base * 2}px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background-color: #8D59B1;
+  animation: ${getDotPulse('#8D59B1', '#C38FE6')} ${BASE_DURATION}s ease-in-out infinite;
+`
+
+const LoaderText = styled.span`
+  font-size: ${({ theme }) => theme.fontSizes.md};
+  line-height: ${({ theme }) => theme.lineHeights.md};
+  font-weight: ${({ theme }) => theme.fontWeights.regular};
+  font-family: inherit;
+  white-space: nowrap;
+  background: linear-gradient(
+    90deg,
+    #8D59B1 0%,
+    #8D59B1 30%,
+    rgba(141, 89, 177, 0.2) 40%,
+    rgba(141, 89, 177, 0.2) 60%,
+    #8D59B1 70%,
+    #8D59B1 100%
+  );
+  background-size: 400% 100%;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: ${textShimmer} ${BASE_DURATION * 2}s ease-in-out infinite;
+`
+
+const DEFAULT_LOADING_TEXTS = ['Thinking', 'Working on it', 'Still working', 'Making progress', 'Getting there']
+const CYCLE_INTERVAL_MS = 5000
+
+function LoaderMessage({ message }: { message?: string }) {
+  const [textIndex, setTextIndex] = useState(0)
 
   useEffect(() => {
-    const id = window.setInterval(() => {
-      setPhraseIndex((i) => (i + 1) % THINKING_PHRASES.length)
-    }, THINKING_PHRASE_MS)
-    return () => clearInterval(id)
-  }, [])
+    if (message || textIndex >= DEFAULT_LOADING_TEXTS.length - 1) {
+      return undefined
+    }
 
-  return <ThinkingText>{THINKING_PHRASES[phraseIndex]}</ThinkingText>
+    const timeoutId = setTimeout(() => {
+      setTextIndex((prev) => prev + 1)
+    }, CYCLE_INTERVAL_MS)
+
+    return () => clearTimeout(timeoutId)
+  }, [textIndex, message])
+
+  const displayText = message || DEFAULT_LOADING_TEXTS[textIndex]
+
+  return (
+    <LoaderWrapper aria-live="polite" aria-label="Loading">
+      <LoaderIndicator aria-hidden="true" />
+      <LoaderText>{displayText}</LoaderText>
+    </LoaderWrapper>
+  )
 }
 
 const StopIcon = () => (
@@ -915,11 +951,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
               )
             }
             if (msg.isStreaming && !msg.content) {
-              return (
-                <ThinkingIndicator key={i}>
-                  <ThinkingStatusText />
-                </ThinkingIndicator>
-              )
+              return <LoaderMessage key={i} />
             }
             return (
               <React.Fragment key={i}>

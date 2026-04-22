@@ -11,6 +11,7 @@
     "test": "npx playwright test"
   },
   "dependencies": {
+    "@zendesk-ui/ai-assistant-chat": "^0.7.1",
     "@zendesk-ui/assets": "^2.6.0",
     "@zendesk-ui/navigation": "^1.9.1",
     "@zendeskgarden/css-bedrock": "^10.0.1",
