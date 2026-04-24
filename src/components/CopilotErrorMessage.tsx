@@ -1,6 +1,5 @@
 import styled from 'styled-components'
-import { Alert } from '@zendeskgarden/react-notifications'
-import { Button } from '@zendeskgarden/react-buttons'
+import { Alert, Button } from '@zendesk-ui/react-components'
 
 interface CopilotErrorMessageProps {
   onViewSetupGuide: () => void

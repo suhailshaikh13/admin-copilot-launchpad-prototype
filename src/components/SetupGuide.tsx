@@ -1,6 +1,5 @@
 import styled from 'styled-components'
-import { Button, Anchor } from '@zendeskgarden/react-buttons'
-import { Code } from '@zendeskgarden/react-typography'
+import { Button, Anchor, Code } from '@zendesk-ui/react-components'
 import ArrowLeftStrokeIcon from '@zendeskgarden/svg-icons/src/16/arrow-left-stroke.svg?react'
 
 interface SetupGuideProps {

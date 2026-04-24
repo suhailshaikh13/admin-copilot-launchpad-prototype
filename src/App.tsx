@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import { Product, Header, Nav, Main, ProfileMenu } from '@zendesk-ui/navigation'
-import { Tooltip } from '@zendeskgarden/react-tooltips'
+import { Tooltip } from '@zendesk-ui/react-components'
 import HomeFillIcon from '@zendesk-ui/assets/icons/20px/home-fill.svg?react'
 import BuildingFillIcon from '@zendesk-ui/assets/icons/20px/building-fill.svg?react'
 import PeopleFillIcon from '@zendesk-ui/assets/icons/20px/people-fill.svg?react'

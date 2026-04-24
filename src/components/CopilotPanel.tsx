@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react'
 import styled, { keyframes } from 'styled-components'
-import { IconButton } from '@zendeskgarden/react-buttons'
+import { IconButton } from '@zendesk-ui/react-components'
 import HistoryIcon from '../assets/history.svg?react'
 import EditIcon from '../assets/edit.svg?react'
 import XIcon from '@zendesk-ui/assets/icons/20px/x-fill.svg?react'
@@ -55,28 +55,6 @@ const Header = styled.div`
   color: #706f6e;
 `
 
-const HeaderIconButton = styled(IconButton)<{ $active?: boolean }>`
-  border-radius: 99px;
-  background-color: ${({ $active }) => ($active ? 'rgba(100, 104, 100, 0.16)' : 'transparent')};
-
-  && svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  &:hover {
-    background-color: ${({ $active }) => ($active ? 'rgba(100, 104, 100, 0.16)' : 'rgba(100, 104, 100, 0.08)')};
-  }
-
-  &:focus-visible {
-    background-color: rgba(100, 104, 100, 0.08);
-    box-shadow: inset 0 0 0 3px #406cc4, inset 0 0 0 4px white;
-  }
-
-  &:active {
-    background-color: rgba(100, 104, 100, 0.16);
-  }
-`
 
 const ConversationTitle = styled.span`
   flex: 1;
@@ -880,16 +858,16 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
           <ConversationTitle>{conversationTitle}</ConversationTitle>
         )}
         {conversations.length > 0 && (
-          <HeaderIconButton size="small" aria-label="History" $active={showHistory} onClick={handleToggleHistory}>
+          <IconButton size="small" aria-label="History" onClick={handleToggleHistory}>
             <HistoryIcon />
-          </HeaderIconButton>
+          </IconButton>
         )}
-        <HeaderIconButton size="small" aria-label="New conversation" onClick={handleNewConversation}>
+        <IconButton size="small" aria-label="New conversation" onClick={handleNewConversation}>
           <EditIcon />
-        </HeaderIconButton>
-        <HeaderIconButton size="small" aria-label="Close" onClick={onClose}>
+        </IconButton>
+        <IconButton size="small" aria-label="Close" onClick={onClose}>
           <XIcon />
-        </HeaderIconButton>
+        </IconButton>
       </Header>
 
       {showHistory && (
