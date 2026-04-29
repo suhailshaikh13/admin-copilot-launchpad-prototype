@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import type { ComponentType } from 'react'
 import styled from 'styled-components'
-import { BasicButton } from './BasicButton'
+import { Button } from '@zendesk-ui/react-components'
 import FlowFillIcon from '@zendesk-ui/assets/icons/20px/flow-fill.svg?react'
 import BookOpenFillIcon from '@zendesk-ui/assets/icons/20px/book-open-fill.svg?react'
 import MonitorFillIcon from '@zendesk-ui/assets/icons/20px/monitor-fill.svg?react'
@@ -333,9 +333,9 @@ export default function Recommendations() {
                 </TagRow>
               </Content>
               <ButtonGroup>
-                <BasicButton onClick={(e) => { e.stopPropagation(); handleClick(index) }}>
+                <Button isBasic isPill onClick={(e) => { e.stopPropagation(); handleClick(index) }}>
                   {activeIndex === index ? 'Close details' : 'View details'}
-                </BasicButton>
+                </Button>
                 <OverflowButton
                   ref={(el) => { buttonRefs.current[index] = el }}
                   aria-label="More options"

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import styled, { keyframes } from 'styled-components'
 import CopilotIcon from '../assets/sparkle-fill.svg?react'
-import { BasicButton } from './BasicButton'
+import { Button } from '@zendesk-ui/react-components'
 import { QuickPrompt } from '@zendesk-ui/ai-assistant-chat'
 
 const Container = styled.div`
@@ -99,7 +99,7 @@ export default function Greetings({ onSuggestionClick }: GreetingsProps) {
             </QuickPrompt>
           ))}
           {!expanded && (
-            <BasicButton onClick={() => setExpanded(true)}>Show more</BasicButton>
+            <Button isBasic isPill onClick={() => setExpanded(true)}>Show more</Button>
           )}
           {expanded && (
             <FadeIn>
