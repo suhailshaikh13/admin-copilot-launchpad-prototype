@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { Anchor } from '@zendesk-ui/react-components'
 
 const Container = styled.div`
   display: flex;
@@ -52,29 +53,6 @@ const Td = styled.td`
   box-sizing: border-box;
 `
 
-const NameLink = styled.a`
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 20px;
-  letter-spacing: -0.154px;
-  color: #406cc4;
-  text-decoration: none;
-  cursor: pointer;
-
-  &:hover {
-    color: #284173;
-  }
-
-  &:active {
-    color: #1f335a;
-  }
-
-  &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 1px white, 0 0 0 4px #406cc4;
-    border-radius: 8px;
-  }
-`
 
 const features = [
   { name: 'Macros', active: 53, runs: 0, unused: 55 },
@@ -100,7 +78,7 @@ export default function FeatureUsage() {
             {features.map((feature) => (
               <tr key={feature.name}>
                 <Td>
-                  <NameLink href="#">{feature.name}</NameLink>
+                  <Anchor href="#" isUnderlined={false}>{feature.name}</Anchor>
                 </Td>
                 <Td>{feature.active}</Td>
                 <Td>{feature.runs}</Td>

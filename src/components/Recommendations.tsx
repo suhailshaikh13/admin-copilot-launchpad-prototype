@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import type { ComponentType } from 'react'
 import styled from 'styled-components'
-import { Button } from '@zendesk-ui/react-components'
+import { Button, Anchor } from '@zendesk-ui/react-components'
 import FlowFillIcon from '@zendesk-ui/assets/icons/20px/flow-fill.svg?react'
 import BookOpenFillIcon from '@zendesk-ui/assets/icons/20px/book-open-fill.svg?react'
 import MonitorFillIcon from '@zendesk-ui/assets/icons/20px/monitor-fill.svg?react'
@@ -29,29 +29,21 @@ const SectionTitle = styled.p`
   margin: 0;
 `
 
-const ViewAllLink = styled.a`
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 16px;
-  letter-spacing: -0.0004px;
-  color: #2f3130;
-  text-decoration: underline;
-  text-decoration-skip-ink: none;
-  cursor: pointer;
+const ViewAllLink = styled(Anchor)`
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: -0.154px;
 
-  &:hover {
+  && {
+    color: #2f3130;
+  }
+
+  &&:hover {
     color: #404241;
   }
 
-  &:active {
+  &&:active {
     color: #646864;
-  }
-
-  &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 1px white, 0 0 0 4px #406cc4;
-    border-radius: 8px;
   }
 `
 

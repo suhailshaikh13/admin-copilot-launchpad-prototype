@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import styled from 'styled-components'
-import ExternalLinkIcon from '@zendesk-ui/assets/icons/20px/external-link-fill.svg?react'
+import { Anchor } from '@zendesk-ui/react-components'
 
 const Container = styled.div`
   display: flex;
@@ -8,36 +8,10 @@ const Container = styled.div`
   gap: 20px;
 `
 
-const TitleLink = styled.a`
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+const TitleLink = styled(Anchor)`
   font-size: 18px;
-  font-weight: 400;
   line-height: 24px;
   letter-spacing: -0.45px;
-  color: #406cc4;
-  text-decoration: none;
-  cursor: pointer;
-
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-
-  &:hover {
-    color: #284173;
-  }
-
-  &:active {
-    color: #1f335a;
-  }
-
-  &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 1px white, 0 0 0 4px #406cc4;
-    border-radius: 8px;
-  }
 `
 
 const Card = styled.div`
@@ -96,55 +70,27 @@ const DateText = styled.p`
   white-space: nowrap;
 `
 
-const AnchorLink = styled.a`
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+const AnchorLink = styled(Anchor)`
   font-size: 12px;
-  font-weight: 400;
   line-height: 16px;
   letter-spacing: -0.0004px;
-  color: #406cc4;
-  text-decoration: none;
-  cursor: pointer;
-
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-
-  &:hover {
-    color: #284173;
-  }
-
-  &:active {
-    color: #1f335a;
-  }
-
-  &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 1px white, 0 0 0 4px #406cc4;
-    border-radius: 8px;
-  }
 `
 
-const ViewAllLink = styled(AnchorLink)`
-  color: #2f3130;
-  text-decoration: underline;
-  text-decoration-skip-ink: none;
+const ViewAllLink = styled(Anchor)`
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: -0.0004px;
 
-  &:hover {
+  && {
+    color: #2f3130;
+  }
+
+  &&:hover {
     color: #404241;
   }
 
-  &:active {
+  &&:active {
     color: #646864;
-  }
-
-  &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 1px white, 0 0 0 4px #406cc4;
-    border-radius: 8px;
   }
 `
 
@@ -163,9 +109,8 @@ export default function ZendeskUpdates() {
 
   return (
     <Container>
-      <TitleLink href="#">
+      <TitleLink href="#" isExternal isUnderlined={false}>
         Zendesk updates
-        <ExternalLinkIcon />
       </TitleLink>
 
       <Card>
@@ -181,17 +126,15 @@ export default function ZendeskUpdates() {
           {announcements.map((item, index) => (
             <ListItem key={index}>
               <DateText>{item.date}</DateText>
-              <AnchorLink href="#">
+              <AnchorLink href="#" isExternal isUnderlined={false}>
                 {item.text}
-                <ExternalLinkIcon />
               </AnchorLink>
             </ListItem>
           ))}
         </List>
 
-        <ViewAllLink href="#">
+        <ViewAllLink href="#" isExternal>
           View all announcements
-          <ExternalLinkIcon />
         </ViewAllLink>
       </Card>
     </Container>

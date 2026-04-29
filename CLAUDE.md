@@ -17,7 +17,6 @@ This is a Zendesk Admin Center home page prototype — a single-page React app w
 ### Stack
 - React 19 + TypeScript, Vite 8, styled-components 6
 - **Zendesk-UI** (`@zendesk-ui/navigation`, `@zendesk-ui/assets`) — private Zendesk packages for global navigation shell (Product, Header, Nav, Main)
-- **Garden** (`@zendeskgarden/react-*`) — Zendesk's open-source component library for UI primitives (buttons, forms, tooltips, avatars, typography, theming)
 - SVGs imported as React components via `vite-plugin-svgr` (`?react` suffix)
 
 ### Layout (src/App.tsx)
@@ -41,4 +40,4 @@ The copilot panel slides in/out via width animation on `PanelSlider`. The `$hasC
 ### Key conventions
 - All styling uses styled-components with transient props (`$propName`) to avoid DOM forwarding
 - Components are in `src/components/`, all flat (no nesting)
-- `ThemeProvider` from Garden wraps the app at the root (`src/main.tsx`)
+- `ThemeProvider` from Zendesk-UI wraps the app at the root (`src/main.tsx`)

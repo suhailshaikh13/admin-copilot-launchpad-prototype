@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { Anchor } from '@zendesk-ui/react-components'
 
 const Container = styled.div`
   display: flex;
@@ -40,26 +41,6 @@ const CardTitle = styled.p`
   margin: 0;
 `
 
-const CardTitleLink = styled.a`
-  color: #406cc4;
-  text-decoration: underline;
-  text-decoration-skip-ink: none;
-  cursor: pointer;
-
-  &:hover {
-    color: #284173;
-  }
-
-  &:active {
-    color: #1f335a;
-  }
-
-  &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 1px white, 0 0 0 4px #406cc4;
-    border-radius: 8px;
-  }
-`
 
 const StatGroup = styled.div`
   display: flex;
@@ -117,7 +98,7 @@ export default function Usage() {
       <SectionTitle>Usage</SectionTitle>
       <CardRow>
         <Card>
-          <CardTitle><CardTitleLink href="#">Storage usage</CardTitleLink></CardTitle>
+          <CardTitle><Anchor href="#">Storage usage</Anchor></CardTitle>
           <StatGroup>
             <StatLabel>Ticket data storage</StatLabel>
             <ProgressBar>
@@ -140,7 +121,7 @@ export default function Usage() {
 
         <Card>
           <CardTitle>
-            <CardTitleLink href="#">API usage</CardTitleLink>
+            <Anchor href="#">API usage</Anchor>
             {' '}
             <span style={{ color: '#2f3130', fontWeight: 400 }}>(last 7 days)</span>
           </CardTitle>
@@ -165,7 +146,7 @@ export default function Usage() {
         </Card>
 
         <Card>
-          <CardTitle><CardTitleLink href="#">Automated resolutions usage</CardTitleLink></CardTitle>
+          <CardTitle><Anchor href="#">Automated resolutions usage</Anchor></CardTitle>
           <StatValue>
             <strong>2 of 9000</strong>
           </StatValue>
