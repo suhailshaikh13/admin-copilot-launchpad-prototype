@@ -7,7 +7,7 @@ import XIcon from '@zendesk-ui/assets/icons/20px/x-fill.svg?react'
 import PlusStrokeIcon from '@zendeskgarden/svg-icons/src/16/plus-stroke.svg?react'
 import PaperPlaneIcon from '@zendesk-ui/assets/icons/20px/paper-plane-fill.svg?react'
 import CopilotIcon from '../assets/sparkle-fill.svg?react'
-import { InteractiveButton } from './InteractiveButton'
+import { QuickPrompt } from '@zendesk-ui/ai-assistant-chat'
 import Markdown from 'react-markdown'
 import FloatIn from './FloatIn'
 import AuroraGlow from './AuroraGlow'
@@ -894,15 +894,15 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
               <Heading>How can I help?</Heading>
             </Title>
             <Suggestions key={openCount} $exiting={suggestionsExiting}>
-              <InteractiveButton onClick={() => handleSuggestionClick('Route specific ticket to assignee')}>
+              <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Route specific ticket to assignee')}>
                 Route specific ticket to assignee
-              </InteractiveButton>
-              <InteractiveButton onClick={() => handleSuggestionClick('Create a view of pending status tickets')}>
+              </QuickPrompt>
+              <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Create a view of pending status tickets')}>
                 Create a view of pending status tickets
-              </InteractiveButton>
-              <InteractiveButton onClick={() => handleSuggestionClick('Explain intent')}>
+              </QuickPrompt>
+              <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Explain intent')}>
                 Explain intent
-              </InteractiveButton>
+              </QuickPrompt>
             </Suggestions>
           </Content>
 
@@ -942,12 +942,12 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
                 {!msg.isStreaming && msg.suggestions && msg.suggestions.length > 0 && i === messages.length - 1 && (
                   <InlineSuggestions $exiting={suggestionsExiting}>
                     {msg.suggestions.map((suggestion, j) => (
-                      <InteractiveButton
+                      <QuickPrompt showIcon={false}
                         key={j}
                         onClick={() => handleSuggestionClick(suggestion)}
                       >
                         {suggestion}
-                      </InteractiveButton>
+                      </QuickPrompt>
                     ))}
                   </InlineSuggestions>
                 )}

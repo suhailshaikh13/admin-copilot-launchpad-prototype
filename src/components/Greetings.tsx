@@ -2,7 +2,7 @@ import { useState } from 'react'
 import styled, { keyframes } from 'styled-components'
 import CopilotIcon from '../assets/sparkle-fill.svg?react'
 import { BasicButton } from './BasicButton'
-import { InteractiveButton } from './InteractiveButton'
+import { QuickPrompt } from '@zendesk-ui/ai-assistant-chat'
 
 const Container = styled.div`
   display: flex;
@@ -94,9 +94,9 @@ export default function Greetings({ onSuggestionClick }: GreetingsProps) {
       <FadeIn>
         <SuggestionRow>
           {initialSuggestions.map((label) => (
-            <InteractiveButton key={label} onClick={() => onSuggestionClick?.(label)}>
+            <QuickPrompt showIcon={false} key={label} onClick={() => onSuggestionClick?.(label)}>
               {label}
-            </InteractiveButton>
+            </QuickPrompt>
           ))}
           {!expanded && (
             <BasicButton onClick={() => setExpanded(true)}>Show more</BasicButton>
@@ -104,9 +104,9 @@ export default function Greetings({ onSuggestionClick }: GreetingsProps) {
           {expanded && (
             <FadeIn>
               {extraSuggestions.map((label) => (
-                <InteractiveButton key={label} onClick={() => onSuggestionClick?.(label)}>
+                <QuickPrompt showIcon={false} key={label} onClick={() => onSuggestionClick?.(label)}>
                   {label}
-                </InteractiveButton>
+                </QuickPrompt>
               ))}
             </FadeIn>
           )}

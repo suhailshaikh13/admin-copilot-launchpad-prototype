@@ -3,8 +3,7 @@ import styled from 'styled-components'
 import CheckLgStrokeIcon from '@zendeskgarden/svg-icons/src/16/check-lg-stroke.svg?react'
 import ArrowTrendingStrokeIcon from '@zendeskgarden/svg-icons/src/16/arrow-trending-stroke.svg?react'
 import AlertWarningStrokeIcon from '@zendeskgarden/svg-icons/src/16/alert-warning-stroke.svg?react'
-import CopilotIcon from '../assets/sparkle-fill.svg?react'
-import { InteractiveButton } from './InteractiveButton'
+import { QuickPrompt } from '@zendesk-ui/ai-assistant-chat'
 
 const Container = styled.div`
   display: flex;
@@ -98,12 +97,6 @@ const CardFooter = styled.div`
   min-height: 32px;
 `
 
-const ChipSparkle = styled(CopilotIcon)`
-  width: 12px;
-  height: 12px;
-  color: #7b61c2;
-`
-
 export default function LatestInsights() {
   return (
     <Container>
@@ -127,9 +120,9 @@ export default function LatestInsights() {
             </CardDescription>
           </div>
           <CardFooter>
-            <InteractiveButton size="small" icon={<ChipSparkle />}>
+            <QuickPrompt size="small">
               Show me more
-            </InteractiveButton>
+            </QuickPrompt>
           </CardFooter>
         </Card>
 
@@ -144,9 +137,9 @@ export default function LatestInsights() {
             </CardDescription>
           </div>
           <CardFooter>
-            <InteractiveButton size="small" icon={<ChipSparkle />}>
+            <QuickPrompt size="small">
               High volume topics today
-            </InteractiveButton>
+            </QuickPrompt>
           </CardFooter>
         </Card>
 
@@ -161,9 +154,9 @@ export default function LatestInsights() {
             </CardDescription>
           </div>
           <CardFooter>
-            <InteractiveButton size="small" icon={<ChipSparkle />}>
+            <QuickPrompt size="small">
               How to improve it
-            </InteractiveButton>
+            </QuickPrompt>
           </CardFooter>
         </Card>
       </CardGrid>
