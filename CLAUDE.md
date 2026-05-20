@@ -41,3 +41,6 @@ The copilot panel slides in/out via width animation on `PanelSlider`. The `$hasC
 - All styling uses styled-components with transient props (`$propName`) to avoid DOM forwarding
 - Components are in `src/components/`, all flat (no nesting)
 - `ThemeProvider` from Zendesk-UI wraps the app at the root (`src/main.tsx`)
+
+### Working practices
+- When starting a new worktree, always run a new dev server, using a new and unique port number. This is useful so the user can preview changes right away.
