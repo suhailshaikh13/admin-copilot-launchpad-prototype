@@ -1,9 +1,15 @@
 import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react'
 import styled, { keyframes } from 'styled-components'
-import { IconButton } from '@zendesk-ui/react-components'
-import HistoryIcon from '../assets/history.svg?react'
-import EditIcon from '../assets/edit.svg?react'
+import { IconButton, Menu, Item } from '@zendesk-ui/react-components'
+import BubblesStrokeIcon from '../assets/bubbles-stroke.svg?react'
+import ChevronLeftIcon from '../assets/chevron-left.svg?react'
+import ChevronDownIcon from '../assets/chevron-down.svg?react'
+import ChevronUpIcon from '../assets/chevron-up.svg?react'
+import NotePencilStrokeIcon from '../assets/note-pencil-stroke.svg?react'
+import ArrowDiagonalOutIcon from '../assets/arrow-diagonal-out.svg?react'
+import ArrowDiagonalInIcon from '../assets/arrow-diagonal-in.svg?react'
 import XIcon from '@zendesk-ui/assets/icons/20px/x-fill.svg?react'
+import DotsVerticalFillIcon from '@zendesk-ui/assets/icons/20px/dots-vertical-fill.svg?react'
 import PlusStrokeIcon from '@zendeskgarden/svg-icons/src/16/plus-stroke.svg?react'
 import PaperPlaneIcon from '@zendesk-ui/assets/icons/20px/paper-plane-fill.svg?react'
 import CopilotIcon from '../assets/sparkle-fill.svg?react'
@@ -31,33 +37,87 @@ interface SavedConversation {
 }
 
 const Panel = styled.div`
-  width: 360px;
-  min-width: 360px;
+  width: 100%;
+  min-width: 0;
   height: 100%;
   flex-shrink: 0;
   background: white;
   border-radius: 24px 24px 0 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: clip;
   position: relative;
 `
 
 const Header = styled.div`
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   height: 56px;
   box-sizing: border-box;
-  padding: 12px 8px 12px 20px;
+  padding: 12px;
   flex-shrink: 0;
-  gap: 4px;
+  gap: 12px;
   color: #706f6e;
+
+  svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+`
+
+const TitleGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+`
+
+const HeaderIcons = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`
+
+const SmallIcon = styled.span`
+  display: flex;
+  svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+`
+
+const FloatingTooltip = styled.span<{ $x: number; $y: number; $align?: 'center' | 'end' }>`
+  position: fixed;
+  top: ${({ $y }) => $y}px;
+  left: ${({ $x }) => $x}px;
+  transform: ${({ $align }) => $align === 'end' ? 'translateX(-100%)' : 'translateX(-50%)'};
+  background: #1f1f1f;
+  color: white;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 9999;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: ${({ $align }) => $align === 'end' ? 'auto' : '50%'};
+    right: ${({ $align }) => $align === 'end' ? '10px' : 'auto'};
+    transform: ${({ $align }) => $align === 'end' ? 'none' : 'translateX(-50%)'};
+    border: 5px solid transparent;
+    border-top: none;
+    border-bottom-color: #1f1f1f;
+  }
 `
 
 
 const ConversationTitle = styled.span`
-  flex: 1;
   font-size: 14px;
   font-weight: 600;
   line-height: 20px;
@@ -65,6 +125,7 @@ const ConversationTitle = styled.span`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 `
 
 const Content = styled.div`
@@ -76,6 +137,9 @@ const Content = styled.div`
   padding: 20px 20px 0;
   position: relative;
   overflow: hidden;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
 `
 
 const Title = styled.div`
@@ -171,6 +235,10 @@ const InputContainer = styled.div<{ $showPlus?: boolean; $disabled?: boolean; $g
   background: ${({ $disabled }) => ($disabled ? 'rgba(100, 104, 100, 0.08)' : 'white')};
   box-shadow: ${({ $disabled, $glow }) => ($disabled || !$glow ? 'none' : '0px 2px 8px 0px #c5afda, 0px 8px 20px 0px #e2dbed')};
   padding-left: ${({ $showPlus }) => ($showPlus ? '8px' : '20px')};
+  box-sizing: border-box;
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
   transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
   cursor: ${({ $disabled }) => ($disabled ? 'not-allowed' : 'text')};
 
@@ -282,10 +350,20 @@ const SendButton = styled.button<{ $disabled?: boolean }>`
 const MessagesContainer = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 0 20px 88px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+`
+
+const MessagesInner = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 0 20px 88px;
+  box-sizing: border-box;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
 `
 
 const ScrollSpacer = styled.div`
@@ -302,6 +380,8 @@ const HistoryContainer = styled.div`
   gap: 4px;
   box-sizing: border-box;
   width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
 `
 
 const HistorySectionHeader = styled.div`
@@ -312,15 +392,15 @@ const HistorySectionHeader = styled.div`
   padding: 12px 20px 4px 20px;
 `
 
-const HistoryItemButton = styled.button<{ $active?: boolean }>`
-  width: calc(100% - 40px);
-  margin: 0 20px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: none;
-  background: ${({ $active }) => ($active ? 'rgba(100, 104, 100, 0.16)' : 'transparent')};
-  cursor: pointer;
-  text-align: left;
+const HistoryItemActions = styled.div`
+  flex-shrink: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease-out;
+`
+
+const HistoryItemText = styled.span`
+  flex: 1;
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
@@ -328,12 +408,32 @@ const HistoryItemButton = styled.button<{ $active?: boolean }>`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: background-color 150ms ease-out;
+  min-width: 0;
+`
+
+const HistoryItemButton = styled.button<{ $active?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: calc(100% - 16px);
+  margin: 0 8px;
+  padding: 8px 4px 8px 12px;
+  border-radius: 8px;
+  border: none;
+  background: ${({ $active }) => ($active ? 'rgba(100, 104, 100, 0.16)' : 'transparent')};
+  cursor: pointer;
   box-sizing: border-box;
+  transition: background-color 150ms ease-out;
 
   &:hover {
     background: ${({ $active }) =>
       $active ? 'rgba(100, 104, 100, 0.16)' : 'rgba(100, 104, 100, 0.08)'};
+  }
+
+  &:hover ${HistoryItemActions},
+  &:focus-visible ${HistoryItemActions} {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   &:focus-visible {
@@ -494,9 +594,11 @@ interface CopilotPanelProps {
   onClose: () => void
   onNavigateToSetupGuide?: () => void
   showPlus?: boolean
+  isFullscreen?: boolean
+  onToggleFullscreen?: () => void
 }
 
-const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function CopilotPanel({ openCount, onClose, onNavigateToSetupGuide, showPlus = false }, ref) {
+const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function CopilotPanel({ openCount, onClose, onNavigateToSetupGuide, showPlus = false, isFullscreen = false, onToggleFullscreen }, ref) {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
@@ -504,6 +606,15 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   const [showHistory, setShowHistory] = useState(false)
   const [conversations, setConversations] = useState<SavedConversation[]>([])
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
+  const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number; align?: 'center' | 'end' } | null>(null)
+  const [titleMenuExpanded, setTitleMenuExpanded] = useState(false)
+
+  const showTooltip = (text: string, align: 'center' | 'end' = 'center') => (e: React.MouseEvent<HTMLElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = align === 'end' ? Math.round(rect.right) : Math.round(rect.left + rect.width / 2)
+    setTooltip({ text, x, y: Math.round(rect.bottom + 8), align })
+  }
+  const hideTooltip = () => setTooltip(null)
   const abortRef = useRef<AbortController | null>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const lastUserMessageRef = useRef<HTMLDivElement>(null)
@@ -512,6 +623,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   const pendingSendRef = useRef<string | null>(null)
   const spacerRef = useRef<HTMLDivElement>(null)
   const [spacerHeight, setSpacerHeight] = useState(0)
+
 
   const isConversation = messages.length > 0
   const conversationTitle = messages.find(m => m.role === 'user')?.content ?? ''
@@ -851,24 +963,54 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   return (
     <Panel>
       <Header>
-        {showHistory && (
-          <ConversationTitle>Conversations</ConversationTitle>
-        )}
-        {!showHistory && isConversation && (
-          <ConversationTitle>{conversationTitle}</ConversationTitle>
-        )}
-        {conversations.length > 0 && (
-          <IconButton size="small" aria-label="History" onClick={handleToggleHistory}>
-            <HistoryIcon />
+        <IconButton size="small" aria-label="Conversations" onClick={handleToggleHistory} onMouseEnter={showTooltip('Conversations')} onMouseLeave={hideTooltip}>
+          {showHistory ? <ChevronLeftIcon /> : <BubblesStrokeIcon />}
+        </IconButton>
+        <TitleGroup>
+          <ConversationTitle>
+            {showHistory ? 'Conversations' : conversationTitle}
+          </ConversationTitle>
+          {isConversation && !showHistory && (
+            <Menu
+              button={(buttonProps) => {
+                const { ref, ...rest } = buttonProps
+                return (
+                  <IconButton ref={ref as React.RefObject<HTMLButtonElement>} {...rest} size="small" aria-label="Conversation options">
+                    {titleMenuExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                  </IconButton>
+                )
+              }}
+              isExpanded={titleMenuExpanded}
+              onChange={({ isExpanded, value }) => {
+                if (isExpanded !== undefined) setTitleMenuExpanded(isExpanded)
+              }}
+              placement="bottom-start"
+              appendToNode={document.body}
+            >
+              <Item value="rename">Rename</Item>
+              <Item value="delete" type="danger">Delete</Item>
+            </Menu>
+          )}
+        </TitleGroup>
+        <HeaderIcons>
+          <IconButton size="small" aria-label="New conversation" onClick={handleNewConversation} onMouseEnter={showTooltip('New conversation')} onMouseLeave={hideTooltip}>
+            <NotePencilStrokeIcon />
           </IconButton>
-        )}
-        <IconButton size="small" aria-label="New conversation" onClick={handleNewConversation}>
-          <EditIcon />
-        </IconButton>
-        <IconButton size="small" aria-label="Close" onClick={onClose}>
-          <XIcon />
-        </IconButton>
+          <IconButton
+            size="small"
+            aria-label={isFullscreen ? 'Exit full screen' : 'View in full screen'}
+            onClick={() => onToggleFullscreen?.()}
+            onMouseEnter={showTooltip(isFullscreen ? 'Exit full screen' : 'View in full screen')}
+            onMouseLeave={hideTooltip}
+          >
+            <SmallIcon>{isFullscreen ? <ArrowDiagonalInIcon /> : <ArrowDiagonalOutIcon />}</SmallIcon>
+          </IconButton>
+          <IconButton size="small" aria-label="Close admin copilot" onClick={onClose} onMouseEnter={showTooltip('Close admin copilot', 'end')} onMouseLeave={hideTooltip}>
+            <XIcon />
+          </IconButton>
+        </HeaderIcons>
       </Header>
+      {tooltip && <FloatingTooltip $x={tooltip.x} $y={tooltip.y} $align={tooltip.align}>{tooltip.text}</FloatingTooltip>}
 
       {showHistory && (
         <HistoryContainer>
@@ -879,7 +1021,12 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
               $active={activeConversationId === conv.id}
               onClick={() => handleHistoryItemClick(conv.id)}
             >
-              {conv.title}
+              <HistoryItemText>{conv.title}</HistoryItemText>
+              <HistoryItemActions>
+                <IconButton size="small" aria-label="More options" onClick={(e) => e.stopPropagation()}>
+                  <DotsVerticalFillIcon />
+                </IconButton>
+              </HistoryItemActions>
             </HistoryItemButton>
           ))}
         </HistoryContainer>
@@ -919,6 +1066,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
 
       {!showHistory && isConversation && (
         <MessagesContainer ref={messagesContainerRef}>
+          <MessagesInner>
           {messages.map((msg, i) => {
             if (msg.role === 'user') {
               const isLastUser = i === messages.findLastIndex(m => m.role === 'user')
@@ -955,6 +1103,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
             )
           })}
           <ScrollSpacer ref={spacerRef} style={{ minHeight: spacerHeight }} />
+          </MessagesInner>
         </MessagesContainer>
       )}
 

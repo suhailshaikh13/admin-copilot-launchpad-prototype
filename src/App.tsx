@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Product, Header, Nav, Main, ProfileMenu } from '@zendesk-ui/navigation'
 import { Tooltip } from '@zendesk-ui/react-components'
 import HomeFillIcon from '@zendesk-ui/assets/icons/20px/home-fill.svg?react'
@@ -90,38 +90,41 @@ const StyledMain = styled(Main)`
   }
 `
 
-const MainWrapper = styled.div<{ $hasCopilot?: boolean }>`
+const MainWrapper = styled.div`
   display: flex;
   flex: 1;
-  gap: ${({ $hasCopilot }) => ($hasCopilot ? '8px' : '0px')};
   min-height: 0;
   height: 100%;
-  padding-right: ${({ $hasCopilot }) => ($hasCopilot ? '8px' : '0')};
-  transition: padding-right 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-              gap 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 `
 
-const PanelSlider = styled.div<{ $open: boolean }>`
-  width: ${({ $open }) => ($open ? '360px' : '0px')};
+const PanelSlider = styled.div<{ $open: boolean; $fullscreen?: boolean }>`
+  width: ${({ $open, $fullscreen }) => !$open ? '0px' : $fullscreen ? 'calc(100% - 8px)' : '360px'};
+  flex: none;
+  margin-left: ${({ $open, $fullscreen }) => $open && !$fullscreen ? '8px' : '0'};
+  margin-right: ${({ $open }) => $open ? '8px' : '0'};
   opacity: ${({ $open }) => ($open ? 1 : 0)};
   pointer-events: ${({ $open }) => ($open ? 'auto' : 'none')};
-  flex-shrink: 0;
   height: 100%;
   overflow: hidden;
   border-radius: 24px 24px 0 0;
   box-shadow: ${({ $open }) => ($open ? '0px 0px 4px 0px rgba(10, 13, 14, 0.16)' : 'none')};
-  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1),
               opacity 0.2s ease-out 0.05s,
               box-shadow 0.2s ease-out 0.05s;
 `
 
-const HomeContentWrapper = styled.div<{ $roundedRight?: boolean }>`
-  flex: 1;
+const HomeContentWrapper = styled.div<{ $roundedRight?: boolean; $hidden?: boolean }>`
+  flex: 1 1 0px;
   min-width: 0;
+  overflow: hidden;
+  opacity: ${({ $hidden }) => $hidden ? 0 : 1};
   background: white;
   border-radius: ${({ $roundedRight }) => ($roundedRight ? '24px 24px 0 0' : '24px 0 0 0')};
   box-shadow: 0px 0px 4px 0px rgba(10, 13, 14, 0.16);
-  transition: border-radius 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity ${({ $hidden }) => $hidden ? '0.3s cubic-bezier(0.4, 0, 0.2, 1)' : '0.25s ease-out 0.1s'},
+              border-radius 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -161,10 +164,12 @@ const products = [
 
 function App() {
   const [copilotOpen, setCopilotOpen] = useState(false)
+  const [copilotFullscreen, setCopilotFullscreen] = useState(false)
   const [copilotOpenCount, setCopilotOpenCount] = useState(0)
   const [hovering, setHovering] = useState(false)
   const [currentPage, setCurrentPage] = useState<'home' | 'setup-guide'>('home')
   const copilotRef = useRef<CopilotPanelHandle>(null)
+
 
   const handleSuggestionClick = useCallback((text: string) => {
     setCopilotOpen(true)
@@ -195,7 +200,6 @@ function App() {
         <Header.Search placeholder="Search admin center">
           <SearchSuggestions />
         </Header.Search>
-        <Header.Separator />
         <Tooltip content="Copilot" placement="bottom" zIndex={100} appendToNode={document.body}>
           <CopilotToggle
             $isOpen={copilotOpen}
@@ -203,6 +207,7 @@ function App() {
             onClick={() => {
               setCopilotOpen(prev => {
                 if (!prev) setCopilotOpenCount(c => c + 1)
+                if (prev) setCopilotFullscreen(false)
                 return !prev
               })
               setHovering(false)
@@ -233,8 +238,8 @@ function App() {
         <Nav.Item icon={<SquareGridCircleFillIcon />}>Apps and integrations</Nav.Item>
       </Nav>
       <StyledMain>
-        <MainWrapper $hasCopilot={copilotOpen}>
-          <HomeContentWrapper $roundedRight={copilotOpen}>
+        <MainWrapper>
+          <HomeContentWrapper $roundedRight={copilotOpen} $hidden={copilotFullscreen}>
             <HomeContent>
               <HomeInner>
                 {currentPage === 'home' && (
@@ -253,12 +258,14 @@ function App() {
               </HomeInner>
             </HomeContent>
           </HomeContentWrapper>
-          <PanelSlider $open={copilotOpen}>
+          <PanelSlider $open={copilotOpen} $fullscreen={copilotFullscreen}>
             <CopilotPanel
               ref={copilotRef}
               openCount={copilotOpenCount}
-              onClose={() => setCopilotOpen(false)}
+              onClose={() => { setCopilotOpen(false); setCopilotFullscreen(false) }}
               onNavigateToSetupGuide={handleNavigateToSetupGuide}
+              isFullscreen={copilotFullscreen}
+              onToggleFullscreen={() => setCopilotFullscreen(f => !f)}
             />
           </PanelSlider>
         </MainWrapper>
