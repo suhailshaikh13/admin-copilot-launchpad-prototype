@@ -109,7 +109,7 @@ export default function ZendeskUpdates() {
 
   return (
     <Container>
-      <TitleLink href="#" isExternal isUnderlined={false}>
+      <TitleLink href="#" isExternal isUnderlined={false} externalIconLabel="(opens in new tab)">
         Zendesk updates
       </TitleLink>
 
@@ -126,14 +126,14 @@ export default function ZendeskUpdates() {
           {announcements.map((item, index) => (
             <ListItem key={index}>
               <DateText>{item.date}</DateText>
-              <AnchorLink href="#" isExternal isUnderlined={false}>
+              <AnchorLink href="#" isExternal isUnderlined={false} externalIconLabel="(opens in new tab)">
                 {item.text}
               </AnchorLink>
             </ListItem>
           ))}
         </List>
 
-        <ViewAllLink href="#" isExternal>
+        <ViewAllLink href="#" isExternal externalIconLabel="(opens in new tab)">
           View all announcements
         </ViewAllLink>
       </Card>
