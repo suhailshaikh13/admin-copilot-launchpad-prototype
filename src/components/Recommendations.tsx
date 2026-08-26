@@ -244,7 +244,6 @@ const recommendations: RecommendationData[] = [
     tags: [
       { label: 'Procedures', bg: '#e2edd4', color: '#344914', Icon: BookOpenFillIcon },
       { label: 'Optimization', bg: '#F6F5F4', color: '#313131' },
-      { label: 'Previously declined', bg: '#F6F5F4', color: '#313131' },
     ],
   },
   {

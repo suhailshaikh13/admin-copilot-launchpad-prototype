@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { Product, Header, Nav, Main, ProfileMenu } from '@zendesk-ui/navigation'
 import { Tooltip } from '@zendesk-ui/react-components'
 import HomeFillIcon from '@zendesk-ui/assets/icons/20px/home-fill.svg?react'
@@ -9,6 +9,8 @@ import SparkleFillIcon from '@zendesk-ui/assets/icons/20px/sparkle-fill.svg?reac
 import MonitorFillIcon from '@zendesk-ui/assets/icons/20px/monitor-fill.svg?react'
 import FlowFillIcon from '@zendesk-ui/assets/icons/20px/flow-fill.svg?react'
 import SquareGridCircleFillIcon from '@zendesk-ui/assets/icons/20px/square-grid-circle-fill.svg?react'
+import LaptopPhoneFillIcon from '@zendesk-ui/assets/icons/20px/laptop-phone-fill.svg?react'
+import RocketFillIcon from '@zendesk-ui/assets/icons/20px/rocket-fill.svg?react'
 import RescueRingFillIcon from '@zendesk-ui/assets/icons/20px/rescue-ring-fill.svg?react'
 import CopilotIcon from './assets/sparkle-fill.svg?react'
 import ProductSupportIcon from '@zendesk-ui/assets/icons/20px/product-support.svg?react'
@@ -182,6 +184,7 @@ function App() {
   const handleNavigateToSetupGuide = useCallback(() => {
     setCurrentPage('setup-guide')
     setCopilotOpen(false)
+    setCopilotFullscreen(false)
   }, [])
 
   return (
@@ -236,6 +239,9 @@ function App() {
         <Nav.Item icon={<MonitorFillIcon />}>Workspaces</Nav.Item>
         <Nav.Item icon={<FlowFillIcon />}>Objects and rules</Nav.Item>
         <Nav.Item icon={<SquareGridCircleFillIcon />}>Apps and integrations</Nav.Item>
+        <Nav.Item icon={<LaptopPhoneFillIcon />}>IT assets</Nav.Item>
+        <Nav.Separator />
+        <Nav.Item icon={<RocketFillIcon />}>Launchpad</Nav.Item>
       </Nav>
       <StyledMain>
         <MainWrapper>

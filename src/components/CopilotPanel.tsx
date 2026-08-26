@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react'
 import styled, { keyframes } from 'styled-components'
-import { IconButton, Menu, Item } from '@zendesk-ui/react-components'
+import { IconButton } from '@zendesk-ui/react-components'
 import BubblesStrokeIcon from '../assets/bubbles-stroke.svg?react'
 import ChevronLeftIcon from '../assets/chevron-left.svg?react'
 import ChevronDownIcon from '../assets/chevron-down.svg?react'
@@ -374,7 +374,7 @@ const HistoryContainer = styled.div`
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0;
+  padding: 0 20px 20px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -388,8 +388,8 @@ const HistorySectionHeader = styled.div`
   font-size: 12px;
   font-weight: 400;
   line-height: 16px;
-  color: #68737d;
-  padding: 12px 20px 4px 20px;
+  color: #646864;
+  padding: 20px 0 8px;
 `
 
 const HistoryItemActions = styled.div`
@@ -411,15 +411,16 @@ const HistoryItemText = styled.span`
   min-width: 0;
 `
 
-const HistoryItemButton = styled.button<{ $active?: boolean }>`
+const HistoryItemButton = styled.div<{ $active?: boolean }>`
   display: flex;
   align-items: center;
   gap: 4px;
-  width: calc(100% - 16px);
-  margin: 0 8px;
+  width: 100%;
+  max-height: 36px;
   padding: 8px 4px 8px 12px;
-  border-radius: 8px;
+  border-radius: 4px;
   border: none;
+  text-align: left;
   background: ${({ $active }) => ($active ? 'rgba(100, 104, 100, 0.16)' : 'transparent')};
   cursor: pointer;
   box-sizing: border-box;
@@ -440,6 +441,78 @@ const HistoryItemButton = styled.button<{ $active?: boolean }>`
     outline: 2px solid #8d59b1;
     outline-offset: -2px;
   }
+`
+
+const HistoryRenameInput = styled.input`
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: #2f3130;
+  border: 1px solid #8d59b1;
+  border-radius: 4px;
+  padding: 0 4px;
+  outline: none;
+  background: white;
+  font-family: inherit;
+`
+
+const ContextMenu = styled.div`
+  position: fixed;
+  background: white;
+  border: 1px solid #dcdcda;
+  border-radius: 8px;
+  box-shadow: 0px 8px 20px 0px rgba(12, 12, 13, 0.16);
+  padding: 4px;
+  min-width: 148px;
+  z-index: 9999;
+  overflow: hidden;
+`
+
+const ContextMenuItem = styled.button<{ $danger?: boolean }>`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-left: 3px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: ${({ $danger }) => ($danger ? '#cc3340' : '#2f3130')};
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  box-sizing: border-box;
+
+  &:hover {
+    background: rgba(31, 115, 183, 0.08);
+    border-left-color: #1f73b7;
+  }
+  &:focus-visible { outline: 2px solid #8d59b1; outline-offset: -2px; }
+`
+
+const DotsButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  color: #2f3130;
+  flex-shrink: 0;
+
+  &:hover { background: rgba(100, 104, 100, 0.08); }
+  &:focus-visible { outline: 2px solid #8d59b1; outline-offset: -2px; }
+
+  svg { width: 16px; height: 16px; }
 `
 
 const UserBubble = styled.div`
@@ -585,6 +658,29 @@ const StopIcon = () => (
   </svg>
 )
 
+function groupConversationsByDate(conversations: SavedConversation[]): { label: string; items: SavedConversation[] }[] {
+  const startOfToday = new Date(new Date().toDateString()).getTime()
+  const startOfYesterday = startOfToday - 86400000
+  const startOf7DaysAgo = startOfToday - 6 * 86400000
+  const startOf30DaysAgo = startOfToday - 29 * 86400000
+
+  const groups = [
+    { label: 'Today', cutoff: startOfToday, items: [] as SavedConversation[] },
+    { label: 'Yesterday', cutoff: startOfYesterday, items: [] as SavedConversation[] },
+    { label: 'Last 7 days', cutoff: startOf7DaysAgo, items: [] as SavedConversation[] },
+    { label: 'Last 30 days', cutoff: startOf30DaysAgo, items: [] as SavedConversation[] },
+    { label: 'Older', cutoff: 0, items: [] as SavedConversation[] },
+  ]
+
+  for (const conv of conversations) {
+    const group = groups.find(g => conv.savedAt >= g.cutoff)
+    if (group) group.items.push(conv)
+  }
+
+  return groups.filter(g => g.items.length > 0)
+}
+
+
 export interface CopilotPanelHandle {
   sendMessage: (text: string) => void
 }
@@ -607,7 +703,10 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   const [conversations, setConversations] = useState<SavedConversation[]>([])
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
   const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number; align?: 'center' | 'end' } | null>(null)
-  const [titleMenuExpanded, setTitleMenuExpanded] = useState(false)
+  const [convMenu, setConvMenu] = useState<{ id: string; x: number; y: number } | null>(null)
+  const [renamingConvId, setRenamingConvId] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
+  const convMenuRef = useRef<HTMLDivElement>(null)
 
   const showTooltip = (text: string, align: 'center' | 'end' = 'center') => (e: React.MouseEvent<HTMLElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
@@ -616,6 +715,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   }
   const hideTooltip = () => setTooltip(null)
   const abortRef = useRef<AbortController | null>(null)
+  const cannedIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const lastUserMessageRef = useRef<HTMLDivElement>(null)
   const prevMessagesLenRef = useRef(0)
@@ -815,6 +915,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
           setIsGenerating(false)
         }
       }, 15)
+      cannedIntervalRef.current = interval
       return
     }
 
@@ -885,6 +986,10 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   const handleStop = useCallback(() => {
     abortRef.current?.abort()
     abortRef.current = null
+    if (cannedIntervalRef.current) {
+      clearInterval(cannedIntervalRef.current)
+      cannedIntervalRef.current = null
+    }
     setMessages(prev => {
       const updated = [...prev]
       const last = updated[updated.length - 1]
@@ -899,6 +1004,10 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   const handleNewConversation = useCallback(() => {
     abortRef.current?.abort()
     abortRef.current = null
+    if (cannedIntervalRef.current) {
+      clearInterval(cannedIntervalRef.current)
+      cannedIntervalRef.current = null
+    }
 
     // Save current conversation before resetting
     saveCurrentConversation()
@@ -928,8 +1037,11 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   }, [])
 
   const handleHistoryItemClick = useCallback((id: string) => {
-    // Don't reload if already viewing this conversation
-    if (id === activeConversationId) return
+    // If clicking the already-active conversation, just close history
+    if (id === activeConversationId) {
+      setShowHistory(false)
+      return
+    }
 
     // Abort any in-flight generation
     abortRef.current?.abort()
@@ -951,6 +1063,34 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   }, [activeConversationId, conversations, saveCurrentConversation])
 
 
+  useEffect(() => {
+    if (!convMenu) return
+    const handler = (e: MouseEvent) => {
+      if (convMenuRef.current && !convMenuRef.current.contains(e.target as Node)) {
+        setConvMenu(null)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [convMenu])
+
+  const handleDotsClick = useCallback((e: React.MouseEvent<HTMLElement>, convId: string) => {
+    e.stopPropagation()
+    const rect = e.currentTarget.getBoundingClientRect()
+    setConvMenu(prev => prev?.id === convId ? null : { id: convId, x: rect.right, y: rect.bottom + 4 })
+  }, [])
+
+  const commitRename = useCallback(() => {
+    if (!renamingConvId) return
+    const trimmed = renameValue.trim()
+    if (trimmed) {
+      setConversations(prev =>
+        prev.map(c => c.id === renamingConvId ? { ...c, title: trimmed } : c)
+      )
+    }
+    setRenamingConvId(null)
+  }, [renamingConvId, renameValue])
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -970,26 +1110,14 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
           <ConversationTitle>
             {showHistory ? 'Conversations' : conversationTitle}
           </ConversationTitle>
-          {isConversation && !showHistory && (
-            <Menu
-              button={(buttonProps) => {
-                const { ref, ...rest } = buttonProps
-                return (
-                  <IconButton ref={ref as React.RefObject<HTMLButtonElement>} {...rest} size="small" aria-label="Conversation options">
-                    {titleMenuExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                  </IconButton>
-                )
-              }}
-              isExpanded={titleMenuExpanded}
-              onChange={({ isExpanded, value }) => {
-                if (isExpanded !== undefined) setTitleMenuExpanded(isExpanded)
-              }}
-              placement="bottom-start"
-              appendToNode={document.body}
+          {isConversation && !showHistory && activeConversationId && (
+            <IconButton
+              size="small"
+              aria-label="Conversation options"
+              onClick={(e) => handleDotsClick(e, activeConversationId)}
             >
-              <Item value="rename">Rename</Item>
-              <Item value="delete" type="danger">Delete</Item>
-            </Menu>
+              {convMenu?.id === activeConversationId ? <ChevronUpIcon /> : <ChevronDownIcon />}
+            </IconButton>
           )}
         </TitleGroup>
         <HeaderIcons>
@@ -1014,20 +1142,41 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
 
       {showHistory && (
         <HistoryContainer>
-          <HistorySectionHeader>Today</HistorySectionHeader>
-          {conversations.map(conv => (
-            <HistoryItemButton
-              key={conv.id}
-              $active={activeConversationId === conv.id}
-              onClick={() => handleHistoryItemClick(conv.id)}
-            >
-              <HistoryItemText>{conv.title}</HistoryItemText>
-              <HistoryItemActions>
-                <IconButton size="small" aria-label="More options" onClick={(e) => e.stopPropagation()}>
-                  <DotsVerticalFillIcon />
-                </IconButton>
-              </HistoryItemActions>
-            </HistoryItemButton>
+          {groupConversationsByDate(conversations).map(group => (
+            <React.Fragment key={group.label}>
+              <HistorySectionHeader>{group.label}</HistorySectionHeader>
+              {group.items.map(conv => (
+                <HistoryItemButton
+                  key={conv.id}
+                  role="button"
+                  tabIndex={0}
+                  $active={activeConversationId === conv.id}
+                  onClick={() => { if (renamingConvId !== conv.id) handleHistoryItemClick(conv.id) }}
+                  onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && renamingConvId !== conv.id) handleHistoryItemClick(conv.id) }}
+                >
+                  {renamingConvId === conv.id ? (
+                    <HistoryRenameInput
+                      autoFocus
+                      value={renameValue}
+                      onChange={e => setRenameValue(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') commitRename()
+                        if (e.key === 'Escape') setRenamingConvId(null)
+                      }}
+                      onBlur={commitRename}
+                      onClick={e => e.stopPropagation()}
+                    />
+                  ) : (
+                    <HistoryItemText>{conv.title}</HistoryItemText>
+                  )}
+                  <HistoryItemActions>
+                    <DotsButton aria-label="More options" onClick={(e) => handleDotsClick(e, conv.id)}>
+                      <DotsVerticalFillIcon />
+                    </DotsButton>
+                  </HistoryItemActions>
+                </HistoryItemButton>
+              ))}
+            </React.Fragment>
           ))}
         </HistoryContainer>
       )}
@@ -1083,8 +1232,8 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
               <React.Fragment key={i}>
                 <AssistantMessage>
                   {msg.content && <Markdown>{msg.content}</Markdown>}
-                  {msg.isError && onNavigateToSetupGuide && (
-                    <CopilotErrorMessage onViewSetupGuide={onNavigateToSetupGuide} />
+                  {msg.isError && (
+                    <CopilotErrorMessage onViewSetupGuide={() => onNavigateToSetupGuide?.()} />
                   )}
                 </AssistantMessage>
                 {!msg.isStreaming && msg.suggestions && msg.suggestions.length > 0 && i === messages.length - 1 && (
@@ -1138,6 +1287,15 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
             )}
           </InputContainer>
         </Footer>
+      )}
+      {convMenu && (
+        <ContextMenu
+          ref={convMenuRef}
+          style={{ top: convMenu.y, left: convMenu.x, transform: 'translateX(-100%)' }}
+        >
+          <ContextMenuItem onClick={() => setConvMenu(null)}>Rename</ContextMenuItem>
+          <ContextMenuItem $danger onClick={() => setConvMenu(null)}>Delete</ContextMenuItem>
+        </ContextMenu>
       )}
     </Panel>
   )
