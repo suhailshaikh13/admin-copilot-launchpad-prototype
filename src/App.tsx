@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Product, Header, Nav, Main, ProfileMenu } from '@zendesk-ui/navigation'
 import { Tooltip } from '@zendesk-ui/react-components'
 import HomeFillIcon from '@zendesk-ui/assets/icons/20px/home-fill.svg?react'
@@ -27,6 +27,8 @@ import ProductAdminCenterIcon from '@zendesk-ui/assets/icons/20px/product-admin-
 import Greetings from './components/Greetings'
 import LatestInsights from './components/LatestInsights'
 import Recommendations from './components/Recommendations'
+import RecommendationDrawer from './components/RecommendationDrawer'
+import { recommendations } from './components/recommendationsData'
 import Usage from './components/Usage'
 import ZendeskUpdates from './components/ZendeskUpdates'
 import FeatureUsage from './components/FeatureUsage'
@@ -117,6 +119,22 @@ const PanelSlider = styled.div<{ $open: boolean; $fullscreen?: boolean }>`
               box-shadow 0.2s ease-out 0.05s;
 `
 
+const DrawerSlider = styled.div<{ $open: boolean }>`
+  width: ${({ $open }) => ($open ? '404px' : '0px')};
+  padding: ${({ $open }) => ($open ? '12px' : '0')};
+  flex: none;
+  position: sticky;
+  top: 0;
+  height: 100%;
+  overflow: hidden;
+  opacity: ${({ $open }) => ($open ? 1 : 0)};
+  pointer-events: ${({ $open }) => ($open ? 'auto' : 'none')};
+  box-sizing: border-box;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.2s ease-out 0.05s;
+`
+
 const HomeContentWrapper = styled.div<{ $roundedRight?: boolean; $hidden?: boolean }>`
   flex: 1 1 0px;
   min-width: 0;
@@ -128,18 +146,28 @@ const HomeContentWrapper = styled.div<{ $roundedRight?: boolean; $hidden?: boole
   transition: opacity ${({ $hidden }) => $hidden ? '0.3s cubic-bezier(0.4, 0, 0.2, 1)' : '0.25s ease-out 0.1s'},
               border-radius 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   min-height: 0;
+`
+
+const ScrollArea = styled.div`
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: row;
 `
 
 const HomeContent = styled.div`
   padding: 40px;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 40px;
   flex: 1;
+  min-width: 0;
 `
 
 const HomeInner = styled.div`
@@ -171,12 +199,59 @@ function App() {
   const [hovering, setHovering] = useState(false)
   const [currentPage, setCurrentPage] = useState<'home' | 'setup-guide'>('home')
   const copilotRef = useRef<CopilotPanelHandle>(null)
+  const [activeRecommendation, setActiveRecommendation] = useState<number | null>(null)
+  const [drawerRec, setDrawerRec] = useState<number | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const drawerVisible = drawerOpen && drawerRec !== null
+
+  // Any close path (X, Skip, copilot, setup guide) returns cards to default state
+  useEffect(() => {
+    if (!drawerOpen) setActiveRecommendation(null)
+  }, [drawerOpen])
+
+  const closeDrawer = useCallback(() => {
+    setDrawerOpen(false)
+    setActiveRecommendation(null)
+  }, [])
+
+  const handleCardClick = useCallback((index: number) => {
+    setActiveRecommendation(prev => {
+      if (prev === index) {
+        setDrawerOpen(false)
+        setCopilotOpen(false)
+        setCopilotFullscreen(false)
+        return null
+      }
+      setDrawerRec(index)
+      setDrawerOpen(true)
+      setCopilotOpen(false)
+      setCopilotFullscreen(false)
+      return index
+    })
+  }, [])
+
+  const handleDetailsClick = useCallback((index: number) => {
+    setActiveRecommendation(prev => {
+      if (prev === index) {
+        setDrawerOpen(false)
+        setCopilotOpen(false)
+        setCopilotFullscreen(false)
+        return null
+      }
+      setDrawerRec(index)
+      setDrawerOpen(true)
+      setCopilotOpen(false)
+      setCopilotFullscreen(false)
+      return index
+    })
+  }, [])
 
 
   const handleSuggestionClick = useCallback((text: string) => {
     setCopilotOpen(true)
     setCopilotOpenCount(c => c + 1)
     setHovering(false)
+    setDrawerOpen(false)
     // Panel is always mounted, so ref is available immediately
     copilotRef.current?.sendMessage(text)
   }, [])
@@ -185,6 +260,7 @@ function App() {
     setCurrentPage('setup-guide')
     setCopilotOpen(false)
     setCopilotFullscreen(false)
+    setDrawerOpen(false)
   }, [])
 
   return (
@@ -214,6 +290,7 @@ function App() {
                 return !prev
               })
               setHovering(false)
+              setDrawerOpen(false)
             }}
             onMouseEnter={() => setHovering(true)}
             onMouseLeave={() => setHovering(false)}
@@ -246,23 +323,38 @@ function App() {
       <StyledMain>
         <MainWrapper>
           <HomeContentWrapper $roundedRight={copilotOpen} $hidden={copilotFullscreen}>
-            <HomeContent>
-              <HomeInner>
-                {currentPage === 'home' && (
-                  <>
-                    <Greetings onSuggestionClick={handleSuggestionClick} />
-                    <LatestInsights />
-                    <Recommendations />
-                    <Usage />
-                    <ZendeskUpdates />
-                    <FeatureUsage />
-                  </>
+            <ScrollArea>
+              <HomeContent>
+                <HomeInner>
+                  {currentPage === 'home' && (
+                    <>
+                      <Greetings onSuggestionClick={handleSuggestionClick} />
+                      <LatestInsights />
+                      <Recommendations
+                        activeIndex={activeRecommendation}
+                        onCardClick={handleCardClick}
+                        onDetailsClick={handleDetailsClick}
+                      />
+                      <Usage />
+                      <ZendeskUpdates />
+                      <FeatureUsage />
+                    </>
+                  )}
+                  {currentPage === 'setup-guide' && (
+                    <SetupGuide onBack={() => setCurrentPage('home')} />
+                  )}
+                </HomeInner>
+              </HomeContent>
+              <DrawerSlider $open={drawerVisible}>
+                {drawerRec !== null && (
+                  <RecommendationDrawer
+                    recommendation={recommendations[drawerRec]}
+                    onClose={closeDrawer}
+                    onAskCopilot={handleSuggestionClick}
+                  />
                 )}
-                {currentPage === 'setup-guide' && (
-                  <SetupGuide onBack={() => setCurrentPage('home')} />
-                )}
-              </HomeInner>
-            </HomeContent>
+              </DrawerSlider>
+            </ScrollArea>
           </HomeContentWrapper>
           <PanelSlider $open={copilotOpen} $fullscreen={copilotFullscreen}>
             <CopilotPanel

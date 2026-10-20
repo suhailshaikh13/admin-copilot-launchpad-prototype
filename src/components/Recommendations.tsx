@@ -1,12 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import type { ComponentType } from 'react'
 import styled from 'styled-components'
 import { Button, Anchor } from '@zendesk-ui/react-components'
-import FlowFillIcon from '@zendesk-ui/assets/icons/20px/flow-fill.svg?react'
-import BookOpenFillIcon from '@zendesk-ui/assets/icons/20px/book-open-fill.svg?react'
-import MonitorFillIcon from '@zendesk-ui/assets/icons/20px/monitor-fill.svg?react'
 import DotsVerticalIcon from '@zendesk-ui/assets/icons/20px/dots-vertical-fill.svg?react'
+import { recommendations } from './recommendationsData'
 
 const Container = styled.div`
   display: flex;
@@ -220,53 +217,17 @@ const MenuDivider = styled.div`
   margin: 4px 0;
 `
 
-interface RecommendationData {
-  title: string
-  description: string
-  reviewLabel: string
-  tags: { label: string; bg: string; color: string; Icon?: ComponentType }[]
+interface RecommendationsProps {
+  activeIndex: number | null
+  onCardClick: (index: number) => void
+  onDetailsClick: (index: number) => void
 }
 
-const recommendations: RecommendationData[] = [
-  {
-    title: 'Route specific tickets to assignee: EMEA Group',
-    description: 'Resolution time could improve by 2h 45min',
-    reviewLabel: 'Review trigger',
-    tags: [
-      { label: 'Triggers', bg: '#e4e8f6', color: '#304073', Icon: FlowFillIcon },
-      { label: 'Optimization', bg: '#F6F5F4', color: '#313131' },
-    ],
-  },
-  {
-    title: 'Change ticket status for intent: Unsolicited marketing',
-    description: 'Resolution time could improve by 1h 05min',
-    reviewLabel: 'Review procedure',
-    tags: [
-      { label: 'Procedures', bg: '#e2edd4', color: '#344914', Icon: BookOpenFillIcon },
-      { label: 'Optimization', bg: '#F6F5F4', color: '#313131' },
-    ],
-  },
-  {
-    title: 'Turn on suggested macros',
-    description: 'Resolution time could improve by 50min',
-    reviewLabel: 'Review macros',
-    tags: [
-      { label: 'Macros', bg: '#dceeed', color: '#034a4b', Icon: MonitorFillIcon },
-      { label: 'Maintenance', bg: '#F6F5F4', color: '#313131' },
-    ],
-  },
-]
-
-export default function Recommendations() {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null)
+export default function Recommendations({ activeIndex, onCardClick, onDetailsClick }: RecommendationsProps) {
   const [menuIndex, setMenuIndex] = useState<number | null>(null)
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 })
   const menuRef = useRef<HTMLDivElement>(null)
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([])
-
-  const handleClick = (index: number) => {
-    setActiveIndex(prev => (prev === index ? null : index))
-  }
 
   const toggleMenu = (index: number) => {
     if (menuIndex === index) {
@@ -306,7 +267,7 @@ export default function Recommendations() {
             <RecommendationItem
               $active={activeIndex === index}
               tabIndex={0}
-              onClick={() => handleClick(index)}
+              onClick={() => onCardClick(index)}
             >
               {activeIndex === index && <AccentBar />}
               <Content>
@@ -324,7 +285,7 @@ export default function Recommendations() {
                 </TagRow>
               </Content>
               <ButtonGroup>
-                <Button isBasic isPill onClick={(e) => { e.stopPropagation(); handleClick(index) }}>
+                <Button isBasic isPill onClick={(e) => { e.stopPropagation(); onDetailsClick(index) }}>
                   {activeIndex === index ? 'Close details' : 'View details'}
                 </Button>
                 <OverflowButton
