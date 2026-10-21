@@ -193,9 +193,9 @@ const products = [
 ]
 
 function App() {
-  const [copilotOpen, setCopilotOpen] = useState(false)
+  const [copilotOpen, setCopilotOpen] = useState(true)
   const [copilotFullscreen, setCopilotFullscreen] = useState(false)
-  const [copilotOpenCount, setCopilotOpenCount] = useState(0)
+  const [copilotOpenCount, setCopilotOpenCount] = useState(1)
   const [hovering, setHovering] = useState(false)
   const [currentPage, setCurrentPage] = useState<'home' | 'setup-guide'>('home')
   const copilotRef = useRef<CopilotPanelHandle>(null)
