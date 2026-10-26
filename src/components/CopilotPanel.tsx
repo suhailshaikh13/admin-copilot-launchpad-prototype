@@ -1002,6 +1002,8 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   }, [])
 
   const handleNewConversation = useCallback(() => {
+    // Button unmounts on this action, so mouseleave never fires — clear tooltip manually
+    setTooltip(null)
     abortRef.current?.abort()
     abortRef.current = null
     if (cannedIntervalRef.current) {
@@ -1121,9 +1123,11 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
           )}
         </TitleGroup>
         <HeaderIcons>
-          <IconButton size="small" aria-label="New conversation" onClick={handleNewConversation} onMouseEnter={showTooltip('New conversation')} onMouseLeave={hideTooltip}>
-            <NotePencilStrokeIcon />
-          </IconButton>
+          {(isConversation || showHistory) && (
+            <IconButton size="small" aria-label="New conversation" onClick={handleNewConversation} onMouseEnter={showTooltip('New conversation')} onMouseLeave={hideTooltip}>
+              <NotePencilStrokeIcon />
+            </IconButton>
+          )}
           <IconButton
             size="small"
             aria-label={isFullscreen ? 'Exit full screen' : 'View in full screen'}
