@@ -3,6 +3,9 @@ import { createPortal } from 'react-dom'
 import styled from 'styled-components'
 import { Button, Anchor } from '@zendesk-ui/react-components'
 import DotsVerticalIcon from '@zendesk-ui/assets/icons/20px/dots-vertical-fill.svg?react'
+import BookmarkStrokeIcon from '../assets/bookmark-stroke.svg?react'
+import BookmarkFillIcon from '../assets/bookmark-fill.svg?react'
+import { Tooltip } from '@zendesk-ui/react-components'
 import { recommendations } from './recommendationsData'
 
 const Container = styled.div`
@@ -50,6 +53,42 @@ const ListContainer = styled.div`
   overflow: hidden;
 `
 
+const SaveButton = styled.button<{ $saved?: boolean }>`
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 24px;
+  background: transparent;
+  color: #646864;
+  cursor: pointer;
+  padding: 0;
+  opacity: ${({ $saved }) => ($saved ? 1 : 0)};
+  visibility: ${({ $saved }) => ($saved ? 'visible' : 'hidden')};
+  transition: opacity 150ms ease, background-color 150ms ease;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    background-color: rgba(100, 104, 100, 0.08);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 3px #406cc4, inset 0 0 0 4px white;
+  }
+
+  &:active {
+    background-color: rgba(100, 104, 100, 0.16);
+  }
+`
+
 const RecommendationItem = styled.div<{ $active?: boolean }>`
   display: flex;
   align-items: center;
@@ -63,6 +102,11 @@ const RecommendationItem = styled.div<{ $active?: boolean }>`
 
   &:hover {
     background-color: rgba(64, 108, 196, 0.08);
+
+    ${SaveButton} {
+      opacity: 1;
+      visibility: visible;
+    }
   }
 
   &:focus-visible {
@@ -219,11 +263,15 @@ const MenuDivider = styled.div`
 
 interface RecommendationsProps {
   activeIndex: number | null
+  saved: boolean[]
+  skipped: boolean[]
   onCardClick: (index: number) => void
   onDetailsClick: (index: number) => void
+  onSaveToggle: (index: number) => void
+  onSkip: (index: number) => void
 }
 
-export default function Recommendations({ activeIndex, onCardClick, onDetailsClick }: RecommendationsProps) {
+export default function Recommendations({ activeIndex, saved, skipped, onCardClick, onDetailsClick, onSaveToggle, onSkip }: RecommendationsProps) {
   const [menuIndex, setMenuIndex] = useState<number | null>(null)
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 })
   const menuRef = useRef<HTMLDivElement>(null)
@@ -262,7 +310,7 @@ export default function Recommendations({ activeIndex, onCardClick, onDetailsCli
       </HeaderRow>
 
       <ListContainer>
-        {recommendations.map((rec, index) => (
+        {recommendations.map((rec, index) => skipped[index] ? null : (
           <div key={index}>
             <RecommendationItem
               $active={activeIndex === index}
@@ -285,6 +333,15 @@ export default function Recommendations({ activeIndex, onCardClick, onDetailsCli
                 </TagRow>
               </Content>
               <ButtonGroup>
+                <Tooltip content={saved[index] ? 'Saved' : 'Save for later'} placement="top" appendToNode={document.body}>
+                  <SaveButton
+                    $saved={saved[index]}
+                    aria-label={saved[index] ? 'Saved' : 'Save for later'}
+                    onClick={(e) => { e.stopPropagation(); onSaveToggle(index) }}
+                  >
+                    {saved[index] ? <BookmarkFillIcon /> : <BookmarkStrokeIcon />}
+                  </SaveButton>
+                </Tooltip>
                 <Button isBasic isPill onClick={(e) => { e.stopPropagation(); onDetailsClick(index) }}>
                   {activeIndex === index ? 'Close details' : 'View details'}
                 </Button>
@@ -297,7 +354,7 @@ export default function Recommendations({ activeIndex, onCardClick, onDetailsCli
                 </OverflowButton>
               </ButtonGroup>
             </RecommendationItem>
-            {index < recommendations.length - 1 && <Divider />}
+            {recommendations.some((_, j) => j > index && !skipped[j]) && <Divider />}
           </div>
         ))}
       </ListContainer>
@@ -308,11 +365,14 @@ export default function Recommendations({ activeIndex, onCardClick, onDetailsCli
             {recommendations[menuIndex].reviewLabel}
           </MenuItem>
           <MenuDivider />
+          <MenuItem onClick={() => { setMenuIndex(null); onSaveToggle(menuIndex) }}>
+            {saved[menuIndex] ? 'Removed from Saved' : 'Save for later'}
+          </MenuItem>
           <MenuItem onClick={() => setMenuIndex(null)}>
             Mark as done
           </MenuItem>
-          <MenuItem onClick={() => setMenuIndex(null)}>
-            Decline
+          <MenuItem onClick={() => { setMenuIndex(null); onSkip(menuIndex) }}>
+            Skip
           </MenuItem>
         </Menu>,
         document.body

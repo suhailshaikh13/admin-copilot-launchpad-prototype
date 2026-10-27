@@ -28,6 +28,7 @@ import Greetings from './components/Greetings'
 import LatestInsights from './components/LatestInsights'
 import Recommendations from './components/Recommendations'
 import RecommendationDrawer from './components/RecommendationDrawer'
+import SaveToast from './components/SaveToast'
 import { recommendations } from './components/recommendationsData'
 import Usage from './components/Usage'
 import ZendeskUpdates from './components/ZendeskUpdates'
@@ -203,6 +204,9 @@ function App() {
   const [drawerRec, setDrawerRec] = useState<number | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const drawerVisible = drawerOpen && drawerRec !== null
+  const [savedRecs, setSavedRecs] = useState<boolean[]>(() => Array(recommendations.length).fill(false))
+  const [skippedRecs, setSkippedRecs] = useState<boolean[]>(() => Array(recommendations.length).fill(false))
+  const [toast, setToast] = useState<{ id: number; title: string; description?: string } | null>(null)
 
   // Any close path (X, Skip, copilot, setup guide) returns cards to default state
   useEffect(() => {
@@ -227,6 +231,25 @@ function App() {
       setCopilotOpen(false)
       setCopilotFullscreen(false)
       return index
+    })
+  }, [])
+
+  const handleSaveToggle = useCallback((index: number) => {
+    setSavedRecs(prev => {
+      const nowSaved = !prev[index]
+      if (nowSaved) {
+        setToast({ id: Date.now(), title: 'Recommendation saved' })
+      }
+      return prev.map((s, i) => (i === index ? nowSaved : s))
+    })
+  }, [])
+
+  const handleSkip = useCallback((index: number) => {
+    setSkippedRecs(prev => prev.map((s, i) => (i === index ? true : s)))
+    setToast({
+      id: Date.now(),
+      title: 'Recommendation skipped',
+      description: 'You can find skipped recommendations in the archive.',
     })
   }, [])
 
@@ -264,7 +287,8 @@ function App() {
   }, [])
 
   return (
-    <Product
+    <>
+      <Product
       locale="en-US"
       products={products}
     >
@@ -332,8 +356,12 @@ function App() {
                       <LatestInsights />
                       <Recommendations
                         activeIndex={activeRecommendation}
+                        saved={savedRecs}
+                        skipped={skippedRecs}
                         onCardClick={handleCardClick}
                         onDetailsClick={handleDetailsClick}
+                        onSaveToggle={handleSaveToggle}
+                        onSkip={handleSkip}
                       />
                       <Usage />
                       <ZendeskUpdates />
@@ -369,6 +397,8 @@ function App() {
         </MainWrapper>
       </StyledMain>
     </Product>
+    {toast && <SaveToast key={toast.id} title={toast.title} description={toast.description} onDismiss={() => setToast(null)} />}
+    </>
   )
 }
 
