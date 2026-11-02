@@ -103,7 +103,7 @@ const MainWrapper = styled.div`
 `
 
 const PanelSlider = styled.div<{ $open: boolean; $fullscreen?: boolean }>`
-  width: ${({ $open, $fullscreen }) => !$open ? '0px' : $fullscreen ? 'calc(100% - 8px)' : '360px'};
+  width: ${({ $open, $fullscreen }) => !$open ? '0px' : $fullscreen ? 'calc(100% - 8px)' : '380px'};
   flex: none;
   margin-left: ${({ $open, $fullscreen }) => $open && !$fullscreen ? '8px' : '0'};
   margin-right: ${({ $open }) => $open ? '8px' : '0'};

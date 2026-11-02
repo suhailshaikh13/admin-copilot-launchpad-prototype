@@ -1187,7 +1187,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
 
       {!showHistory && !isConversation && (
         <>
-          <AuroraGlow />
+          <AuroraGlow isFullscreen={isFullscreen} />
           <Content>
             <Title>
               <SparkleIcon />
