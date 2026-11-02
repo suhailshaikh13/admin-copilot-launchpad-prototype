@@ -5,7 +5,7 @@ const gradientPulse = keyframes`
   50% { transform: scale(2.0) rotate(90deg); }
 `
 
-const Container = styled.div`
+const Container = styled.div<{ $isFullscreen?: boolean }>`
   position: absolute;
   bottom: -323px;
   left: -124px;
@@ -18,11 +18,11 @@ const Container = styled.div`
   z-index: 0;
 `
 
-const OuterWrapper = styled.div`
+const OuterWrapper = styled.div<{ $isFullscreen?: boolean }>`
   flex: none;
   width: 444px;
   height: 444px;
-  transform: rotate(-38deg);
+  transform: ${({ $isFullscreen }) => $isFullscreen ? 'scaleX(2.5) rotate(-38deg)' : 'rotate(-38deg)'};
 `
 
 const RadialBg = styled.div`
@@ -74,20 +74,20 @@ const InnerGlowInner = styled.div`
   inset: -28.1%;
 `
 
-const GradientBand = styled.div`
+const GradientBand = styled.div<{ $isFullscreen?: boolean }>`
   position: absolute;
   bottom: 124.8px;
-  left: 82.05px;
-  right: 27.77px;
+  left: ${({ $isFullscreen }) => $isFullscreen ? '0' : '82.05px'};
+  right: ${({ $isFullscreen }) => $isFullscreen ? '0' : '27.77px'};
   height: 286.4px;
   display: flex;
   align-items: center;
   justify-content: center;
 `
 
-const GradientBandRect = styled.div`
+const GradientBandRect = styled.div<{ $isFullscreen?: boolean }>`
   flex: none;
-  width: 360px;
+  width: ${({ $isFullscreen }) => $isFullscreen ? '1200px' : '380px'};
   height: 82px;
   transform: rotate(38deg);
   background-image: linear-gradient(0.63deg, rgb(202, 184, 228) 2.59%, rgba(226, 219, 237, 0) 97.99%);
@@ -95,17 +95,17 @@ const GradientBandRect = styled.div`
 
 const SvgBlock = { display: 'block', width: '100%', height: '100%' } as const
 
-export default function AuroraGlow() {
+export default function AuroraGlow({ isFullscreen }: { isFullscreen?: boolean }) {
   return (
-    <Container>
-      <OuterWrapper>
+    <Container $isFullscreen={isFullscreen}>
+      <OuterWrapper $isFullscreen={isFullscreen}>
         <RadialBg>
           <AnimatedGroup>
             <MainEllipseWrapper>
               <MainEllipseInner>
                 <svg style={SvgBlock} fill="none" preserveAspectRatio="none" viewBox="0 0 612 612">
                   <defs>
-                    <filter colorInterpolationFilters="sRGB" filterUnits="userSpaceOnUse" height="612" id="aurora-filter-main" width="612" x="0" y="0">
+                    <filter colorInterpolationFilters="sRGB" filterUnits="userSpaceOnUse" height="762" id="aurora-filter-main" width="762" x="-75" y="-75">
                       <feFlood floodOpacity="0" result="BackgroundImageFix" />
                       <feBlend in="SourceGraphic" in2="BackgroundImageFix" mode="normal" result="shape" />
                       <feGaussianBlur result="effect1_foregroundBlur" stdDeviation="50" />
@@ -128,7 +128,7 @@ export default function AuroraGlow() {
               <InnerGlowInner>
                 <svg style={SvgBlock} fill="none" preserveAspectRatio="none" viewBox="0 0 445 445">
                   <defs>
-                    <filter colorInterpolationFilters="sRGB" filterUnits="userSpaceOnUse" height="445" id="aurora-filter-glow" width="445" x="0" y="0">
+                    <filter colorInterpolationFilters="sRGB" filterUnits="userSpaceOnUse" height="565" id="aurora-filter-glow" width="565" x="-60" y="-60">
                       <feFlood floodOpacity="0" result="BackgroundImageFix" />
                       <feBlend in="SourceGraphic" in2="BackgroundImageFix" mode="normal" result="shape" />
                       <feGaussianBlur result="effect1_foregroundBlur" stdDeviation="40" />
@@ -142,8 +142,8 @@ export default function AuroraGlow() {
             </InnerGlowWrapper>
           </AnimatedGroup>
 
-          <GradientBand>
-            <GradientBandRect />
+          <GradientBand $isFullscreen={isFullscreen}>
+            <GradientBandRect $isFullscreen={isFullscreen} />
           </GradientBand>
         </RadialBg>
       </OuterWrapper>
