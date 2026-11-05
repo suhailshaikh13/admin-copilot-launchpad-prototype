@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
-import styled, { keyframes } from 'styled-components'
-import { Button, Tag } from '@zendesk-ui/react-components'
+import styled from 'styled-components'
+import { Button, Checkbox, Tag } from '@zendesk-ui/react-components'
 import SparkleFillIcon from '../assets/sparkle-fill.svg?react'
 import {
   buildHelpCenterArticles,
@@ -12,9 +12,16 @@ import {
 } from '../launchpad/helpCenterArticles'
 import CopilotPreviewCard from './CopilotPreviewCard'
 
-const rise = keyframes`
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+const ScreenReaderOnly = styled.span`
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 `
 
 const Body = styled.div`
@@ -25,39 +32,53 @@ const Body = styled.div`
   min-width: 0;
 `
 
-const ArticleStack = styled.div`
+const ArticleListShell = styled.div`
+  margin: 0 -20px;
+  width: calc(100% + 40px);
+  border-top: 1px solid #eae9e8;
+  border-bottom: 1px solid #eae9e8;
+`
+
+const ArticleRow = styled.label<{ $decided?: boolean }>`
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px;
+  border-bottom: 1px solid #eae9e8;
+  cursor: pointer;
+  background: ${({ $decided }) => ($decided ? '#fafafa' : '#fff')};
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: #f9f9f8;
+  }
+`
+
+const CheckboxWrap = styled.span`
+  flex-shrink: 0;
+  padding-top: 2px;
+`
+
+const ArticleContent = styled.span`
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: 100%;
+  gap: 12px;
+  flex: 1;
   min-width: 0;
 `
 
-const ArticleCard = styled.article<{ $delay: number }>`
-  width: 100%;
-  box-sizing: border-box;
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid #eae9e8;
-  background: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 12px;
-  animation: ${rise} 0.45s ease-out both;
-  animation-delay: ${({ $delay }) => $delay}ms;
-`
-
-const ArticleHeader = styled.div`
+const ArticleHeader = styled.span`
   display: flex;
   flex-direction: column;
   gap: 4px;
   width: 100%;
-  min-width: 0;
 `
 
-const ArticleTitle = styled.p`
-  margin: 0;
+const ArticleTitle = styled.span`
+  display: block;
   font-size: 14px;
   font-weight: 600;
   line-height: 20px;
@@ -65,8 +86,8 @@ const ArticleTitle = styled.p`
   color: #2f3130;
 `
 
-const ArticleExcerpt = styled.p`
-  margin: 0;
+const ArticleExcerpt = styled.span`
+  display: block;
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
@@ -74,14 +95,14 @@ const ArticleExcerpt = styled.p`
   color: #646864;
 `
 
-const StatusTagRow = styled.div`
+const StatusTagRow = styled.span`
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
   align-items: center;
 `
 
-const StatusTag = styled(Tag)<{ $tone?: 'neutral' | 'draft' | 'published' }>`
+const StatusTag = styled(Tag)<{ $tone?: 'draft' | 'published' }>`
   && {
     ${({ $tone }) =>
       $tone === 'published'
@@ -89,47 +110,10 @@ const StatusTag = styled(Tag)<{ $tone?: 'neutral' | 'draft' | 'published' }>`
       background: #edf7ed;
       color: #4b7d04;
     `
-        : $tone === 'draft'
-          ? `
+        : `
       background: #f4f6f8;
       color: #646864;
-    `
-          : `
-      background: #e4eaf6;
-      color: #406cc4;
     `}
-  }
-`
-
-const CardActions = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding-top: 4px;
-`
-
-const CardActionButton = styled.button<{ $active?: boolean; $variant?: 'publish' }>`
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 16px;
-  cursor: pointer;
-  border: 1px solid
-    ${({ $active, $variant }) =>
-      $active ? ($variant === 'publish' ? '#4b7d04' : '#646864') : '#dcdcda'};
-  background: ${({ $active, $variant }) =>
-    $active ? ($variant === 'publish' ? '#edf7ed' : '#fff') : '#fff'};
-  color: ${({ $active, $variant }) =>
-    $active && $variant === 'publish' ? '#4b7d04' : '#2f3130'};
-
-  &:hover:not(:disabled) {
-    border-color: #b7b7b3;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
   }
 `
 
@@ -137,8 +121,7 @@ const Footer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-top: 8px;
-  border-top: 1px solid #e9ebed;
+  padding-top: 4px;
   width: 100%;
 `
 
@@ -154,28 +137,6 @@ const FooterHint = styled.p`
   font-size: 12px;
   line-height: 16px;
   color: #646864;
-`
-
-const FooterBulkButton = styled.button`
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid #dcdcda;
-  background: #fafafa;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 16px;
-  color: #2f3130;
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    background: #f4f6f8;
-    border-color: #b7b7b3;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
 `
 
 const AgentPreview = styled.div`
@@ -220,18 +181,6 @@ const AgentAnswer = styled.p`
   color: #646864;
 `
 
-function statusLabel(status: ArticleStatus): string {
-  if (status === 'published') return 'Published'
-  if (status === 'draft') return 'Draft'
-  return 'Awaiting review'
-}
-
-function statusTone(status: ArticleStatus): 'neutral' | 'draft' | 'published' {
-  if (status === 'published') return 'published'
-  if (status === 'draft') return 'draft'
-  return 'neutral'
-}
-
 interface CopilotHelpCenterPreviewWidgetProps {
   onComplete: (summary: HelpCenterCompletionSummary) => void
 }
@@ -241,23 +190,52 @@ export default function CopilotHelpCenterPreviewWidget({
 }: CopilotHelpCenterPreviewWidgetProps) {
   const articles = useMemo(() => buildHelpCenterArticles(HELP_CENTER_PREVIEW_BRAND), [])
   const [finished, setFinished] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
   const [statuses, setStatuses] = useState<Record<string, ArticleStatus>>(() =>
     Object.fromEntries(articles.map(article => [article.id, 'generated' as ArticleStatus]))
   )
 
-  const setArticleStatus = useCallback((id: string, status: ArticleStatus) => {
-    setStatuses(prev => ({ ...prev, [id]: status }))
+  const toggleSelected = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
   }, [])
 
-  const draftAll = useCallback(() => {
-    setStatuses(Object.fromEntries(articles.map(article => [article.id, 'draft' as ArticleStatus])))
-  }, [articles])
+  const selectableIds = useMemo(
+    () => articles.filter(article => statuses[article.id] === 'generated').map(article => article.id),
+    [articles, statuses]
+  )
 
-  const publishAll = useCallback(() => {
-    setStatuses(
-      Object.fromEntries(articles.map(article => [article.id, 'published' as ArticleStatus]))
-    )
-  }, [articles])
+  const allSelectableSelected =
+    selectableIds.length > 0 && selectableIds.every(id => selectedIds.has(id))
+
+  const toggleSelectAll = useCallback(() => {
+    if (allSelectableSelected) {
+      setSelectedIds(new Set())
+      return
+    }
+    setSelectedIds(new Set(selectableIds))
+  }, [allSelectableSelected, selectableIds])
+
+  const applyToSelected = useCallback(
+    (status: 'draft' | 'published') => {
+      if (selectedIds.size === 0) return
+      setStatuses(prev => {
+        const next = { ...prev }
+        selectedIds.forEach(id => {
+          if (next[id] === 'generated') {
+            next[id] = status
+          }
+        })
+        return next
+      })
+      setSelectedIds(new Set())
+    },
+    [selectedIds]
+  )
 
   const decidedCount = useMemo(
     () =>
@@ -282,6 +260,7 @@ export default function CopilotHelpCenterPreviewWidget({
   )
 
   const allDecided = decidedCount === articles.length
+  const selectionCount = selectedIds.size
 
   const handleFinish = useCallback(() => {
     if (!allDecided || finished) return
@@ -294,47 +273,54 @@ export default function CopilotHelpCenterPreviewWidget({
       })),
     }
     setFinished(true)
+    setSelectedIds(new Set())
     onComplete(summary)
   }, [allDecided, articles, finished, onComplete, statuses])
 
   return (
     <CopilotPreviewCard title="Help center preview">
       <Body>
-        <ArticleStack>
-          {articles.map((article, index) => {
+        <ArticleListShell>
+          {articles.map(article => {
             const status = statuses[article.id]
+            const isSelected = selectedIds.has(article.id)
+            const isPending = status === 'generated'
             return (
-              <ArticleCard key={article.id} $delay={index * 80}>
-                <ArticleHeader>
-                  <ArticleTitle>{article.title}</ArticleTitle>
-                  <ArticleExcerpt>{article.excerpt}</ArticleExcerpt>
-                </ArticleHeader>
-                <StatusTagRow>
-                  <StatusTag $tone={statusTone(status)}>{statusLabel(status)}</StatusTag>
-                </StatusTagRow>
-                <CardActions>
-                  <CardActionButton
-                    type="button"
-                    $active={status === 'draft'}
-                    onClick={() => setArticleStatus(article.id, 'draft')}
-                    disabled={finished}
+              <ArticleRow
+                key={article.id}
+                $decided={!isPending}
+                onClick={event => {
+                  if (finished || !isPending) return
+                  if ((event.target as HTMLElement).closest('input[type="checkbox"]')) return
+                  toggleSelected(article.id)
+                }}
+              >
+                <CheckboxWrap onClick={event => event.stopPropagation()}>
+                  <Checkbox
+                    checked={isSelected}
+                    disabled={finished || !isPending}
+                    onChange={() => toggleSelected(article.id)}
                   >
-                    Save as draft
-                  </CardActionButton>
-                  <CardActionButton
-                    type="button"
-                    $variant="publish"
-                    $active={status === 'published'}
-                    onClick={() => setArticleStatus(article.id, 'published')}
-                    disabled={finished}
-                  >
-                    Publish
-                  </CardActionButton>
-                </CardActions>
-              </ArticleCard>
+                    <ScreenReaderOnly>Select {article.title}</ScreenReaderOnly>
+                  </Checkbox>
+                </CheckboxWrap>
+                <ArticleContent>
+                  <ArticleHeader>
+                    <ArticleTitle>{article.title}</ArticleTitle>
+                    <ArticleExcerpt>{article.excerpt}</ArticleExcerpt>
+                  </ArticleHeader>
+                  {!isPending && (
+                    <StatusTagRow>
+                      <StatusTag $tone={status === 'published' ? 'published' : 'draft'}>
+                        {status === 'published' ? 'Published' : 'Draft'}
+                      </StatusTag>
+                    </StatusTagRow>
+                  )}
+                </ArticleContent>
+              </ArticleRow>
             )
           })}
-        </ArticleStack>
+        </ArticleListShell>
 
         {publishedTitles.length > 0 && agentAnswer && (
           <AgentPreview>
@@ -351,18 +337,34 @@ export default function CopilotHelpCenterPreviewWidget({
           <FooterHint>
             {allDecided
               ? `${publishedTitles.length} published · ${decidedCount - publishedTitles.length} draft`
-              : `Choose draft or publish for each article (${decidedCount}/${articles.length} decided).`}
+              : selectionCount > 0
+                ? `${selectionCount} selected — publish or save as draft, then finish when every article is decided.`
+                : `Select articles to publish or save as draft (${decidedCount}/${articles.length} decided).`}
           </FooterHint>
           <FooterActions>
-            <FooterBulkButton type="button" onClick={draftAll} disabled={finished}>
-              Draft all three
-            </FooterBulkButton>
-            <FooterBulkButton type="button" onClick={publishAll} disabled={finished}>
-              Publish all three
-            </FooterBulkButton>
+            {selectableIds.length > 0 && (
+              <Button size="small" onClick={toggleSelectAll} disabled={finished}>
+                {allSelectableSelected ? 'Clear selection' : 'Select all'}
+              </Button>
+            )}
             <Button
               size="small"
-              isPrimary
+              disabled={finished || selectionCount === 0}
+              onClick={() => applyToSelected('draft')}
+            >
+              Save selected as draft
+            </Button>
+            <Button
+              size="small"
+              isPrimary={selectionCount > 0 && !allDecided}
+              disabled={finished || selectionCount === 0}
+              onClick={() => applyToSelected('published')}
+            >
+              Publish selected
+            </Button>
+            <Button
+              size="small"
+              isPrimary={allDecided}
               disabled={!allDecided || finished}
               onClick={handleFinish}
             >
