@@ -1,3 +1,6 @@
+export const HELP_CENTER_PREVIEW_BRAND = 'Northwind Trading'
+export const HELP_CENTER_PREVIEW_SITE = 'northwindtrading.com'
+
 export type ArticleStatus = 'generated' | 'draft' | 'published'
 
 export interface HelpCenterArticle {

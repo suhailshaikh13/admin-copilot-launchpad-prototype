@@ -1444,10 +1444,7 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
                     />
                   )}
                   {msg.widget === 'help-center-preview' && !msg.isStreaming && (
-                    <CopilotHelpCenterPreviewWidget
-                      businessName={businessName}
-                      onComplete={handleHelpCenterComplete}
-                    />
+                    <CopilotHelpCenterPreviewWidget onComplete={handleHelpCenterComplete} />
                   )}
                   {showFeedback && <AssistantMessageFeedback content={feedbackContent} />}
                 </AssistantMessage>

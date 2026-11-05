@@ -1,126 +1,26 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { Button } from '@zendesk-ui/react-components'
 import SparkleFillIcon from '../assets/sparkle-fill.svg?react'
-import MonitorFillIcon from '@zendesk-ui/assets/icons/20px/monitor-fill.svg?react'
 import {
   buildHelpCenterArticles,
-  inferSiteLabel,
+  HELP_CENTER_PREVIEW_BRAND,
+  HELP_CENTER_PREVIEW_SITE,
   sampleAgentAnswer,
   type ArticleStatus,
   type HelpCenterCompletionSummary,
 } from '../launchpad/helpCenterArticles'
 import CopilotPreviewCard from './CopilotPreviewCard'
 
-const shimmer = keyframes`
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-`
-
 const rise = keyframes`
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 `
 
-const Panel = styled.div`
-  overflow: hidden;
-`
-
-const Hero = styled.div`
-  margin: -20px -20px 0;
-  padding: 16px 20px;
-  background: linear-gradient(135deg, #f4f7fc 0%, #faf5ff 48%, #fff 100%);
-  border-bottom: 1px solid #e9ebed;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-`
-
-const HeroTitle = styled.h3`
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 20px;
-  color: #2f3130;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  svg {
-    width: 18px;
-    height: 18px;
-    color: #9256b1;
-  }
-`
-
-const SiteChip = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  align-self: flex-start;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid #dcdcda;
-  font-size: 12px;
-  font-weight: 600;
-  color: #406cc4;
-
-  svg {
-    width: 14px;
-    height: 14px;
-  }
-`
-
-const ScanBar = styled.div`
-  height: 6px;
-  border-radius: 999px;
-  background: linear-gradient(
-    90deg,
-    rgba(64, 108, 196, 0.15) 0%,
-    rgba(146, 86, 177, 0.45) 50%,
-    rgba(64, 108, 196, 0.15) 100%
-  );
-  background-size: 200% 100%;
-  animation: ${shimmer} 1.4s ease-in-out infinite;
-`
-
-const ScanStep = styled.p`
-  margin: 0;
-  font-size: 13px;
-  line-height: 18px;
-  color: #646864;
-  min-height: 18px;
-`
-
 const Body = styled.div`
-  padding: 14px 0 0;
   display: flex;
   flex-direction: column;
   gap: 14px;
-`
-
-const BulkRow = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-`
-
-const BulkButton = styled.button`
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid #dcdcda;
-  background: #fafafa;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 16px;
-  color: #2f3130;
-  cursor: pointer;
-
-  &:hover {
-    background: #f4f6f8;
-    border-color: #b7b7b3;
-  }
 `
 
 const ArticleList = styled.ul`
@@ -231,16 +131,38 @@ const Footer = styled.div`
 
 const FooterActions = styled.div`
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
+  gap: 8px;
 `
 
-const Hint = styled.p`
+const FooterHint = styled.p`
   margin: 0;
   font-size: 12px;
   line-height: 16px;
   color: #646864;
+`
+
+const FooterBulkButton = styled.button`
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #dcdcda;
+  background: #fafafa;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  color: #2f3130;
+  cursor: pointer;
+
+  &:hover {
+    background: #f4f6f8;
+    border-color: #b7b7b3;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `
 
 const AgentPreview = styled.div`
@@ -283,42 +205,18 @@ const AgentAnswer = styled.p`
   color: #646864;
 `
 
-const SCAN_STEPS = [
-  'Scanning your public site…',
-  'Extracting policies and FAQs…',
-  'Drafting three help articles for your trial…',
-] as const
-
-type Phase = 'scanning' | 'ready' | 'finished'
-
 interface CopilotHelpCenterPreviewWidgetProps {
-  businessName: string
   onComplete: (summary: HelpCenterCompletionSummary) => void
 }
 
 export default function CopilotHelpCenterPreviewWidget({
-  businessName,
   onComplete,
 }: CopilotHelpCenterPreviewWidgetProps) {
-  const siteLabel = inferSiteLabel(businessName)
-  const articles = useMemo(() => buildHelpCenterArticles(businessName), [businessName])
-  const [phase, setPhase] = useState<Phase>('scanning')
-  const [scanIndex, setScanIndex] = useState(0)
+  const articles = useMemo(() => buildHelpCenterArticles(HELP_CENTER_PREVIEW_BRAND), [])
+  const [finished, setFinished] = useState(false)
   const [statuses, setStatuses] = useState<Record<string, ArticleStatus>>(() =>
     Object.fromEntries(articles.map(article => [article.id, 'generated' as ArticleStatus]))
   )
-
-  useEffect(() => {
-    if (phase !== 'scanning') return
-    const stepTimer = window.setInterval(() => {
-      setScanIndex(index => Math.min(index + 1, SCAN_STEPS.length - 1))
-    }, 650)
-    const doneTimer = window.setTimeout(() => setPhase('ready'), 2200)
-    return () => {
-      window.clearInterval(stepTimer)
-      window.clearTimeout(doneTimer)
-    }
-  }, [phase])
 
   const setArticleStatus = useCallback((id: string, status: ArticleStatus) => {
     setStatuses(prev => ({ ...prev, [id]: status }))
@@ -352,71 +250,29 @@ export default function CopilotHelpCenterPreviewWidget({
   )
 
   const agentAnswer = useMemo(
-    () => sampleAgentAnswer(businessName, publishedTitles),
-    [businessName, publishedTitles]
+    () => sampleAgentAnswer(HELP_CENTER_PREVIEW_BRAND, publishedTitles),
+    [publishedTitles]
   )
 
   const allDecided = decidedCount === articles.length
 
   const handleFinish = useCallback(() => {
-    if (!allDecided) return
+    if (!allDecided || finished) return
     const summary: HelpCenterCompletionSummary = {
-      businessName,
-      siteLabel,
+      businessName: HELP_CENTER_PREVIEW_BRAND,
+      siteLabel: HELP_CENTER_PREVIEW_SITE,
       articles: articles.map(article => ({
         ...article,
         status: statuses[article.id] as 'draft' | 'published',
       })),
     }
-    setPhase('finished')
+    setFinished(true)
     onComplete(summary)
-  }, [allDecided, articles, businessName, onComplete, siteLabel, statuses])
-
-  if (phase === 'scanning') {
-    return (
-      <CopilotPreviewCard title="Help center preview">
-        <Panel aria-busy="true">
-          <Hero>
-            <HeroTitle>
-              <SparkleFillIcon aria-hidden />
-              Building your Help center
-            </HeroTitle>
-            <SiteChip>
-              <MonitorFillIcon aria-hidden />
-              {siteLabel}
-            </SiteChip>
-            <ScanBar />
-            <ScanStep>{SCAN_STEPS[scanIndex]}</ScanStep>
-          </Hero>
-        </Panel>
-      </CopilotPreviewCard>
-    )
-  }
+  }, [allDecided, articles, finished, onComplete, statuses])
 
   return (
     <CopilotPreviewCard title="Help center preview">
-      <Panel aria-labelledby="help-center-preview-title">
-      <Hero>
-        <HeroTitle id="help-center-preview-title">
-          <SparkleFillIcon aria-hidden />
-          Three articles from {siteLabel}
-        </HeroTitle>
-        <Hint>
-          Generated for <strong>{businessName}</strong> from your public site. Choose draft or
-          publish for each — your AI agent only uses published articles in this preview.
-        </Hint>
-      </Hero>
-
       <Body>
-        <BulkRow>
-          <BulkButton type="button" onClick={draftAll}>
-            Draft all three
-          </BulkButton>
-          <BulkButton type="button" onClick={publishAll}>
-            Publish all three
-          </BulkButton>
-        </BulkRow>
-
         <ArticleList>
           {articles.map((article, index) => {
             const status = statuses[article.id]
@@ -441,6 +297,7 @@ export default function CopilotHelpCenterPreviewWidget({
                     type="button"
                     $active={status === 'draft'}
                     onClick={() => setArticleStatus(article.id, 'draft')}
+                    disabled={finished}
                   >
                     Save as draft
                   </RowButton>
@@ -449,6 +306,7 @@ export default function CopilotHelpCenterPreviewWidget({
                     $variant="publish"
                     $active={status === 'published'}
                     onClick={() => setArticleStatus(article.id, 'published')}
+                    disabled={finished}
                   >
                     Publish
                   </RowButton>
@@ -470,24 +328,29 @@ export default function CopilotHelpCenterPreviewWidget({
         )}
 
         <Footer>
-          <Hint>
+          <FooterHint>
             {allDecided
-              ? `${publishedTitles.length} published · ${decidedCount - publishedTitles.length} draft — finish when this looks right.`
+              ? `${publishedTitles.length} published · ${decidedCount - publishedTitles.length} draft`
               : `Choose draft or publish for each article (${decidedCount}/${articles.length} decided).`}
-          </Hint>
+          </FooterHint>
           <FooterActions>
+            <FooterBulkButton type="button" onClick={draftAll} disabled={finished}>
+              Draft all three
+            </FooterBulkButton>
+            <FooterBulkButton type="button" onClick={publishAll} disabled={finished}>
+              Publish all three
+            </FooterBulkButton>
             <Button
               size="small"
               isPrimary
-              disabled={!allDecided || phase === 'finished'}
+              disabled={!allDecided || finished}
               onClick={handleFinish}
             >
-              {phase === 'finished' ? 'Saved' : 'Finish preview'}
+              {finished ? 'Saved' : 'Finish preview'}
             </Button>
           </FooterActions>
         </Footer>
       </Body>
-      </Panel>
     </CopilotPreviewCard>
   )
 }

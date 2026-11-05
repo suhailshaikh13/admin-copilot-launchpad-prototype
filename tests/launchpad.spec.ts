@@ -26,10 +26,8 @@ test.describe('Launchpad trial experience', () => {
     await page.getByRole('button', { name: 'Go live quickly' }).click()
     await page.getByRole('button', { name: 'Preview Help center' }).click({ timeout: 15000 })
 
-    await expect(page.getByText(/Three articles from camera-obscura\.com/i)).toBeVisible({
-      timeout: 10000,
-    })
-    await expect(page.getByText(/Shipping and delivery for Camera obscura/i)).toBeVisible()
+    await expect(page.getByText(/Northwind Trading/i).first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/Shipping and delivery for Northwind Trading/i)).toBeVisible()
 
     await page.getByRole('button', { name: 'Publish all three' }).click()
     await expect(page.getByText('Agent preview')).toBeVisible()

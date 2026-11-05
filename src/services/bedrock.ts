@@ -292,11 +292,10 @@ Review the ticket preview below. When you're ready, I can draft a reply for you 
 </suggestions>`
 }
 
-export function getPreviewHelpCenterResponse(businessName: string): string {
-  const brand = businessName.trim() || 'your business'
+export function getPreviewHelpCenterResponse(_businessName: string): string {
   return `I'll **preview your Help center** using content from your public website — no manual setup.
 
-For **${brand}**, I will draft three articles your AI agent can use in this trial. Review them here, publish what you want live, and see how answers change.
+I pulled **three suggested articles** from **northwindtrading.com** for **Northwind Trading**. Review each one below, then use **Draft all three**, **Publish all three**, or **Finish preview** when you're ready.
 
 <widget>help-center-preview</widget>
 
