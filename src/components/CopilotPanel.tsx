@@ -40,6 +40,31 @@ interface Message {
   sampleTicketPhase?: SampleTicketPhase
 }
 
+function isLastAssistantInStreak(messages: Message[], index: number): boolean {
+  const msg = messages[index]
+  if (msg.role !== 'assistant') return false
+  const next = messages[index + 1]
+  return !next || next.role === 'user'
+}
+
+function assistantStreakFeedbackContent(messages: Message[], lastIndex: number): string {
+  let start = lastIndex
+  while (start > 0) {
+    const prev = messages[start - 1]
+    if (prev.role !== 'assistant' || prev.isStreaming || prev.isError) break
+    start -= 1
+  }
+
+  const parts: string[] = []
+  for (let i = start; i <= lastIndex; i += 1) {
+    const entry = messages[i]
+    if (entry.role === 'assistant' && entry.content && !entry.isError) {
+      parts.push(entry.content)
+    }
+  }
+  return parts.join('\n\n')
+}
+
 interface SavedConversation {
   id: string
   title: string
@@ -1386,15 +1411,19 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
             if (msg.isStreaming && !msg.content) {
               return <LoaderMessage key={i} />
             }
+            const showFeedback =
+              !msg.isStreaming &&
+              !msg.isError &&
+              isLastAssistantInStreak(messages, i) &&
+              assistantStreakFeedbackContent(messages, i).length > 0
+            const feedbackContent = showFeedback ? assistantStreakFeedbackContent(messages, i) : ''
+
             return (
               <React.Fragment key={i}>
                 <AssistantMessage>
                   {msg.content && <Markdown>{msg.content}</Markdown>}
                   {msg.isError && (
                     <CopilotErrorMessage onViewSetupGuide={() => onNavigateToSetupGuide?.()} />
-                  )}
-                  {!msg.isStreaming && !msg.isError && msg.content && (
-                    <AssistantMessageFeedback content={msg.content} />
                   )}
                   {msg.widget === 'team-invite' && !msg.isStreaming && (
                     <CopilotTeamInviteWidget onInviteSent={handleTeamInvitesSent} />
@@ -1420,6 +1449,7 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
                       onComplete={handleHelpCenterComplete}
                     />
                   )}
+                  {showFeedback && <AssistantMessageFeedback content={feedbackContent} />}
                 </AssistantMessage>
                 {!msg.isStreaming && msg.suggestions && msg.suggestions.length > 0 && i === messages.length - 1 && (
                   <InlineSuggestions $exiting={suggestionsExiting}>
