@@ -25,6 +25,7 @@ import type { ChatMessage } from '../services/bedrock'
 import CopilotTeamInviteWidget from './CopilotTeamInviteWidget'
 import CopilotSampleTicketWidget from './CopilotSampleTicketWidget'
 import CopilotHelpCenterPreviewWidget from './CopilotHelpCenterPreviewWidget'
+import AssistantMessageFeedback from './AssistantMessageFeedback'
 import type { HelpCenterCompletionSummary } from '../launchpad/helpCenterArticles'
 import type { TeamInviteEntry } from '../launchpad/teamInvite'
 
@@ -1373,6 +1374,9 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
                   {msg.content && <Markdown>{msg.content}</Markdown>}
                   {msg.isError && (
                     <CopilotErrorMessage onViewSetupGuide={() => onNavigateToSetupGuide?.()} />
+                  )}
+                  {!msg.isStreaming && !msg.isError && msg.content && (
+                    <AssistantMessageFeedback content={msg.content} />
                   )}
                   {msg.widget === 'team-invite' && !msg.isStreaming && (
                     <CopilotTeamInviteWidget onInviteSent={handleTeamInvitesSent} />

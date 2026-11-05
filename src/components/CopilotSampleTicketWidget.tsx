@@ -14,42 +14,51 @@ import {
 const Card = styled.div`
   margin-top: 12px;
   border: 1px solid #dcdcda;
-  border-radius: 12px;
+  border-radius: 14px;
   background: #fff;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  box-shadow: 0 4px 16px rgba(47, 49, 48, 0.05);
 `
 
 const CardHeader = styled.div`
-  padding: 14px 16px 12px;
-  border-bottom: 1px solid #e9ebed;
-  background: #fafafa;
+  padding: 16px 16px 14px;
+  border-bottom: 1px solid #f0f0ee;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 `
 
 const CardTitle = styled.h3`
   margin: 0;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
-  line-height: 20px;
+  line-height: 16px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #646864;
+`
+
+const Subject = styled.p`
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 22px;
+  letter-spacing: -0.2px;
   color: #2f3130;
 `
 
-const TicketMeta = styled.div`
+const MetaRow = styled.div`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
 `
 
 const StatusPill = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 999px;
   background: #e4eaf6;
   color: #2f3130;
@@ -66,15 +75,6 @@ const StatusPill = styled.span`
   }
 `
 
-const Subject = styled.p`
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 20px;
-  color: #2f3130;
-  flex: 1;
-`
-
 const Channel = styled.span`
   font-size: 12px;
   line-height: 16px;
@@ -82,29 +82,11 @@ const Channel = styled.span`
   white-space: nowrap;
 `
 
-const SummaryRow = styled.div`
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-  font-size: 12px;
-  line-height: 16px;
-  color: #646864;
-
-  svg {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-    margin-top: 1px;
-    color: #9256b1;
-  }
-`
-
 const Body = styled.div`
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  background: linear-gradient(180deg, #f4f7fc 0%, #fafafa 40%, #fff 100%);
+  gap: 14px;
 `
 
 const ThreadLabel = styled.div`
@@ -119,8 +101,8 @@ const ThreadLabel = styled.div`
 const CustomerBubble = styled.div`
   padding: 12px 14px;
   border-radius: 12px;
-  background: #f4f6f8;
-  border: 1px solid #e9ebed;
+  background: #f8f9f9;
+  border: 1px solid #eef0f2;
   font-size: 13px;
   line-height: 18px;
   color: #2f3130;
@@ -130,7 +112,7 @@ const StepCallout = styled.div`
   padding: 12px 14px;
   border-radius: 10px;
   background: #f9f5fa;
-  border: 1px solid #e9ebed;
+  border: 1px solid #efe9f2;
   font-size: 13px;
   line-height: 18px;
   color: #2f3130;
@@ -141,9 +123,9 @@ const Composer = styled.div`
   flex-direction: column;
   gap: 8px;
   padding: 12px;
-  border-radius: 10px;
-  border: 1px solid #dcdcda;
-  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e4e4e2;
+  background: #fafafa;
 `
 
 const ToRow = styled.div`
@@ -157,7 +139,8 @@ const ToRow = styled.div`
 const ToChip = styled.span`
   padding: 2px 8px;
   border-radius: 999px;
-  background: #f4f6f8;
+  background: #fff;
+  border: 1px solid #e9ebed;
   font-size: 12px;
   font-weight: 600;
   color: #2f3130;
@@ -165,7 +148,7 @@ const ToChip = styled.span`
 
 const ReplyArea = styled.textarea`
   width: 100%;
-  min-height: 96px;
+  min-height: 88px;
   box-sizing: border-box;
   border: none;
   resize: vertical;
@@ -180,9 +163,8 @@ const ReplyArea = styled.textarea`
     outline: none;
   }
 
-  &:disabled,
   &:read-only {
-    color: #646864;
+    color: #464a48;
   }
 `
 
@@ -207,21 +189,13 @@ const PromptRow = styled.div`
   gap: 8px;
 `
 
-const Footer = styled.div`
-  padding: 12px 16px 16px;
-  border-top: 1px solid #e9ebed;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: #fff;
-`
-
-const FooterActions = styled.div`
+const ActionRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 8px;
+  padding-top: 4px;
 `
 
 const GhostButton = styled.button`
@@ -257,7 +231,7 @@ const SuccessBanner = styled.div`
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: 10px;
   background: #edf7ed;
   color: #4b7d04;
   font-size: 13px;
@@ -280,7 +254,6 @@ const PostedPanel = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 14px 0 4px;
 `
 
 const TicketLink = styled.a`
@@ -349,7 +322,11 @@ export default function CopilotSampleTicketWidget({
   const [isEditing, setIsEditing] = useState(false)
   const [activePrompt, setActivePrompt] = useState<ReplyRefinementPrompt | null>(null)
 
-  const showComposer = phase === 'review' || phase === 'sending' || phase === 'posted' || phase === 'solving' || phase === 'solved'
+  const showComposer =
+    phase === 'review' || phase === 'sending' || phase === 'posted' || phase === 'solving' || phase === 'solved'
+
+  const showActions =
+    phase === 'preview' || phase === 'review' || phase === 'posted'
 
   const applyPrompt = useCallback((prompt: ReplyRefinementPrompt) => {
     setActivePrompt(prompt)
@@ -389,17 +366,11 @@ export default function CopilotSampleTicketWidget({
     <Card aria-labelledby="sample-ticket-title">
       <CardHeader>
         <CardTitle id="sample-ticket-title">Sample ticket #{SAMPLE_TICKET.id}</CardTitle>
-        <TicketMeta>
-          <div>
-            <StatusPill>Open</StatusPill>
-            <Subject>{SAMPLE_TICKET.subject}</Subject>
-          </div>
+        <Subject>{SAMPLE_TICKET.subject}</Subject>
+        <MetaRow>
+          <StatusPill>Open</StatusPill>
           <Channel>{SAMPLE_TICKET.channel}</Channel>
-        </TicketMeta>
-        <SummaryRow>
-          <SparkleFillIcon aria-hidden />
-          <span>{SAMPLE_TICKET.summary}</span>
-        </SummaryRow>
+        </MetaRow>
       </CardHeader>
 
       <Body>
@@ -419,9 +390,7 @@ export default function CopilotSampleTicketWidget({
         )}
 
         {phase === 'drafting' && (
-          <StepCallout>
-            <SendingNote style={{ animation: 'none', opacity: 1 }}>Writing a Copilot reply…</SendingNote>
-          </StepCallout>
+          <SendingNote>Writing a Copilot reply…</SendingNote>
         )}
 
         {showComposer && (
@@ -500,32 +469,32 @@ export default function CopilotSampleTicketWidget({
             Ticket solved — nice work on your first resolution
           </SuccessBanner>
         )}
-      </Body>
 
-      <Footer>
-        <FooterActions>
-          {phase === 'preview' && (
-            <Button size="small" isPrimary onClick={handleDraftReply}>
-              Yes, draft a reply
-            </Button>
-          )}
-          {phase === 'review' && (
-            <>
-              <GhostButton type="button" onClick={() => setIsEditing(editing => !editing)}>
-                {isEditing ? 'Done editing' : 'Edit reply'}
-              </GhostButton>
-              <Button size="small" isPrimary onClick={handleApproveSend}>
-                Approve and send
+        {showActions && (
+          <ActionRow>
+            {phase === 'preview' && (
+              <Button size="small" isPrimary onClick={handleDraftReply}>
+                Yes, draft a reply
               </Button>
-            </>
-          )}
-          {phase === 'posted' && (
-            <Button size="small" isPrimary onClick={handleSolve}>
-              Solve this ticket
-            </Button>
-          )}
-        </FooterActions>
-      </Footer>
+            )}
+            {phase === 'review' && (
+              <>
+                <GhostButton type="button" onClick={() => setIsEditing(editing => !editing)}>
+                  {isEditing ? 'Done editing' : 'Edit reply'}
+                </GhostButton>
+                <Button size="small" isPrimary onClick={handleApproveSend}>
+                  Approve and send
+                </Button>
+              </>
+            )}
+            {phase === 'posted' && (
+              <Button size="small" isPrimary onClick={handleSolve}>
+                Solve this ticket
+              </Button>
+            )}
+          </ActionRow>
+        )}
+      </Body>
     </Card>
   )
 }
