@@ -16,10 +16,26 @@ test.describe('Launchpad trial experience', () => {
   test('go live quickly shows onboarding actions', async ({ page }) => {
     await page.getByRole('button', { name: 'Go live quickly' }).click()
     await expect(page.getByText(/fastest way to go live/i)).toBeVisible({ timeout: 15000 })
-    await expect(page.getByText(/Camera obscura/)).toBeVisible()
     await expect(page.getByRole('button', { name: 'Preview Help center' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Try a sample ticket' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Connect Support Email' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Bring in your team' })).toBeVisible()
+  })
+
+  test('bring in your team opens copilot-led invite flow', async ({ page }) => {
+    await page.getByRole('button', { name: 'Go live quickly' }).click()
+    await expect(page.getByRole('button', { name: 'Bring in your team' })).toBeVisible({
+      timeout: 15000,
+    })
+    await page.getByRole('button', { name: 'Bring in your team' }).click()
+
+    await expect(page.getByText(/bring in your team/i).first()).toBeVisible({ timeout: 15000 })
+    await expect(page.getByRole('heading', { name: 'Send email invites' })).toBeVisible()
+    await expect(page.getByLabel('Send an email invite')).toHaveValue('alex@swiftfinance.io')
+    await expect(page.getByLabel('Give them a role')).toHaveValue('Admin')
+
+    await page.getByRole('button', { name: 'Invite' }).click()
+    await expect(page.getByText('Invites sent')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText(/You're all set/i)).toBeVisible({ timeout: 5000 })
   })
 })

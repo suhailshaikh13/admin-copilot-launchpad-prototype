@@ -18,9 +18,12 @@ import Markdown from 'react-markdown'
 import FloatIn from './FloatIn'
 import AuroraGlow from './AuroraGlow'
 import { CopilotErrorMessage } from './CopilotErrorMessage'
-import { streamChat, parseSuggestions, getCannedResponse } from '../services/bedrock'
+import { streamChat, parseSuggestions, parseAssistantPayload, getCannedResponse } from '../services/bedrock'
+import type { AssistantWidget } from '../services/bedrock'
 import type { LaunchpadStage } from '../launchpad/types'
 import type { ChatMessage } from '../services/bedrock'
+import CopilotTeamInviteWidget from './CopilotTeamInviteWidget'
+import type { TeamInviteEntry } from '../launchpad/teamInvite'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -28,6 +31,7 @@ interface Message {
   isStreaming?: boolean
   isError?: boolean
   suggestions?: string[]
+  widget?: AssistantWidget
 }
 
 interface SavedConversation {
@@ -860,6 +864,35 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
     }
   }, [messages, activeConversationId])
 
+  const handleTeamInvitesSent = useCallback((entries: TeamInviteEntry[]) => {
+    const summary =
+      entries.length === 1
+        ? `You're all set — **${entries[0].email}** will get an invite to join as **${entries[0].role}**. Once they accept, they'll see the same AI-powered Agent Workspace you're setting up.`
+        : `You're all set — I sent **${entries.length}** invites. Once they accept, they'll join your trial and work alongside AI in Agent Workspace.`
+
+    setMessages(prev => [
+      ...prev,
+      {
+        role: 'assistant',
+        content: summary,
+        suggestions: ['Connect Support Email', 'Preview Help center', 'Try a sample ticket'],
+      },
+    ])
+  }, [])
+
+  const handleSkipTeamInvite = useCallback(() => {
+    setMessages(prev => [
+      ...prev,
+      { role: 'user', content: 'Skip for now' },
+      {
+        role: 'assistant',
+        content:
+          'No problem — you can invite teammates anytime from **People**. Want to keep going on another go-live step?',
+        suggestions: ['Connect Support Email', 'Preview Help center'],
+      },
+    ])
+  }, [])
+
   const handleSend = useCallback((text?: string) => {
     const content = (text ?? inputValue).trim()
     if (!content || isGenerating) return
@@ -892,10 +925,9 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
       setActiveConversationId(newConversation.id)
     }
 
-    const cannedResponse =
-      messages.length === 0 ? getCannedResponse(content, businessName) : undefined
+    const cannedResponse = getCannedResponse(content, businessName)
     if (cannedResponse) {
-      const parsed = parseSuggestions(cannedResponse)
+      const parsed = parseAssistantPayload(cannedResponse)
       let charIndex = 0
       const interval = setInterval(() => {
         const chunkSize = Math.floor(Math.random() * 12) + 4
@@ -922,6 +954,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
                 ...last,
                 content: parsed.content,
                 suggestions: parsed.suggestions,
+                widget: parsed.widget,
                 isStreaming: false,
               }
             }
@@ -1280,6 +1313,12 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
                   {msg.content && <Markdown>{msg.content}</Markdown>}
                   {msg.isError && (
                     <CopilotErrorMessage onViewSetupGuide={() => onNavigateToSetupGuide?.()} />
+                  )}
+                  {msg.widget === 'team-invite' && !msg.isStreaming && (
+                    <CopilotTeamInviteWidget
+                      onInviteSent={handleTeamInvitesSent}
+                      onSkip={handleSkipTeamInvite}
+                    />
                   )}
                 </AssistantMessage>
                 {!msg.isStreaming && msg.suggestions && msg.suggestions.length > 0 && i === messages.length - 1 && (

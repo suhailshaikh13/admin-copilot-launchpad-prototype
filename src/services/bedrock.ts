@@ -267,10 +267,27 @@ export function getGoLiveQuicklyResponse(_businessName: string): string {
 </suggestions>`
 }
 
+export function getBringInTeamResponse(_businessName: string): string {
+  return `I'll help you **bring in your team** without leaving this chat.
+
+Your team works hand-in-hand with AI to deliver fast, accurate, and personal service to customers. Add their emails below, pick a role for each person, and I'll send the invites.
+
+<widget>team-invite</widget>
+
+<suggestions>
+<chip>Connect Support Email</chip>
+<chip>Preview Help center</chip>
+</suggestions>`
+}
+
 export function getCannedResponse(message: string, businessName = 'your business'): string | undefined {
   const trimmed = message.trim()
   if (trimmed === 'Go live quickly' || trimmed.toLowerCase().includes('go live')) {
     return getGoLiveQuicklyResponse(businessName)
+  }
+
+  if (trimmed === 'Bring in your team' || trimmed.toLowerCase() === 'bring in your team') {
+    return getBringInTeamResponse(businessName)
   }
 
   if (CANNED_RESPONSES[trimmed] && CANNED_RESPONSES[trimmed] !== 'GO_LIVE_TEMPLATE') {
@@ -297,6 +314,24 @@ export function parseSuggestions(text: string): { content: string; suggestions: 
   const chips = [...match[1].matchAll(/<chip>(.*?)<\/chip>/g)]
     .map(m => m[1].trim()).filter(Boolean).slice(0, 5)
   return { content, suggestions: chips }
+}
+
+export type AssistantWidget = 'team-invite'
+
+export function parseAssistantPayload(text: string): {
+  content: string
+  suggestions: string[]
+  widget?: AssistantWidget
+} {
+  const { content: withWidget, suggestions } = parseSuggestions(text)
+  const widgetMatch = withWidget.match(/<widget>([\s\S]*?)<\/widget>\s*/)
+  if (!widgetMatch) {
+    return { content: withWidget, suggestions }
+  }
+  const widgetId = widgetMatch[1].trim()
+  const content = withWidget.replace(widgetMatch[0], '').trimEnd()
+  const widget = widgetId === 'team-invite' ? 'team-invite' : undefined
+  return { content, suggestions, widget }
 }
 
 export async function streamChat(
