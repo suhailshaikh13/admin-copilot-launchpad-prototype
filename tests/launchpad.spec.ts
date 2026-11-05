@@ -68,9 +68,8 @@ test.describe('Launchpad trial experience', () => {
     })
     await page.getByRole('button', { name: 'Bring in your team' }).click()
 
-    await expect(page.getByText(/bring in your team/i).first()).toBeVisible({ timeout: 15000 })
-    await expect(page.getByRole('heading', { name: 'Send email invites' })).toBeVisible()
-    await expect(page.getByLabel('Send an email invite')).toHaveValue('alex@swiftfinance.io')
+    await expect(page.getByText('Team invites').first()).toBeVisible({ timeout: 15000 })
+    await expect(page.getByLabel('Email')).toHaveValue('alex@swiftfinance.io')
 
     await page.getByRole('button', { name: 'Invite' }).click()
     await expect(page.getByText('Invites sent')).toBeVisible({ timeout: 5000 })

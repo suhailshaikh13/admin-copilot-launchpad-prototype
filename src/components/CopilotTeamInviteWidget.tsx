@@ -11,44 +11,57 @@ import {
 } from '../launchpad/teamInvite'
 import CopilotPreviewCard from './CopilotPreviewCard'
 
-const Content = styled.div`
+const Body = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
+  min-width: 0;
 `
 
-const CardTitle = styled.h3`
+const Intro = styled.p`
   margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 20px;
-  color: #2f3130;
-`
-
-const CardHint = styled.p`
-  margin: -8px 0 0;
   font-size: 13px;
   line-height: 18px;
   color: #646864;
 `
 
-const RowGrid = styled.div`
+const InviteStack = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
 `
 
-const InviteRow = styled.div`
+const InviteBlock = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #e9ebed;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #eae9e8;
+  background: #fafafa;
+`
 
-  &:last-of-type {
-    border-bottom: none;
-    padding-bottom: 0;
-  }
+const BlockHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+`
+
+const BlockTitle = styled.span`
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #646864;
+`
+
+const FieldPair = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 `
 
 const FieldLabel = styled.label`
@@ -56,9 +69,6 @@ const FieldLabel = styled.label`
   font-weight: 600;
   line-height: 16px;
   color: #2f3130;
-  display: flex;
-  align-items: center;
-  gap: 4px;
 `
 
 const TextInput = styled.input`
@@ -66,7 +76,7 @@ const TextInput = styled.input`
   box-sizing: border-box;
   height: 40px;
   padding: 0 12px;
-  border: 1px solid #b7b7b3;
+  border: 1px solid #dcdcda;
   border-radius: 8px;
   font-size: 14px;
   line-height: 20px;
@@ -82,6 +92,10 @@ const TextInput = styled.input`
   &[aria-invalid='true'] {
     border-color: #c72a1a;
   }
+
+  &:disabled {
+    opacity: 0.6;
+  }
 `
 
 const Select = styled.select`
@@ -89,7 +103,7 @@ const Select = styled.select`
   box-sizing: border-box;
   height: 40px;
   padding: 0 36px 0 12px;
-  border: 1px solid #b7b7b3;
+  border: 1px solid #dcdcda;
   border-radius: 8px;
   font-size: 14px;
   line-height: 20px;
@@ -105,18 +119,54 @@ const Select = styled.select`
     outline-offset: 1px;
     border-color: #406cc4;
   }
+
+  &:disabled {
+    opacity: 0.6;
+  }
 `
 
-const AddLink = styled.button`
-  align-self: flex-start;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0;
+const RemoveButton = styled.button`
+  padding: 4px 8px;
   border: none;
   background: none;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  color: #646864;
+  cursor: pointer;
+  border-radius: 6px;
+
+  &:hover:not(:disabled) {
+    color: #2f3130;
+    background: rgba(47, 49, 48, 0.06);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`
+
+const ActionsRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+`
+
+const AddButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #dcdcda;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
   color: #406cc4;
   cursor: pointer;
 
@@ -125,31 +175,14 @@ const AddLink = styled.button`
     height: 14px;
   }
 
-  &:hover {
-    text-decoration: underline;
+  &:hover:not(:disabled) {
+    background: #f4f7fc;
+    border-color: #b7b7b3;
   }
-`
 
-const Footer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  padding-top: 4px;
-  border-top: 1px solid #e9ebed;
-`
-
-const TextButton = styled.button`
-  padding: 8px 4px;
-  border: none;
-  background: none;
-  font-size: 14px;
-  line-height: 20px;
-  color: #646864;
-  cursor: pointer;
-
-  &:hover {
-    color: #2f3130;
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `
 
@@ -172,12 +205,6 @@ const SendingNote = styled.p`
   animation: ${pulse} 1.2s ease-in-out infinite;
 `
 
-const SuccessBlock = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`
-
 const SuccessHeader = styled.div`
   display: flex;
   align-items: center;
@@ -189,15 +216,14 @@ const SuccessHeader = styled.div`
   svg {
     width: 20px;
     height: 20px;
-    color: #4b7d04;
   }
 `
 
 const SuccessList = styled.ul`
-  margin: 0;
+  margin: 8px 0 0;
   padding-left: 20px;
   font-size: 13px;
-  line-height: 18px;
+  line-height: 20px;
   color: #2f3130;
 `
 
@@ -264,8 +290,7 @@ export default function CopilotTeamInviteWidget({ onInviteSent }: CopilotTeamInv
   if (status === 'sent') {
     return (
       <CopilotPreviewCard title="Team invites">
-        <Content aria-live="polite">
-          <SuccessBlock>
+        <Body aria-live="polite">
           <SuccessHeader>
             <CheckCircleFillIcon aria-hidden />
             Invites sent
@@ -277,68 +302,77 @@ export default function CopilotTeamInviteWidget({ onInviteSent }: CopilotTeamInv
               </li>
             ))}
           </SuccessList>
-        </SuccessBlock>
-        </Content>
+        </Body>
       </CopilotPreviewCard>
     )
   }
 
   return (
     <CopilotPreviewCard title="Team invites">
-      <Content aria-labelledby={`${formId}-title`}>
-      <CardTitle id={`${formId}-title`}>Send email invites</CardTitle>
-      <CardHint>They'll join your trial workspace and work alongside AI in Agent Workspace.</CardHint>
+      <Body aria-labelledby={`${formId}-intro`}>
+        <Intro id={`${formId}-intro`}>
+          They&apos;ll join your trial workspace and work alongside AI in Agent Workspace.
+        </Intro>
 
-      <RowGrid>
-        {rows.map((row, index) => (
-          <InviteRow key={row.id}>
-            <FieldLabel htmlFor={`${formId}-email-${row.id}`}>Send an email invite</FieldLabel>
-            <TextInput
-              id={`${formId}-email-${row.id}`}
-              type="email"
-              autoComplete="email"
-              value={row.email}
-              aria-invalid={Boolean(error && !isValidInviteEmail(row.email))}
-              disabled={status === 'sending'}
-              onChange={event => updateRow(row.id, { email: event.target.value })}
-            />
-            <FieldLabel htmlFor={`${formId}-role-${row.id}`}>Give them a role</FieldLabel>
-            <Select
-              id={`${formId}-role-${row.id}`}
-              value={row.role}
-              disabled={status === 'sending'}
-              onChange={event => updateRow(row.id, { role: event.target.value as TeamInviteRole })}
-            >
-              {TEAM_INVITE_ROLES.map(role => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </Select>
-            {rows.length > 1 && (
-              <TextButton type="button" onClick={() => removeRow(row.id)} disabled={status === 'sending'}>
-                Remove
-              </TextButton>
-            )}
-            {index === rows.length - 1 && rows.length < 5 && (
-              <AddLink type="button" onClick={addRow} disabled={status === 'sending'}>
-                <PlusStrokeIcon aria-hidden />
-                Add
-              </AddLink>
-            )}
-          </InviteRow>
-        ))}
-      </RowGrid>
+        <InviteStack>
+          {rows.map((row, index) => (
+            <InviteBlock key={row.id}>
+              <BlockHeader>
+                <BlockTitle>Teammate {index + 1}</BlockTitle>
+                {rows.length > 1 && (
+                  <RemoveButton type="button" onClick={() => removeRow(row.id)} disabled={status === 'sending'}>
+                    Remove
+                  </RemoveButton>
+                )}
+              </BlockHeader>
+              <FieldPair>
+                <FieldLabel htmlFor={`${formId}-email-${row.id}`}>Email</FieldLabel>
+                <TextInput
+                  id={`${formId}-email-${row.id}`}
+                  type="email"
+                  autoComplete="email"
+                  value={row.email}
+                  aria-invalid={Boolean(error && !isValidInviteEmail(row.email))}
+                  disabled={status === 'sending'}
+                  onChange={event => updateRow(row.id, { email: event.target.value })}
+                />
+              </FieldPair>
+              <FieldPair>
+                <FieldLabel htmlFor={`${formId}-role-${row.id}`}>Role</FieldLabel>
+                <Select
+                  id={`${formId}-role-${row.id}`}
+                  value={row.role}
+                  disabled={status === 'sending'}
+                  onChange={event => updateRow(row.id, { role: event.target.value as TeamInviteRole })}
+                >
+                  {TEAM_INVITE_ROLES.map(role => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </Select>
+              </FieldPair>
+            </InviteBlock>
+          ))}
+        </InviteStack>
 
-      {error && <ErrorText role="alert">{error}</ErrorText>}
-      {status === 'sending' && <SendingNote>Sending invites…</SendingNote>}
+        {error && <ErrorText role="alert">{error}</ErrorText>}
+        {status === 'sending' && <SendingNote>Sending invites…</SendingNote>}
 
-      <Footer>
-        <Button size="small" isPrimary onClick={handleInvite} disabled={status === 'sending'}>
-          Invite
-        </Button>
-      </Footer>
-      </Content>
+        <ActionsRow>
+          {rows.length < 5 ? (
+            <AddButton type="button" onClick={addRow} disabled={status === 'sending'}>
+              <PlusStrokeIcon aria-hidden />
+              Add teammate
+            </AddButton>
+          ) : (
+            <span />
+          )}
+          <Button size="small" isPrimary onClick={handleInvite} disabled={status === 'sending'}>
+            Invite
+          </Button>
+        </ActionsRow>
+      </Body>
     </CopilotPreviewCard>
   )
 }
