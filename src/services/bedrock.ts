@@ -223,23 +223,7 @@ Intent values are continuously improved by Zendesk's AI models and are specific 
 <chip>Test a procedure with sample tickets</chip>
 </suggestions>`,
 
-  'Go live quickly': `I'll get your **trial live on the web** in a few guided steps. Here's what I'm setting up for you:
-
-**1. Web widget** — Drop the messaging widget on your demo site with your trial brand colors.
-
-**2. Default routing** — Route new chats to your trial support group so nothing sits unassigned.
-
-**3. Publish** — Turn on the widget so visitors can start conversations immediately.
-
-I'm applying these changes to your **launch preview** on the left. You should see the checklist and site preview update as each step completes.
-
-**You're live** when the widget appears on your demo URL and the checklist shows all steps complete.
-
-<suggestions>
-<chip>Add my brand colors to the widget</chip>
-<chip>Invite a teammate to the trial</chip>
-<chip>Test a conversation end-to-end</chip>
-</suggestions>`,
+  'Go live quickly': `GO_LIVE_TEMPLATE`,
 
   'Escalate tickets with negative sentiment': `Here's how to automatically escalate tickets that have **negative sentiment**:
 
@@ -272,16 +256,34 @@ I'm applying these changes to your **launch preview** on the left. You should se
 </suggestions>`,
 }
 
-export function getCannedResponse(message: string): string | undefined {
+export function getGoLiveQuicklyResponse(businessName: string): string {
+  return `The fastest way to go live is using the onboarding **Checklist**. I can actually configure these settings for you right here in our chat.
+
+What should we configure first for **${businessName}**?
+
+<suggestions>
+<chip>Preview Help center</chip>
+<chip>Try a sample ticket</chip>
+<chip>Connect Support Email</chip>
+<chip>Bring in your team</chip>
+</suggestions>`
+}
+
+export function getCannedResponse(message: string, businessName = 'your business'): string | undefined {
   const trimmed = message.trim()
-  if (CANNED_RESPONSES[trimmed]) return CANNED_RESPONSES[trimmed]
+  if (trimmed === 'Go live quickly' || trimmed.toLowerCase().includes('go live')) {
+    return getGoLiveQuicklyResponse(businessName)
+  }
+
+  if (CANNED_RESPONSES[trimmed] && CANNED_RESPONSES[trimmed] !== 'GO_LIVE_TEMPLATE') {
+    return CANNED_RESPONSES[trimmed]
+  }
 
   const lower = trimmed.toLowerCase()
   for (const [key, value] of Object.entries(CANNED_RESPONSES)) {
+    if (key === 'Go live quickly' || value === 'GO_LIVE_TEMPLATE') continue
     if (key.toLowerCase() === lower) return value
   }
-
-  if (lower.includes('go live')) return CANNED_RESPONSES['Go live quickly']
 
   return undefined
 }

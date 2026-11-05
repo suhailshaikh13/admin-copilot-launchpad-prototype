@@ -416,6 +416,7 @@ function App() {
               ref={copilotRef}
               openCount={copilotOpenCount}
               variant={isLaunchpad ? 'launchpad' : 'admin'}
+              businessName="Camera obscura"
               onLaunchpadProgress={setLaunchpadStage}
               onClose={() => {
                 if (isLaunchpad) return

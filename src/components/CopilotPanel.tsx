@@ -695,6 +695,7 @@ interface CopilotPanelProps {
   onToggleFullscreen?: () => void
   variant?: 'admin' | 'launchpad'
   onLaunchpadProgress?: (stage: LaunchpadStage) => void
+  businessName?: string
 }
 
 const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function CopilotPanel({
@@ -706,6 +707,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   onToggleFullscreen,
   variant = 'admin',
   onLaunchpadProgress,
+  businessName = 'your business',
 }, ref) {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
@@ -878,10 +880,6 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
     setMessages(prev => [...prev, userMessage, assistantMessage])
     setIsGenerating(true)
 
-    if (variant === 'launchpad' && isGoLiveQuery(content)) {
-      onLaunchpadProgress?.('progress')
-    }
-
     // Create conversation immediately on first message
     if (messages.length === 0 && !activeConversationId) {
       const newConversation: SavedConversation = {
@@ -894,8 +892,8 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
       setActiveConversationId(newConversation.id)
     }
 
-    const cannedResponse = messages.length === 0 ? getCannedResponse(content) : undefined
-    const goLiveCanned = cannedResponse !== undefined && isGoLiveQuery(content)
+    const cannedResponse =
+      messages.length === 0 ? getCannedResponse(content, businessName) : undefined
     if (cannedResponse) {
       const parsed = parseSuggestions(cannedResponse)
       let charIndex = 0
@@ -930,9 +928,6 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
             return updated
           })
           setIsGenerating(false)
-          if (goLiveCanned) {
-            onLaunchpadProgress?.('live')
-          }
         }
       }, 15)
       cannedIntervalRef.current = interval
@@ -997,7 +992,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
       },
       controller.signal
     )
-  }, [inputValue, isGenerating, messages, activeConversationId, variant, onLaunchpadProgress])
+  }, [inputValue, isGenerating, messages, activeConversationId, variant, onLaunchpadProgress, businessName])
 
   useImperativeHandle(ref, () => ({
     sendMessage: (text: string) => handleSend(text),
