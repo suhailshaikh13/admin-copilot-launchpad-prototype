@@ -343,13 +343,13 @@ export default function CopilotSampleTicketWidget({
   const showReplyComposer =
     phase === 'reply-review' || phase === 'sending' || phase === 'posted' || phase === 'solving' || phase === 'solved'
 
-  const useCollapsible = phase === 'ticket-preview' || phase === 'reply-review'
+  const useCollapsible = phase === 'ticket-preview'
 
   return (
     <CopilotPreviewCard
       title={previewTitle(phase)}
       expandable={useCollapsible ? 'collapsible' : 'none'}
-      collapsedMaxHeight={phase === 'ticket-preview' ? 200 : 240}
+      collapsedMaxHeight={200}
     >
       {phase === 'drafting-reply' && <SendingNote>Writing a Copilot reply…</SendingNote>}
 

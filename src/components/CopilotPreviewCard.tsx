@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import styled from 'styled-components'
 
 const Shell = styled.div`
@@ -29,7 +29,7 @@ const Title = styled.p`
   color: #422953;
 `
 
-const InnerCard = styled.div<{ $expandable?: boolean; $expanded?: boolean }>`
+const InnerCard = styled.div<{ $reserveCollapsedToggleSpace?: boolean }>`
   position: relative;
   margin: 0;
   background: #fff;
@@ -39,9 +39,12 @@ const InnerCard = styled.div<{ $expandable?: boolean; $expanded?: boolean }>`
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 
-  ${({ $expandable, $expanded }) =>
-    $expandable && !$expanded
+  ${({ $reserveCollapsedToggleSpace }) =>
+    $reserveCollapsedToggleSpace
       ? `
     padding-bottom: 56px;
   `
@@ -50,6 +53,7 @@ const InnerCard = styled.div<{ $expandable?: boolean; $expanded?: boolean }>`
 
 const Content = styled.div<{ $collapsed?: boolean; $collapsedMaxHeight?: number }>`
   width: 100%;
+  min-width: 0;
   ${({ $collapsed, $collapsedMaxHeight = 184 }) =>
     $collapsed
       ? `
@@ -69,11 +73,7 @@ const FadeGradient = styled.div`
   background: linear-gradient(to top, #ffffff 35%, rgba(255, 255, 255, 0));
 `
 
-const ToggleButton = styled.button`
-  position: absolute;
-  left: 3px;
-  bottom: 9px;
-  z-index: 1;
+const toggleButtonStyles = `
   border: none;
   background: transparent;
   padding: 10px 16px;
@@ -88,6 +88,24 @@ const ToggleButton = styled.button`
   &:hover {
     background: rgba(64, 108, 196, 0.08);
   }
+`
+
+const CollapsedToggleButton = styled.button`
+  position: absolute;
+  left: 3px;
+  bottom: 9px;
+  z-index: 1;
+  ${toggleButtonStyles}
+`
+
+const ExpandedToggleRow = styled.div`
+  margin-top: 8px;
+  flex-shrink: 0;
+`
+
+const ExpandedToggleButton = styled.button`
+  align-self: flex-start;
+  ${toggleButtonStyles}
 `
 
 export type CopilotPreviewExpandable = 'none' | 'collapsible'
@@ -111,27 +129,35 @@ export default function CopilotPreviewCard({
   const isCollapsible = expandable === 'collapsible'
   const showCollapsed = isCollapsible && !expanded
 
+  useEffect(() => {
+    if (!isCollapsible) {
+      setExpanded(false)
+    }
+  }, [isCollapsible])
+
   return (
     <Shell>
       <Header>
         <Title>{title}</Title>
       </Header>
-      <InnerCard $expandable={isCollapsible} $expanded={expanded}>
+      <InnerCard $reserveCollapsedToggleSpace={showCollapsed}>
         <Content $collapsed={showCollapsed} $collapsedMaxHeight={collapsedMaxHeight}>
           {children}
         </Content>
         {showCollapsed && (
           <>
             <FadeGradient aria-hidden />
-            <ToggleButton type="button" onClick={() => setExpanded(true)}>
+            <CollapsedToggleButton type="button" onClick={() => setExpanded(true)}>
               View full preview
-            </ToggleButton>
+            </CollapsedToggleButton>
           </>
         )}
         {isCollapsible && expanded && (
-          <ToggleButton type="button" onClick={() => setExpanded(false)}>
-            Hide full preview
-          </ToggleButton>
+          <ExpandedToggleRow>
+            <ExpandedToggleButton type="button" onClick={() => setExpanded(false)}>
+              Hide full preview
+            </ExpandedToggleButton>
+          </ExpandedToggleRow>
         )}
       </InnerCard>
     </Shell>

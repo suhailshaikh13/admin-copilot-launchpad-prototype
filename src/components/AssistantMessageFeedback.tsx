@@ -8,7 +8,7 @@ import CopyStrokeIcon from '@zendeskgarden/svg-icons/src/16/copy-stroke.svg?reac
 const FeedbackRow = styled.div`
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 4px;
   margin-top: 8px;
 `
