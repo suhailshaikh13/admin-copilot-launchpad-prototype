@@ -256,10 +256,8 @@ Intent values are continuously improved by Zendesk's AI models and are specific 
 </suggestions>`,
 }
 
-export function getGoLiveQuicklyResponse(businessName: string): string {
+export function getGoLiveQuicklyResponse(_businessName: string): string {
   return `The fastest way to go live is using the onboarding **Checklist**. I can actually configure these settings for you right here in our chat.
-
-What should we configure first for **${businessName}**?
 
 <suggestions>
 <chip>Preview Help center</chip>
