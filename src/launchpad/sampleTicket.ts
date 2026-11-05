@@ -1,4 +1,5 @@
 export const SAMPLE_TICKET = {
+  id: 1,
   subject: 'Unable to log in after password reset',
   channel: 'Via email',
   summary:

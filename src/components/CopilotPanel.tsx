@@ -883,19 +883,6 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
     ])
   }, [])
 
-  const handleSkipTeamInvite = useCallback(() => {
-    setMessages(prev => [
-      ...prev,
-      { role: 'user', content: 'Skip for now' },
-      {
-        role: 'assistant',
-        content:
-          'No problem — you can invite teammates anytime from **People**. Want to keep going on another go-live step?',
-        suggestions: ['Connect Support Email', 'Preview Help center'],
-      },
-    ])
-  }, [])
-
   const handleSampleReplySent = useCallback(() => {
     setMessages(prev => [
       ...prev,
@@ -908,26 +895,38 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
     ])
   }, [])
 
+  const handleSampleDraftRequested = useCallback(() => {
+    setMessages(prev => [
+      ...prev,
+      {
+        role: 'assistant',
+        content:
+          'On it — I will draft a reply based on the customer message and your account policies.',
+        suggestions: [],
+      },
+    ])
+  }, [])
+
+  const handleSampleReplyReady = useCallback(() => {
+    setMessages(prev => [
+      ...prev,
+      {
+        role: 'assistant',
+        content:
+          'Here is a suggested reply. Refine it with the quick prompts, edit the text, or **Approve and send** when it looks good.',
+        suggestions: [],
+      },
+    ])
+  }, [])
+
   const handleSampleTicketSolved = useCallback(() => {
     setMessages(prev => [
       ...prev,
       {
         role: 'assistant',
         content:
-          'Ticket **#4821** is solved. You just walked through review, reply, and resolution with Copilot — the same flow works on live tickets in Agent Workspace.',
+          'Ticket **#1** is solved. You just walked through review, reply, and resolution with Copilot — the same flow works on live tickets in Agent Workspace.',
         suggestions: ['Bring in your team', 'Connect Support Email', 'Preview Help center'],
-      },
-    ])
-  }, [])
-
-  const handleSkipSampleTicket = useCallback(() => {
-    setMessages(prev => [
-      ...prev,
-      { role: 'user', content: 'Skip for now' },
-      {
-        role: 'assistant',
-        content: 'No worries — you can practice on a sample ticket anytime. What should we tackle next?',
-        suggestions: ['Bring in your team', 'Connect Support Email'],
       },
     ])
   }, [])
@@ -950,19 +949,6 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
 
 ${published.length > 0 ? 'Try asking your agent a policy question in messaging or open **Try a sample ticket** to see replies in context.' : 'Publish at least one article to preview how the agent answers customers.'}`,
         suggestions: ['Try a sample ticket', 'Bring in your team', 'Connect Support Email'],
-      },
-    ])
-  }, [])
-
-  const handleSkipHelpCenter = useCallback(() => {
-    setMessages(prev => [
-      ...prev,
-      { role: 'user', content: 'Skip for now' },
-      {
-        role: 'assistant',
-        content:
-          'No problem — your generated articles will stay in draft until you publish them from **Channels → Help center**.',
-        suggestions: ['Try a sample ticket', 'Bring in your team'],
       },
     ])
   }, [])
@@ -1389,23 +1375,20 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
                     <CopilotErrorMessage onViewSetupGuide={() => onNavigateToSetupGuide?.()} />
                   )}
                   {msg.widget === 'team-invite' && !msg.isStreaming && (
-                    <CopilotTeamInviteWidget
-                      onInviteSent={handleTeamInvitesSent}
-                      onSkip={handleSkipTeamInvite}
-                    />
+                    <CopilotTeamInviteWidget onInviteSent={handleTeamInvitesSent} />
                   )}
                   {msg.widget === 'sample-ticket' && !msg.isStreaming && (
                     <CopilotSampleTicketWidget
+                      onDraftRequested={handleSampleDraftRequested}
+                      onReplyReady={handleSampleReplyReady}
                       onReplySent={handleSampleReplySent}
                       onTicketSolved={handleSampleTicketSolved}
-                      onSkip={handleSkipSampleTicket}
                     />
                   )}
                   {msg.widget === 'help-center-preview' && !msg.isStreaming && (
                     <CopilotHelpCenterPreviewWidget
                       businessName={businessName}
                       onComplete={handleHelpCenterComplete}
-                      onSkip={handleSkipHelpCenter}
                     />
                   )}
                 </AssistantMessage>

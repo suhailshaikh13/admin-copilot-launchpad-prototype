@@ -43,20 +43,25 @@ test.describe('Launchpad trial experience', () => {
     await page.getByRole('button', { name: 'Go live quickly' }).click()
     await page.getByRole('button', { name: 'Try a sample ticket' }).click({ timeout: 15000 })
 
-    await expect(page.getByRole('heading', { name: 'Sample ticket' })).toBeVisible({ timeout: 15000 })
+    await expect(page.getByRole('heading', { name: 'Sample ticket #1' })).toBeVisible({ timeout: 15000 })
     await expect(page.getByText('Unable to log in after password reset')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Yes, draft a reply' }).click()
+    await expect(page.getByRole('button', { name: 'Approve and send' })).toBeVisible({ timeout: 5000 })
 
     await page.getByRole('button', { name: 'Make the tone warmer' }).click()
     await expect(page.getByLabel('Suggested reply')).toContainText('locked out')
 
-    await page.getByRole('button', { name: 'Send reply' }).click()
+    await page.getByRole('button', { name: 'Approve and send' }).click()
     await expect(page.getByText('Reply sent — customer notified by email')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText('The reply has been posted to the ticket.')).toBeVisible()
+    await expect(page.getByRole('link', { name: /View ticket #1/i })).toBeVisible()
 
     await page.getByRole('button', { name: 'Solve this ticket' }).click()
     await expect(page.getByText('Ticket solved — nice work on your first resolution')).toBeVisible({
       timeout: 5000,
     })
-    await expect(page.getByText(/4821.*solved/i)).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText(/Ticket #1 is solved/i)).toBeVisible({ timeout: 5000 })
   })
 
   test('bring in your team opens copilot-led invite flow', async ({ page }) => {

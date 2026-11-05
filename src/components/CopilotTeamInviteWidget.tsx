@@ -137,7 +137,7 @@ const AddLink = styled.button`
 const Footer = styled.div`
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
   padding-top: 4px;
   border-top: 1px solid #e9ebed;
@@ -213,7 +213,6 @@ interface RowState {
 
 interface CopilotTeamInviteWidgetProps {
   onInviteSent: (entries: TeamInviteEntry[]) => void
-  onSkip?: () => void
 }
 
 function createRow(partial?: Partial<RowState>): RowState {
@@ -224,10 +223,7 @@ function createRow(partial?: Partial<RowState>): RowState {
   }
 }
 
-export default function CopilotTeamInviteWidget({
-  onInviteSent,
-  onSkip,
-}: CopilotTeamInviteWidgetProps) {
+export default function CopilotTeamInviteWidget({ onInviteSent }: CopilotTeamInviteWidgetProps) {
   const formId = useId()
   const [rows, setRows] = useState<RowState[]>(() => [createRow()])
   const [error, setError] = useState<string | null>(null)
@@ -339,9 +335,6 @@ export default function CopilotTeamInviteWidget({
       {status === 'sending' && <SendingNote>Sending invites…</SendingNote>}
 
       <Footer>
-        <TextButton type="button" onClick={onSkip} disabled={status === 'sending'}>
-          Skip for now
-        </TextButton>
         <Button size="small" isPrimary onClick={handleInvite} disabled={status === 'sending'}>
           Invite
         </Button>

@@ -235,22 +235,8 @@ const Footer = styled.div`
 const FooterActions = styled.div`
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
-`
-
-const TextButton = styled.button`
-  padding: 8px 4px;
-  border: none;
-  background: none;
-  font-size: 14px;
-  line-height: 20px;
-  color: #646864;
-  cursor: pointer;
-
-  &:hover {
-    color: #2f3130;
-  }
 `
 
 const Hint = styled.p`
@@ -311,13 +297,11 @@ type Phase = 'scanning' | 'ready' | 'finished'
 interface CopilotHelpCenterPreviewWidgetProps {
   businessName: string
   onComplete: (summary: HelpCenterCompletionSummary) => void
-  onSkip?: () => void
 }
 
 export default function CopilotHelpCenterPreviewWidget({
   businessName,
   onComplete,
-  onSkip,
 }: CopilotHelpCenterPreviewWidgetProps) {
   const siteLabel = inferSiteLabel(businessName)
   const articles = useMemo(() => buildHelpCenterArticles(businessName), [businessName])
@@ -492,9 +476,6 @@ export default function CopilotHelpCenterPreviewWidget({
               : `Choose draft or publish for each article (${decidedCount}/${articles.length} decided).`}
           </Hint>
           <FooterActions>
-            <TextButton type="button" onClick={onSkip}>
-              Skip for now
-            </TextButton>
             <Button
               size="small"
               isPrimary

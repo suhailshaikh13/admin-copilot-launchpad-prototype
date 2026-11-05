@@ -281,9 +281,9 @@ Your team works hand-in-hand with AI to deliver fast, accurate, and personal ser
 }
 
 export function getTrySampleTicketResponse(_businessName: string): string {
-  return `Let's **try a sample ticket** so you can see how Copilot helps agents respond.
+  return `Let's **try a sample ticket** — I'll walk you through it step by step.
 
-Review the customer's message below, tweak the suggested reply if you want (or use a quick prompt), send it, then mark the ticket solved — all from here.
+First, review the ticket below. When you're ready, I can draft a reply for you to approve before we post it to the customer.
 
 <widget>sample-ticket</widget>
 
