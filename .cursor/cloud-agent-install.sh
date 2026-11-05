@@ -14,4 +14,6 @@ curl -fsSL -u "${ARTIFACTORY_USERNAME}:${ARTIFACTORY_API_KEY}" \
 
 npm ci --legacy-peer-deps
 
-npx playwright install chromium --with-deps
+if ! npx playwright install chromium --with-deps; then
+  echo "Playwright browser download failed; use system Chrome via PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/local/bin/google-chrome for tests." >&2
+fi
