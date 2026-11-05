@@ -1,9 +1,8 @@
 import { useCallback, useState } from 'react'
-import styled, { keyframes } from 'styled-components'
+import styled from 'styled-components'
 import { Button } from '@zendesk-ui/react-components'
 import { QuickPrompt } from '@zendesk-ui/ai-assistant-chat'
 import SparkleFillIcon from '../assets/sparkle-fill.svg?react'
-import CheckCircleFillIcon from '../assets/check-circle-fill.svg?react'
 import CopilotPreviewCard from './CopilotPreviewCard'
 import {
   REFINED_REPLIES,
@@ -72,6 +71,12 @@ const Channel = styled.span`
   color: #646864;
 `
 
+const ThreadBlock = styled.div`
+  &:not(:last-child) {
+    margin-bottom: 14px;
+  }
+`
+
 const ThreadLabel = styled.div`
   display: flex;
   align-items: center;
@@ -82,14 +87,14 @@ const ThreadLabel = styled.div`
   margin-bottom: 8px;
 `
 
-const CustomerBubble = styled.div`
+const MessageBubble = styled.div<{ $variant?: 'customer' | 'agent' }>`
   padding: 12px 14px;
   border-radius: 12px;
-  background: #f8f9f9;
-  border: 1px solid #eef0f2;
   font-size: 13px;
   line-height: 18px;
   color: #2f3130;
+  background: ${({ $variant }) => ($variant === 'agent' ? '#f4f7fc' : '#f8f9f9')};
+  border: 1px solid ${({ $variant }) => ($variant === 'agent' ? '#e4eaf6' : '#eef0f2')};
 `
 
 const Composer = styled.div`
@@ -100,7 +105,6 @@ const Composer = styled.div`
   border-radius: 12px;
   border: 1px solid #e4e4e2;
   background: #fafafa;
-  margin-top: 14px;
 `
 
 const ToRow = styled.div`
@@ -190,47 +194,11 @@ const GhostButton = styled.button`
   }
 `
 
-const pulse = keyframes`
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
-`
-
-const SendingNote = styled.p`
-  margin: 0;
-  font-size: 13px;
-  color: #646864;
-  animation: ${pulse} 1.2s ease-in-out infinite;
-`
-
-const SuccessBanner = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: #edf7ed;
-  color: #4b7d04;
-  font-size: 13px;
-  font-weight: 600;
-
-  svg {
-    width: 18px;
-    height: 18px;
-  }
-`
-
 const PostedLead = styled.p`
-  margin: 0;
+  margin: 0 0 10px;
   font-size: 14px;
   line-height: 20px;
   color: #2f3130;
-`
-
-const PostedPanel = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 12px;
 `
 
 const TicketLink = styled.a`
@@ -243,6 +211,7 @@ const TicketLink = styled.a`
   line-height: 20px;
   color: #406cc4;
   text-decoration: none;
+  margin-bottom: 14px;
 
   &:hover {
     text-decoration: underline;
@@ -252,13 +221,6 @@ const TicketLink = styled.a`
     width: 16px;
     height: 16px;
   }
-`
-
-const PostedHint = styled.p`
-  margin: 0;
-  font-size: 13px;
-  line-height: 18px;
-  color: #646864;
 `
 
 function NewWindowIcon() {
@@ -272,13 +234,17 @@ function NewWindowIcon() {
   )
 }
 
+const SubjectInThread = styled(Subject)`
+  margin: 0 0 14px;
+`
+
 function previewTitle(phase: SampleTicketPhase): string {
-  if (phase === 'reply-review' || phase === 'drafting-reply') return 'Suggested reply'
-  if (phase === 'posted' || phase === 'solving' || phase === 'solved') return 'Reply posted'
+  if (phase === 'reply-draft') return 'Suggested reply'
+  if (phase === 'posted-thread') return 'Reply on ticket'
   return 'Ticket preview'
 }
 
-function TicketThread() {
+function TicketPreviewCard() {
   return (
     <>
       <TicketHeader>
@@ -289,33 +255,35 @@ function TicketThread() {
           <Channel>{SAMPLE_TICKET.channel}</Channel>
         </MetaRow>
       </TicketHeader>
-      <div>
+      <ThreadBlock>
         <ThreadLabel>
           <span>{SAMPLE_TICKET.customerLabel}</span>
           <span>{SAMPLE_TICKET.timestamp}</span>
         </ThreadLabel>
-        <CustomerBubble>{SAMPLE_TICKET.customerMessage}</CustomerBubble>
-      </div>
+        <MessageBubble>{SAMPLE_TICKET.customerMessage}</MessageBubble>
+      </ThreadBlock>
     </>
   )
 }
 
 interface CopilotSampleTicketWidgetProps {
   phase: SampleTicketPhase
-  onPhaseChange: (phase: SampleTicketPhase) => void
-  onReplySent: () => void
+  postedReply?: string
+  onReplyApproved: (reply: string) => void
   onTicketSolved: () => void
 }
 
 export default function CopilotSampleTicketWidget({
   phase,
-  onPhaseChange,
-  onReplySent,
+  postedReply = SAMPLE_TICKET.defaultReply,
+  onReplyApproved,
   onTicketSolved,
 }: CopilotSampleTicketWidgetProps) {
   const [reply, setReply] = useState<string>(SAMPLE_TICKET.defaultReply)
   const [isEditing, setIsEditing] = useState(false)
   const [activePrompt, setActivePrompt] = useState<ReplyRefinementPrompt | null>(null)
+  const [solved, setSolved] = useState(false)
+  const [sent, setSent] = useState(false)
 
   const applyPrompt = useCallback((prompt: ReplyRefinementPrompt) => {
     setActivePrompt(prompt)
@@ -324,121 +292,93 @@ export default function CopilotSampleTicketWidget({
   }, [])
 
   const handleApproveSend = useCallback(() => {
-    if (!reply.trim()) return
-    onPhaseChange('sending')
-    window.setTimeout(() => {
-      onPhaseChange('posted')
-      onReplySent()
-    }, 700)
-  }, [onPhaseChange, onReplySent, reply])
+    if (!reply.trim() || sent) return
+    setSent(true)
+    onReplyApproved(reply.trim())
+  }, [onReplyApproved, reply, sent])
 
   const handleSolve = useCallback(() => {
-    onPhaseChange('solving')
-    window.setTimeout(() => {
-      onPhaseChange('solved')
-      onTicketSolved()
-    }, 600)
-  }, [onPhaseChange, onTicketSolved])
+    if (solved) return
+    setSolved(true)
+    onTicketSolved()
+  }, [onTicketSolved, solved])
 
-  const showReplyComposer =
-    phase === 'reply-review' || phase === 'sending' || phase === 'posted' || phase === 'solving' || phase === 'solved'
+  if (phase === 'ticket-preview') {
+    return (
+      <CopilotPreviewCard title={previewTitle(phase)} expandable="none">
+        <TicketPreviewCard />
+      </CopilotPreviewCard>
+    )
+  }
 
-  const useCollapsible = phase === 'ticket-preview'
+  if (phase === 'reply-draft') {
+    return (
+      <CopilotPreviewCard title={previewTitle(phase)} expandable="none">
+        <Composer>
+          <ToRow>
+            <span>To</span>
+            <ToChip>{SAMPLE_TICKET.customerLabel}</ToChip>
+          </ToRow>
+          <ReplyArea
+            value={reply}
+            readOnly={!isEditing}
+            aria-label="Suggested reply"
+            onChange={event => setReply(event.target.value)}
+          />
+          <CopilotTag>
+            <SparkleFillIcon aria-hidden />
+            Copilot generated reply
+          </CopilotTag>
+        </Composer>
+        <PromptRow>
+          {REPLY_REFINEMENT_PROMPTS.map(prompt => (
+            <QuickPrompt key={prompt} showIcon={false} size="small" onClick={() => applyPrompt(prompt)}>
+              {prompt}
+            </QuickPrompt>
+          ))}
+        </PromptRow>
+        {activePrompt && <CopilotTag>Updated reply: {activePrompt.toLowerCase()}</CopilotTag>}
+        <ActionRow>
+          <GhostButton type="button" onClick={() => setIsEditing(editing => !editing)}>
+            {isEditing ? 'Done editing' : 'Edit reply'}
+          </GhostButton>
+          <Button size="small" isPrimary onClick={handleApproveSend} disabled={sent}>
+            Approve and send
+          </Button>
+        </ActionRow>
+      </CopilotPreviewCard>
+    )
+  }
 
   return (
-    <CopilotPreviewCard
-      title={previewTitle(phase)}
-      expandable={useCollapsible ? 'collapsible' : 'none'}
-      collapsedMaxHeight={200}
-    >
-      {phase === 'drafting-reply' && <SendingNote>Writing a Copilot reply…</SendingNote>}
-
-      {(phase === 'ticket-preview' || phase === 'drafting-reply' || showReplyComposer) && <TicketThread />}
-
-      {showReplyComposer && (
-        <>
-          <Composer>
-            <ToRow>
-              <span>To</span>
-              <ToChip>{SAMPLE_TICKET.customerLabel}</ToChip>
-            </ToRow>
-            <ReplyArea
-              value={reply}
-              readOnly={phase !== 'reply-review' || !isEditing}
-              aria-label="Suggested reply"
-              onChange={event => setReply(event.target.value)}
-            />
-            <CopilotTag>
-              <SparkleFillIcon aria-hidden />
-              Copilot generated reply
-            </CopilotTag>
-          </Composer>
-
-          {phase === 'reply-review' && (
-            <>
-              <PromptRow>
-                {REPLY_REFINEMENT_PROMPTS.map(prompt => (
-                  <QuickPrompt
-                    key={prompt}
-                    showIcon={false}
-                    size="small"
-                    onClick={() => applyPrompt(prompt)}
-                  >
-                    {prompt}
-                  </QuickPrompt>
-                ))}
-              </PromptRow>
-              {activePrompt && (
-                <CopilotTag>Updated reply: {activePrompt.toLowerCase()}</CopilotTag>
-              )}
-              <ActionRow>
-                <GhostButton type="button" onClick={() => setIsEditing(editing => !editing)}>
-                  {isEditing ? 'Done editing' : 'Edit reply'}
-                </GhostButton>
-                <Button size="small" isPrimary onClick={handleApproveSend}>
-                  Approve and send
-                </Button>
-              </ActionRow>
-            </>
-          )}
-        </>
-      )}
-
-      {phase === 'sending' && <SendingNote>Posting reply to the ticket…</SendingNote>}
-
-      {(phase === 'posted' || phase === 'solving' || phase === 'solved') && (
-        <>
-          <SuccessBanner>
-            <CheckCircleFillIcon aria-hidden />
-            Reply sent — customer notified by email
-          </SuccessBanner>
-          <PostedPanel>
-            <PostedLead>The reply has been posted to the ticket.</PostedLead>
-            <TicketLink href="#" onClick={event => event.preventDefault()}>
-              View ticket #{SAMPLE_TICKET.id}
-              <NewWindowIcon />
-            </TicketLink>
-            <PostedHint>
-              To see the experience from the customer&apos;s side, submit a test request through
-              your Help Center and watch it arrive as a new ticket in Agent Workspace.
-            </PostedHint>
-          </PostedPanel>
-          {phase === 'posted' && (
-            <ActionRow>
-              <Button size="small" isPrimary onClick={handleSolve}>
-                Solve this ticket
-              </Button>
-            </ActionRow>
-          )}
-        </>
-      )}
-
-      {phase === 'solving' && <SendingNote>Marking ticket solved…</SendingNote>}
-      {phase === 'solved' && (
-        <SuccessBanner>
-          <CheckCircleFillIcon aria-hidden />
-          Ticket solved — nice work on your first resolution
-        </SuccessBanner>
+    <CopilotPreviewCard title={previewTitle(phase)} expandable="collapsible" collapsedMaxHeight={240}>
+      <Eyebrow>Sample ticket #{SAMPLE_TICKET.id}</Eyebrow>
+      <SubjectInThread>{SAMPLE_TICKET.subject}</SubjectInThread>
+      <ThreadBlock>
+        <ThreadLabel>
+          <span>{SAMPLE_TICKET.customerLabel}</span>
+          <span>{SAMPLE_TICKET.timestamp}</span>
+        </ThreadLabel>
+        <MessageBubble>{SAMPLE_TICKET.customerMessage}</MessageBubble>
+      </ThreadBlock>
+      <ThreadBlock>
+        <ThreadLabel>
+          <span>You</span>
+          <span>Just now</span>
+        </ThreadLabel>
+        <MessageBubble $variant="agent">{postedReply}</MessageBubble>
+      </ThreadBlock>
+      <PostedLead>The reply has been posted to the ticket.</PostedLead>
+      <TicketLink href="#" onClick={event => event.preventDefault()}>
+        View ticket #{SAMPLE_TICKET.id}
+        <NewWindowIcon />
+      </TicketLink>
+      {!solved && (
+        <ActionRow>
+          <Button size="small" isPrimary onClick={handleSolve}>
+            Solve this ticket
+          </Button>
+        </ActionRow>
       )}
     </CopilotPreviewCard>
   )

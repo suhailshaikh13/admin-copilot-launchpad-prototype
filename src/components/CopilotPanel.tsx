@@ -38,6 +38,7 @@ interface Message {
   suggestions?: string[]
   widget?: AssistantWidget
   sampleTicketPhase?: SampleTicketPhase
+  sampleTicketReply?: string
 }
 
 function isLastAssistantInStreak(messages: Message[], index: number): boolean {
@@ -911,14 +912,16 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
     ])
   }, [])
 
-  const handleSampleReplySent = useCallback(() => {
+  const handleSampleReplyApproved = useCallback((reply: string) => {
     setMessages(prev => [
       ...prev,
       {
         role: 'assistant',
         content:
-          'Reply sent. For this scenario, keep the ticket **open** until the customer confirms they can sign in — when you are ready, tap **Solve this ticket** in the card.',
-        suggestions: [],
+          'Your reply is on the ticket. Expand the preview to see the customer message and what you sent.',
+        widget: 'sample-ticket',
+        sampleTicketPhase: 'posted-thread',
+        sampleTicketReply: reply,
       },
     ])
   }, [])
@@ -929,7 +932,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
       {
         role: 'assistant',
         content:
-          'Ticket **#1** is solved. You just walked through review, reply, and resolution with Copilot — the same flow works on live tickets in Agent Workspace.',
+          'Ticket **#1** is solved — nice work. Open **View ticket #1** in the preview above anytime, or continue in Agent Workspace.',
         suggestions: ['Bring in your team', 'Connect Support Email', 'Preview Help center'],
       },
     ])
@@ -970,10 +973,6 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
         if (lastAssistantIdx >= 0 && updated[lastAssistantIdx].suggestions?.length) {
           updated[lastAssistantIdx] = { ...updated[lastAssistantIdx], suggestions: undefined }
         }
-        const ticketIdx = updated.findLastIndex(m => m.widget === 'sample-ticket')
-        if (ticketIdx >= 0) {
-          updated[ticketIdx] = { ...updated[ticketIdx], sampleTicketPhase: 'drafting-reply' }
-        }
         updated.push({ role: 'user', content })
         updated.push({
           role: 'assistant',
@@ -984,19 +983,16 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
       })
 
       window.setTimeout(() => {
-        setMessages(prev => {
-          const ticketIdx = prev.findLastIndex(m => m.widget === 'sample-ticket')
-          const updated = [...prev]
-          if (ticketIdx >= 0) {
-            updated[ticketIdx] = { ...updated[ticketIdx], sampleTicketPhase: 'reply-review' }
-          }
-          updated.push({
+        setMessages(prev => [
+          ...prev,
+          {
             role: 'assistant',
             content:
-              'Here is a suggested reply. Refine it with the quick prompts, edit the text, or **Approve and send** when it looks good.',
-          })
-          return updated
-        })
+              'Here is the suggested reply. Refine it with the quick prompts in the preview, then **Approve and send** when it looks good.',
+            widget: 'sample-ticket',
+            sampleTicketPhase: 'reply-draft',
+          },
+        ])
       }, 900)
       return
     }
@@ -1431,15 +1427,8 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
                   {msg.widget === 'sample-ticket' && !msg.isStreaming && (
                     <CopilotSampleTicketWidget
                       phase={msg.sampleTicketPhase ?? 'ticket-preview'}
-                      onPhaseChange={phase => {
-                        setMessages(prevMessages => {
-                          if (i >= prevMessages.length) return prevMessages
-                          const updated = [...prevMessages]
-                          updated[i] = { ...updated[i], sampleTicketPhase: phase }
-                          return updated
-                        })
-                      }}
-                      onReplySent={handleSampleReplySent}
+                      postedReply={msg.sampleTicketReply}
+                      onReplyApproved={handleSampleReplyApproved}
                       onTicketSolved={handleSampleTicketSolved}
                     />
                   )}
