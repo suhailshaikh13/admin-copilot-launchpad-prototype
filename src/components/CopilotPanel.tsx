@@ -18,7 +18,8 @@ import Markdown from 'react-markdown'
 import FloatIn from './FloatIn'
 import AuroraGlow from './AuroraGlow'
 import { CopilotErrorMessage } from './CopilotErrorMessage'
-import { streamChat, parseSuggestions, getCannedResponse } from '../services/bedrock'
+import { streamChat, parseSuggestions, getCannedResponse, isGoLiveQuery } from '../services/bedrock'
+import type { LaunchpadStage } from '../launchpad/types'
 import type { ChatMessage } from '../services/bedrock'
 
 interface Message {
@@ -692,9 +693,20 @@ interface CopilotPanelProps {
   showPlus?: boolean
   isFullscreen?: boolean
   onToggleFullscreen?: () => void
+  variant?: 'admin' | 'launchpad'
+  onLaunchpadProgress?: (stage: LaunchpadStage) => void
 }
 
-const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function CopilotPanel({ openCount, onClose, onNavigateToSetupGuide, showPlus = false, isFullscreen = false, onToggleFullscreen }, ref) {
+const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function CopilotPanel({
+  openCount,
+  onClose,
+  onNavigateToSetupGuide,
+  showPlus = false,
+  isFullscreen = false,
+  onToggleFullscreen,
+  variant = 'admin',
+  onLaunchpadProgress,
+}, ref) {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
@@ -866,6 +878,10 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
     setMessages(prev => [...prev, userMessage, assistantMessage])
     setIsGenerating(true)
 
+    if (variant === 'launchpad' && isGoLiveQuery(content)) {
+      onLaunchpadProgress?.('progress')
+    }
+
     // Create conversation immediately on first message
     if (messages.length === 0 && !activeConversationId) {
       const newConversation: SavedConversation = {
@@ -879,6 +895,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
     }
 
     const cannedResponse = messages.length === 0 ? getCannedResponse(content) : undefined
+    const goLiveCanned = cannedResponse !== undefined && isGoLiveQuery(content)
     if (cannedResponse) {
       const parsed = parseSuggestions(cannedResponse)
       let charIndex = 0
@@ -913,6 +930,9 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
             return updated
           })
           setIsGenerating(false)
+          if (goLiveCanned) {
+            onLaunchpadProgress?.('live')
+          }
         }
       }, 15)
       cannedIntervalRef.current = interval
@@ -977,7 +997,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
       },
       controller.signal
     )
-  }, [inputValue, isGenerating, messages, activeConversationId])
+  }, [inputValue, isGenerating, messages, activeConversationId, variant, onLaunchpadProgress])
 
   useImperativeHandle(ref, () => ({
     sendMessage: (text: string) => handleSend(text),
@@ -1110,7 +1130,11 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
         </IconButton>
         <TitleGroup>
           <ConversationTitle>
-            {showHistory ? 'Conversations' : conversationTitle}
+            {showHistory
+              ? 'Conversations'
+              : variant === 'launchpad' && !isConversation
+                ? 'Launchpad'
+                : conversationTitle}
           </ConversationTitle>
           {isConversation && !showHistory && activeConversationId && (
             <IconButton
@@ -1191,18 +1215,41 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
           <Content>
             <Title>
               <SparkleIcon />
-              <Heading>How can I help?</Heading>
+              <Heading>
+                {variant === 'launchpad' ? 'Launch your trial' : 'How can I help?'}
+              </Heading>
             </Title>
+            {variant === 'launchpad' && (
+              <DisclaimerText style={{ textAlign: 'center', maxWidth: 320, margin: '0 auto 8px' }}>
+                Ask how to go live—I'll configure your trial and update the preview on the left.
+              </DisclaimerText>
+            )}
             <Suggestions key={openCount} $exiting={suggestionsExiting}>
-              <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Route specific ticket to assignee')}>
-                Route specific ticket to assignee
-              </QuickPrompt>
-              <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Create a view of pending status tickets')}>
-                Create a view of pending status tickets
-              </QuickPrompt>
-              <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Explain intent')}>
-                Explain intent
-              </QuickPrompt>
+              {variant === 'launchpad' ? (
+                <>
+                  <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Go live quickly')}>
+                    Go live quickly
+                  </QuickPrompt>
+                  <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Set up messaging for my trial')}>
+                    Set up messaging for my trial
+                  </QuickPrompt>
+                  <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Connect email channel')}>
+                    Connect email channel
+                  </QuickPrompt>
+                </>
+              ) : (
+                <>
+                  <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Route specific ticket to assignee')}>
+                    Route specific ticket to assignee
+                  </QuickPrompt>
+                  <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Create a view of pending status tickets')}>
+                    Create a view of pending status tickets
+                  </QuickPrompt>
+                  <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Explain intent')}>
+                    Explain intent
+                  </QuickPrompt>
+                </>
+              )}
             </Suggestions>
           </Content>
 

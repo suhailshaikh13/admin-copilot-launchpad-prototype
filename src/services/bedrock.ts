@@ -223,6 +223,24 @@ Intent values are continuously improved by Zendesk's AI models and are specific 
 <chip>Test a procedure with sample tickets</chip>
 </suggestions>`,
 
+  'Go live quickly': `I'll get your **trial live on the web** in a few guided steps. Here's what I'm setting up for you:
+
+**1. Web widget** — Drop the messaging widget on your demo site with your trial brand colors.
+
+**2. Default routing** — Route new chats to your trial support group so nothing sits unassigned.
+
+**3. Publish** — Turn on the widget so visitors can start conversations immediately.
+
+I'm applying these changes to your **launch preview** on the left. You should see the checklist and site preview update as each step completes.
+
+**You're live** when the widget appears on your demo URL and the checklist shows all steps complete.
+
+<suggestions>
+<chip>Add my brand colors to the widget</chip>
+<chip>Invite a teammate to the trial</chip>
+<chip>Test a conversation end-to-end</chip>
+</suggestions>`,
+
   'Escalate tickets with negative sentiment': `Here's how to automatically escalate tickets that have **negative sentiment**:
 
 1. Go to **Objects and rules** → **Business rules** → **Triggers**
@@ -255,7 +273,21 @@ Intent values are continuously improved by Zendesk's AI models and are specific 
 }
 
 export function getCannedResponse(message: string): string | undefined {
-  return CANNED_RESPONSES[message]
+  const trimmed = message.trim()
+  if (CANNED_RESPONSES[trimmed]) return CANNED_RESPONSES[trimmed]
+
+  const lower = trimmed.toLowerCase()
+  for (const [key, value] of Object.entries(CANNED_RESPONSES)) {
+    if (key.toLowerCase() === lower) return value
+  }
+
+  if (lower.includes('go live')) return CANNED_RESPONSES['Go live quickly']
+
+  return undefined
+}
+
+export function isGoLiveQuery(message: string): boolean {
+  return message.trim().toLowerCase().includes('go live')
 }
 
 export function parseSuggestions(text: string): { content: string; suggestions: string[] } {

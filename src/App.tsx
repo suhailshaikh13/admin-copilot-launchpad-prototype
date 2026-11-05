@@ -36,7 +36,9 @@ import FeatureUsage from './components/FeatureUsage'
 import CopilotPanel from './components/CopilotPanel'
 import type { CopilotPanelHandle } from './components/CopilotPanel'
 import SearchSuggestions from './components/SearchSuggestions'
+import LaunchpadTrialCanvas from './components/LaunchpadTrialCanvas'
 import { SetupGuide } from './components/SetupGuide'
+import type { LaunchpadStage } from './launchpad/types'
 import styled from 'styled-components'
 
 const CopilotToggle = styled.button<{ $isOpen: boolean; $animateHover: boolean }>`
@@ -102,8 +104,9 @@ const MainWrapper = styled.div`
   height: 100%;
 `
 
-const PanelSlider = styled.div<{ $open: boolean; $fullscreen?: boolean }>`
-  width: ${({ $open, $fullscreen }) => !$open ? '0px' : $fullscreen ? 'calc(100% - 8px)' : '380px'};
+const PanelSlider = styled.div<{ $open: boolean; $fullscreen?: boolean; $wide?: boolean }>`
+  width: ${({ $open, $fullscreen, $wide }) =>
+    !$open ? '0px' : $fullscreen ? 'calc(100% - 8px)' : $wide ? '420px' : '380px'};
   flex: none;
   margin-left: ${({ $open, $fullscreen }) => $open && !$fullscreen ? '8px' : '0'};
   margin-right: ${({ $open }) => $open ? '8px' : '0'};
@@ -198,7 +201,8 @@ function App() {
   const [copilotFullscreen, setCopilotFullscreen] = useState(false)
   const [copilotOpenCount, setCopilotOpenCount] = useState(1)
   const [hovering, setHovering] = useState(false)
-  const [currentPage, setCurrentPage] = useState<'home' | 'setup-guide'>('home')
+  const [currentPage, setCurrentPage] = useState<'home' | 'setup-guide' | 'launchpad'>('launchpad')
+  const [launchpadStage, setLaunchpadStage] = useState<LaunchpadStage>('idle')
   const copilotRef = useRef<CopilotPanelHandle>(null)
   const [activeRecommendation, setActiveRecommendation] = useState<number | null>(null)
   const [drawerRec, setDrawerRec] = useState<number | null>(null)
@@ -286,6 +290,23 @@ function App() {
     setDrawerOpen(false)
   }, [])
 
+  const openLaunchpad = useCallback(() => {
+    setCurrentPage('launchpad')
+    setLaunchpadStage('idle')
+    setCopilotOpen(true)
+    setCopilotOpenCount(c => c + 1)
+    setCopilotFullscreen(false)
+    setDrawerOpen(false)
+    setActiveRecommendation(null)
+  }, [])
+
+  const openHome = useCallback(() => {
+    setCurrentPage('home')
+    setLaunchpadStage('idle')
+  }, [])
+
+  const isLaunchpad = currentPage === 'launchpad'
+
   return (
     <>
       <Product
@@ -332,7 +353,7 @@ function App() {
         </ProfileMenu>
       </Header>
       <Nav>
-        <Nav.Item icon={<HomeFillIcon />} isCurrent>Home</Nav.Item>
+        <Nav.Item icon={<HomeFillIcon />} isCurrent={currentPage === 'home'} onClick={openHome}>Home</Nav.Item>
         <Nav.Item icon={<BuildingFillIcon />}>Account</Nav.Item>
         <Nav.Item icon={<PeopleFillIcon />}>People</Nav.Item>
         <Nav.Item icon={<PaperPlaneFillIcon />}>Channels</Nav.Item>
@@ -342,56 +363,71 @@ function App() {
         <Nav.Item icon={<SquareGridCircleFillIcon />}>Apps and integrations</Nav.Item>
         <Nav.Item icon={<LaptopPhoneFillIcon />}>IT assets</Nav.Item>
         <Nav.Separator />
-        <Nav.Item icon={<RocketFillIcon />}>Launchpad</Nav.Item>
+        <Nav.Item icon={<RocketFillIcon />} isCurrent={isLaunchpad} onClick={openLaunchpad}>Launchpad</Nav.Item>
       </Nav>
       <StyledMain>
         <MainWrapper>
-          <HomeContentWrapper $roundedRight={copilotOpen} $hidden={copilotFullscreen}>
+          <HomeContentWrapper $roundedRight={copilotOpen} $hidden={copilotFullscreen && !isLaunchpad}>
             <ScrollArea>
-              <HomeContent>
-                <HomeInner>
-                  {currentPage === 'home' && (
-                    <>
-                      <Greetings onSuggestionClick={handleSuggestionClick} />
-                      <LatestInsights />
-                      <Recommendations
-                        activeIndex={activeRecommendation}
-                        saved={savedRecs}
-                        skipped={skippedRecs}
-                        onCardClick={handleCardClick}
-                        onDetailsClick={handleDetailsClick}
-                        onSaveToggle={handleSaveToggle}
-                        onSkip={handleSkip}
+              {isLaunchpad ? (
+                <LaunchpadTrialCanvas stage={launchpadStage} />
+              ) : (
+                <>
+                  <HomeContent>
+                    <HomeInner>
+                      {currentPage === 'home' && (
+                        <>
+                          <Greetings onSuggestionClick={handleSuggestionClick} />
+                          <LatestInsights />
+                          <Recommendations
+                            activeIndex={activeRecommendation}
+                            saved={savedRecs}
+                            skipped={skippedRecs}
+                            onCardClick={handleCardClick}
+                            onDetailsClick={handleDetailsClick}
+                            onSaveToggle={handleSaveToggle}
+                            onSkip={handleSkip}
+                          />
+                          <Usage />
+                          <ZendeskUpdates />
+                          <FeatureUsage />
+                        </>
+                      )}
+                      {currentPage === 'setup-guide' && (
+                        <SetupGuide onBack={() => setCurrentPage('home')} />
+                      )}
+                    </HomeInner>
+                  </HomeContent>
+                  <DrawerSlider $open={drawerVisible}>
+                    {drawerRec !== null && (
+                      <RecommendationDrawer
+                        recommendation={recommendations[drawerRec]}
+                        onClose={closeDrawer}
+                        onAskCopilot={handleSuggestionClick}
                       />
-                      <Usage />
-                      <ZendeskUpdates />
-                      <FeatureUsage />
-                    </>
-                  )}
-                  {currentPage === 'setup-guide' && (
-                    <SetupGuide onBack={() => setCurrentPage('home')} />
-                  )}
-                </HomeInner>
-              </HomeContent>
-              <DrawerSlider $open={drawerVisible}>
-                {drawerRec !== null && (
-                  <RecommendationDrawer
-                    recommendation={recommendations[drawerRec]}
-                    onClose={closeDrawer}
-                    onAskCopilot={handleSuggestionClick}
-                  />
-                )}
-              </DrawerSlider>
+                    )}
+                  </DrawerSlider>
+                </>
+              )}
             </ScrollArea>
           </HomeContentWrapper>
-          <PanelSlider $open={copilotOpen} $fullscreen={copilotFullscreen}>
+          <PanelSlider $open={copilotOpen} $fullscreen={copilotFullscreen && !isLaunchpad} $wide={isLaunchpad}>
             <CopilotPanel
               ref={copilotRef}
               openCount={copilotOpenCount}
-              onClose={() => { setCopilotOpen(false); setCopilotFullscreen(false) }}
+              variant={isLaunchpad ? 'launchpad' : 'admin'}
+              onLaunchpadProgress={setLaunchpadStage}
+              onClose={() => {
+                if (isLaunchpad) return
+                setCopilotOpen(false)
+                setCopilotFullscreen(false)
+              }}
               onNavigateToSetupGuide={handleNavigateToSetupGuide}
-              isFullscreen={copilotFullscreen}
-              onToggleFullscreen={() => setCopilotFullscreen(f => !f)}
+              isFullscreen={copilotFullscreen && !isLaunchpad}
+              onToggleFullscreen={() => {
+                if (isLaunchpad) return
+                setCopilotFullscreen(f => !f)
+              }}
             />
           </PanelSlider>
         </MainWrapper>

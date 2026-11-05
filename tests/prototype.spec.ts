@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test'
 test.describe('Admin Copilot Home', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:5173')
+    await page.getByRole('button', { name: 'Home' }).click()
   })
 
   test('renders the header with Admin center and search', async ({ page }) => {
