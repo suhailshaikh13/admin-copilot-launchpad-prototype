@@ -44,3 +44,9 @@ The copilot panel slides in/out via width animation on `PanelSlider`. The `$hasC
 
 ### Working practices
 - When starting a new worktree, always run a new dev server, using a new and unique port number. This is useful so the user can preview changes right away.
+
+### Cloud Agents (solo prototypes)
+- Branch new work from **`cursor/env-setup-beac`** (or any branch that includes `.cursor/cloud-agent-install.sh` and `.cursor/cloud-agent-start.sh`). Branches off bare `main` without those files will fail Cloud Agent install.
+- Environment secrets: **`ARTIFACTORY_USERNAME`** and **`ARTIFACTORY_API_KEY`** (same as GitHub Actions).
+- On agent boot, **`start`** serves Vite at **http://127.0.0.1:5173** unless you set `DEV_PORT`. Playwright uses system Chrome when Playwright browser downloads fail.
+- Example: `git checkout cursor/env-setup-beac && git checkout -b prototype/my-idea`
