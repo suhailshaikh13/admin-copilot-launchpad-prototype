@@ -6,7 +6,9 @@ test.describe('Launchpad trial experience', () => {
   })
 
   test('shows trial workspace and launchpad copilot', async ({ page }) => {
-    await expect(page.getByText('Your launch preview')).toBeVisible()
+    await expect(page.getByText('Set up your trial essentials')).toBeVisible()
+    await expect(page.getByText('1 of 5 completed')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Go to Agent Workspace' })).toBeVisible()
     await expect(page.getByText('Launch your trial')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Go live quickly' })).toBeVisible()
   })
