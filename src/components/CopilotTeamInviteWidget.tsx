@@ -36,10 +36,11 @@ const InviteBlock = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid #eae9e8;
-  background: #fafafa;
+
+  &:not(:first-child) {
+    padding-top: 12px;
+    border-top: 1px solid #eef0f2;
+  }
 `
 
 const BlockHeader = styled.div`
