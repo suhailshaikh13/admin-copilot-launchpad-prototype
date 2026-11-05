@@ -937,13 +937,13 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
 
   const handleHelpCenterComplete = useCallback((summary: HelpCenterCompletionSummary) => {
     const published = summary.articles.filter(article => article.status === 'published')
-    const drafts = summary.articles.filter(article => article.status === 'draft')
+    const unpublished = summary.articles.filter(article => article.status === 'unpublished')
     const publishedLine =
       published.length === 0
-        ? 'You kept all three as drafts — publish when you are ready for the agent to use them.'
+        ? 'You reviewed the articles without publishing — publish anytime from Help center when you are ready.'
         : published.length === 3
-          ? 'All three articles are **published**. Your trial agent can answer from this knowledge right away.'
-          : `**${published.length}** published and **${drafts.length}** saved as draft on **${summary.siteLabel}**.`
+          ? 'All three articles are **published** on your Help center. Your trial agent can answer from them right away.'
+          : `**${published.length}** article${published.length === 1 ? '' : 's'} published on **${summary.siteLabel}**${unpublished.length > 0 ? ` (${unpublished.length} left unpublished).` : '.'}`
 
     setMessages(prev => [
       ...prev,
@@ -951,7 +951,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
         role: 'assistant',
         content: `Help center preview saved for **${summary.businessName}**. ${publishedLine}
 
-${published.length > 0 ? 'Try asking your agent a policy question in messaging or open **Try a sample ticket** to see replies in context.' : 'Publish at least one article to preview how the agent answers customers.'}`,
+${published.length > 0 ? 'Try asking your agent a policy question in messaging or open **Try a sample ticket** to see replies in context.' : 'Publish at least one article when you want the agent to use this knowledge.'}`,
         suggestions: ['Try a sample ticket', 'Bring in your team', 'Connect Support Email'],
       },
     ])

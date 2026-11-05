@@ -295,7 +295,7 @@ Review the ticket preview below. When you're ready, I can draft a reply for you 
 export function getPreviewHelpCenterResponse(_businessName: string): string {
   return `I'll **preview your Help center** with articles that were already generated for your trial.
 
-There are **three help articles** for **Northwind Trading** on **northwindtrading.com**. Select the ones you want in the preview, then **Publish selected** or **Save selected as draft**—finish when every article has a status.
+There are **three help articles** for **Northwind Trading** on **northwindtrading.com**. Read the preview in the card, open **View full article** for the live page, select what you want, and **Publish selected**—then **Finish preview** when you are done.
 
 <widget>help-center-preview</widget>
 

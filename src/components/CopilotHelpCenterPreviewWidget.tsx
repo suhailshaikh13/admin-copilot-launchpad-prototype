@@ -6,6 +6,7 @@ import {
   buildHelpCenterArticles,
   HELP_CENTER_PREVIEW_BRAND,
   HELP_CENTER_PREVIEW_SITE,
+  helpCenterArticleUrl,
   sampleAgentAnswer,
   type ArticleStatus,
   type HelpCenterCompletionSummary,
@@ -33,52 +34,45 @@ const Body = styled.div`
 `
 
 const ArticleListShell = styled.div`
-  margin: 0 -20px;
+  margin: -20px -20px 0;
   width: calc(100% + 40px);
-  border-top: 1px solid #eae9e8;
   border-bottom: 1px solid #eae9e8;
 `
 
-const ArticleRow = styled.label<{ $decided?: boolean }>`
+const ArticleRow = styled.div<{ $published?: boolean }>`
   display: flex;
   align-items: flex-start;
   gap: 12px;
   padding: 20px;
   border-bottom: 1px solid #eae9e8;
-  cursor: pointer;
-  background: ${({ $decided }) => ($decided ? '#fafafa' : '#fff')};
+  background: ${({ $published }) => ($published ? '#fafafa' : '#fff')};
+  cursor: ${({ $published }) => ($published ? 'default' : 'pointer')};
 
   &:last-child {
     border-bottom: none;
   }
 
   &:hover {
-    background: #f9f9f8;
+    background: ${({ $published }) => ($published ? '#fafafa' : '#f9f9f8')};
   }
 `
 
-const CheckboxWrap = styled.span`
+const CheckboxColumn = styled.span`
   flex-shrink: 0;
+  width: 16px;
   padding-top: 2px;
 `
 
-const ArticleContent = styled.span`
+const ArticleContent = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   flex: 1;
   min-width: 0;
 `
 
-const ArticleHeader = styled.span`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-`
-
-const ArticleTitle = styled.span`
-  display: block;
+const ArticleTitle = styled.p`
+  margin: 0;
   font-size: 14px;
   font-weight: 600;
   line-height: 20px;
@@ -86,8 +80,8 @@ const ArticleTitle = styled.span`
   color: #2f3130;
 `
 
-const ArticleExcerpt = styled.span`
-  display: block;
+const ArticlePreview = styled.p`
+  margin: 0;
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
@@ -95,25 +89,24 @@ const ArticleExcerpt = styled.span`
   color: #646864;
 `
 
-const StatusTagRow = styled.span`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  align-items: center;
+const ArticleLink = styled.a`
+  align-self: flex-start;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: -0.154px;
+  color: #406cc4;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
 `
 
-const StatusTag = styled(Tag)<{ $tone?: 'draft' | 'published' }>`
+const PublishedTag = styled(Tag)`
   && {
-    ${({ $tone }) =>
-      $tone === 'published'
-        ? `
-      background: #edf7ed;
-      color: #4b7d04;
-    `
-        : `
-      background: #f4f6f8;
-      color: #646864;
-    `}
+    background: #edf7ed;
+    color: #4b7d04;
   }
 `
 
@@ -192,7 +185,7 @@ export default function CopilotHelpCenterPreviewWidget({
   const [finished, setFinished] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
   const [statuses, setStatuses] = useState<Record<string, ArticleStatus>>(() =>
-    Object.fromEntries(articles.map(article => [article.id, 'generated' as ArticleStatus]))
+    Object.fromEntries(articles.map(article => [article.id, 'unpublished' as ArticleStatus]))
   )
 
   const toggleSelected = useCallback((id: string) => {
@@ -204,45 +197,39 @@ export default function CopilotHelpCenterPreviewWidget({
     })
   }, [])
 
-  const selectableIds = useMemo(
-    () => articles.filter(article => statuses[article.id] === 'generated').map(article => article.id),
+  const unpublishedIds = useMemo(
+    () =>
+      articles.filter(article => statuses[article.id] === 'unpublished').map(article => article.id),
     [articles, statuses]
   )
 
-  const allSelectableSelected =
-    selectableIds.length > 0 && selectableIds.every(id => selectedIds.has(id))
+  const allUnpublishedSelected =
+    unpublishedIds.length > 0 && unpublishedIds.every(id => selectedIds.has(id))
 
   const toggleSelectAll = useCallback(() => {
-    if (allSelectableSelected) {
+    if (allUnpublishedSelected) {
       setSelectedIds(new Set())
       return
     }
-    setSelectedIds(new Set(selectableIds))
-  }, [allSelectableSelected, selectableIds])
+    setSelectedIds(new Set(unpublishedIds))
+  }, [allUnpublishedSelected, unpublishedIds])
 
-  const applyToSelected = useCallback(
-    (status: 'draft' | 'published') => {
-      if (selectedIds.size === 0) return
-      setStatuses(prev => {
-        const next = { ...prev }
-        selectedIds.forEach(id => {
-          if (next[id] === 'generated') {
-            next[id] = status
-          }
-        })
-        return next
+  const publishSelected = useCallback(() => {
+    if (selectedIds.size === 0) return
+    setStatuses(prev => {
+      const next = { ...prev }
+      selectedIds.forEach(id => {
+        if (next[id] === 'unpublished') {
+          next[id] = 'published'
+        }
       })
-      setSelectedIds(new Set())
-    },
-    [selectedIds]
-  )
+      return next
+    })
+    setSelectedIds(new Set())
+  }, [selectedIds])
 
-  const decidedCount = useMemo(
-    () =>
-      articles.filter(article => {
-        const status = statuses[article.id]
-        return status === 'draft' || status === 'published'
-      }).length,
+  const publishedCount = useMemo(
+    () => articles.filter(article => statuses[article.id] === 'published').length,
     [articles, statuses]
   )
 
@@ -259,70 +246,63 @@ export default function CopilotHelpCenterPreviewWidget({
     [publishedTitles]
   )
 
-  const allDecided = decidedCount === articles.length
   const selectionCount = selectedIds.size
 
   const handleFinish = useCallback(() => {
-    if (!allDecided || finished) return
-    const summary: HelpCenterCompletionSummary = {
+    if (finished) return
+    onComplete({
       businessName: HELP_CENTER_PREVIEW_BRAND,
       siteLabel: HELP_CENTER_PREVIEW_SITE,
       articles: articles.map(article => ({
         ...article,
-        status: statuses[article.id] as 'draft' | 'published',
+        status: statuses[article.id],
       })),
-    }
+    })
     setFinished(true)
     setSelectedIds(new Set())
-    onComplete(summary)
-  }, [allDecided, articles, finished, onComplete, statuses])
+  }, [articles, finished, onComplete, statuses])
 
   return (
     <CopilotPreviewCard title="Help center preview">
       <Body>
         <ArticleListShell>
           {articles.map(article => {
-            const status = statuses[article.id]
+            const isPublished = statuses[article.id] === 'published'
             const isSelected = selectedIds.has(article.id)
-            const isPending = status === 'generated'
+            const articleUrl = helpCenterArticleUrl(article.slug)
+            const canSelect = !isPublished && !finished
+
             return (
               <ArticleRow
                 key={article.id}
-                $decided={!isPending}
+                $published={isPublished}
                 onClick={event => {
-                  if (finished || !isPending) return
-                  if ((event.target as HTMLElement).closest('input[type="checkbox"]')) return
+                  if (!canSelect) return
+                  if ((event.target as HTMLElement).closest('a, input, label')) return
                   toggleSelected(article.id)
                 }}
               >
-                <CheckboxWrap onClick={event => event.stopPropagation()}>
-                  <Checkbox
-                    checked={isSelected}
-                    disabled={finished || !isPending}
-                    onChange={() => toggleSelected(article.id)}
-                  >
-                    <ScreenReaderOnly>Select {article.title}</ScreenReaderOnly>
-                  </Checkbox>
-                </CheckboxWrap>
+                <CheckboxColumn onClick={event => event.stopPropagation()}>
+                  {canSelect ? (
+                    <Checkbox checked={isSelected} onChange={() => toggleSelected(article.id)}>
+                      <ScreenReaderOnly>Select {article.title}</ScreenReaderOnly>
+                    </Checkbox>
+                  ) : null}
+                </CheckboxColumn>
                 <ArticleContent>
-                  <ArticleHeader>
-                    <ArticleTitle>{article.title}</ArticleTitle>
-                    <ArticleExcerpt>{article.excerpt}</ArticleExcerpt>
-                  </ArticleHeader>
-                  {!isPending && (
-                    <StatusTagRow>
-                      <StatusTag $tone={status === 'published' ? 'published' : 'draft'}>
-                        {status === 'published' ? 'Published' : 'Draft'}
-                      </StatusTag>
-                    </StatusTagRow>
-                  )}
+                  <ArticleTitle>{article.title}</ArticleTitle>
+                  <ArticlePreview>{article.previewLines}</ArticlePreview>
+                  <ArticleLink href={articleUrl} target="_blank" rel="noopener noreferrer">
+                    View full article
+                  </ArticleLink>
+                  {isPublished && <PublishedTag>Published</PublishedTag>}
                 </ArticleContent>
               </ArticleRow>
             )
           })}
         </ArticleListShell>
 
-        {publishedTitles.length > 0 && agentAnswer && (
+        {publishedCount > 0 && agentAnswer && (
           <AgentPreview>
             <AgentLabel>
               <SparkleFillIcon aria-hidden />
@@ -335,39 +315,27 @@ export default function CopilotHelpCenterPreviewWidget({
 
         <Footer>
           <FooterHint>
-            {allDecided
-              ? `${publishedTitles.length} published · ${decidedCount - publishedTitles.length} draft`
+            {publishedCount > 0
+              ? `${publishedCount} published — use View full article to open the live Help center page anytime.`
               : selectionCount > 0
-                ? `${selectionCount} selected — publish or save as draft, then finish when every article is decided.`
-                : `Select articles to publish or save as draft (${decidedCount}/${articles.length} decided).`}
+                ? `${selectionCount} selected — publish when you are ready, or finish after reviewing.`
+                : 'Read the preview, open the full article, then select and publish what you want live.'}
           </FooterHint>
           <FooterActions>
-            {selectableIds.length > 0 && (
-              <Button size="small" onClick={toggleSelectAll} disabled={finished}>
-                {allSelectableSelected ? 'Clear selection' : 'Select all'}
+            {unpublishedIds.length > 0 && !finished && (
+              <Button size="small" onClick={toggleSelectAll}>
+                {allUnpublishedSelected ? 'Clear selection' : 'Select all'}
               </Button>
             )}
             <Button
               size="small"
+              isPrimary={selectionCount > 0}
               disabled={finished || selectionCount === 0}
-              onClick={() => applyToSelected('draft')}
-            >
-              Save selected as draft
-            </Button>
-            <Button
-              size="small"
-              isPrimary={selectionCount > 0 && !allDecided}
-              disabled={finished || selectionCount === 0}
-              onClick={() => applyToSelected('published')}
+              onClick={publishSelected}
             >
               Publish selected
             </Button>
-            <Button
-              size="small"
-              isPrimary={allDecided}
-              disabled={!allDecided || finished}
-              onClick={handleFinish}
-            >
+            <Button size="small" isPrimary={selectionCount === 0} disabled={finished} onClick={handleFinish}>
               {finished ? 'Saved' : 'Finish preview'}
             </Button>
           </FooterActions>
