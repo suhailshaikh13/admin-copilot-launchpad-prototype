@@ -293,9 +293,9 @@ Review the ticket preview below. When you're ready, I can draft a reply for you 
 }
 
 export function getPreviewHelpCenterResponse(_businessName: string): string {
-  return `I'll **preview your Help center** using content from your public website — no manual setup.
+  return `I'll **preview your Help center** with articles that were already generated for your trial.
 
-I pulled **three suggested articles** from **northwindtrading.com** for **Northwind Trading**. Review each one below, then use **Draft all three**, **Publish all three**, or **Finish preview** when you're ready.
+There are **three help articles** for **Northwind Trading** on **northwindtrading.com**. Review them below and choose **Save as draft** or **Publish** for each one—or use **Draft all three**, **Publish all three**, and **Finish preview** when you're done.
 
 <widget>help-center-preview</widget>
 

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import styled, { keyframes } from 'styled-components'
-import { Button } from '@zendesk-ui/react-components'
+import { Button, Tag } from '@zendesk-ui/react-components'
 import SparkleFillIcon from '../assets/sparkle-fill.svg?react'
 import {
   buildHelpCenterArticles,
@@ -20,88 +20,95 @@ const rise = keyframes`
 const Body = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
 `
 
-const ArticleList = styled.ul`
-  list-style: none;
-  margin: 0;
-  padding: 0;
+const ArticleStack = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
+  min-width: 0;
 `
 
-const ArticleCard = styled.li<{ $delay: number }>`
-  padding: 12px;
+const ArticleCard = styled.article<{ $delay: number }>`
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20px;
   border-radius: 12px;
-  border: 1px solid #e9ebed;
-  background: #fafafa;
+  border: 1px solid #eae9e8;
+  background: #fff;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  align-items: stretch;
+  gap: 12px;
   animation: ${rise} 0.45s ease-out both;
   animation-delay: ${({ $delay }) => $delay}ms;
 `
 
-const ArticleTop = styled.div`
+const ArticleHeader = styled.div`
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-`
-
-const ArticleCopy = styled.div`
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
   min-width: 0;
-  flex: 1;
 `
 
-const Category = styled.span`
-  display: block;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: #646864;
-  margin-bottom: 4px;
-`
-
-const Title = styled.p`
-  margin: 0 0 4px;
+const ArticleTitle = styled.p`
+  margin: 0;
   font-size: 14px;
   font-weight: 600;
-  line-height: 18px;
+  line-height: 20px;
+  letter-spacing: -0.154px;
   color: #2f3130;
 `
 
-const Excerpt = styled.p`
+const ArticleExcerpt = styled.p`
   margin: 0;
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.154px;
   color: #646864;
 `
 
-const StatusPill = styled.span<{ $status: ArticleStatus }>`
-  flex-shrink: 0;
-  padding: 4px 8px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 14px;
-  white-space: nowrap;
-  color: ${({ $status }) =>
-    $status === 'published' ? '#4b7d04' : $status === 'draft' ? '#646864' : '#406cc4'};
-  background: ${({ $status }) =>
-    $status === 'published' ? '#edf7ed' : $status === 'draft' ? '#f4f6f8' : '#e4eaf6'};
-`
-
-const RowActions = styled.div`
+const StatusTagRow = styled.div`
   display: flex;
-  gap: 8px;
   flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
 `
 
-const RowButton = styled.button<{ $active?: boolean; $variant?: 'publish' }>`
+const StatusTag = styled(Tag)<{ $tone?: 'neutral' | 'draft' | 'published' }>`
+  && {
+    ${({ $tone }) =>
+      $tone === 'published'
+        ? `
+      background: #edf7ed;
+      color: #4b7d04;
+    `
+        : $tone === 'draft'
+          ? `
+      background: #f4f6f8;
+      color: #646864;
+    `
+          : `
+      background: #e4eaf6;
+      color: #406cc4;
+    `}
+  }
+`
+
+const CardActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 4px;
+`
+
+const CardActionButton = styled.button<{ $active?: boolean; $variant?: 'publish' }>`
   padding: 6px 12px;
   border-radius: 999px;
   font-size: 12px;
@@ -116,8 +123,13 @@ const RowButton = styled.button<{ $active?: boolean; $variant?: 'publish' }>`
   color: ${({ $active, $variant }) =>
     $active && $variant === 'publish' ? '#4b7d04' : '#2f3130'};
 
-  &:hover {
+  &:hover:not(:disabled) {
     border-color: #b7b7b3;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `
 
@@ -125,8 +137,9 @@ const Footer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-top: 4px;
+  padding-top: 8px;
   border-top: 1px solid #e9ebed;
+  width: 100%;
 `
 
 const FooterActions = styled.div`
@@ -154,7 +167,7 @@ const FooterBulkButton = styled.button`
   color: #2f3130;
   cursor: pointer;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: #f4f6f8;
     border-color: #b7b7b3;
   }
@@ -173,6 +186,8 @@ const AgentPreview = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 `
 
 const AgentLabel = styled.span`
@@ -204,6 +219,18 @@ const AgentAnswer = styled.p`
   line-height: 18px;
   color: #646864;
 `
+
+function statusLabel(status: ArticleStatus): string {
+  if (status === 'published') return 'Published'
+  if (status === 'draft') return 'Draft'
+  return 'Awaiting review'
+}
+
+function statusTone(status: ArticleStatus): 'neutral' | 'draft' | 'published' {
+  if (status === 'published') return 'published'
+  if (status === 'draft') return 'draft'
+  return 'neutral'
+}
 
 interface CopilotHelpCenterPreviewWidgetProps {
   onComplete: (summary: HelpCenterCompletionSummary) => void
@@ -273,35 +300,28 @@ export default function CopilotHelpCenterPreviewWidget({
   return (
     <CopilotPreviewCard title="Help center preview">
       <Body>
-        <ArticleList>
+        <ArticleStack>
           {articles.map((article, index) => {
             const status = statuses[article.id]
             return (
               <ArticleCard key={article.id} $delay={index * 80}>
-                <ArticleTop>
-                  <ArticleCopy>
-                    <Category>{article.category}</Category>
-                    <Title>{article.title}</Title>
-                    <Excerpt>{article.excerpt}</Excerpt>
-                  </ArticleCopy>
-                  <StatusPill $status={status}>
-                    {status === 'generated'
-                      ? 'Suggested'
-                      : status === 'draft'
-                        ? 'Draft'
-                        : 'Published'}
-                  </StatusPill>
-                </ArticleTop>
-                <RowActions>
-                  <RowButton
+                <ArticleHeader>
+                  <ArticleTitle>{article.title}</ArticleTitle>
+                  <ArticleExcerpt>{article.excerpt}</ArticleExcerpt>
+                </ArticleHeader>
+                <StatusTagRow>
+                  <StatusTag $tone={statusTone(status)}>{statusLabel(status)}</StatusTag>
+                </StatusTagRow>
+                <CardActions>
+                  <CardActionButton
                     type="button"
                     $active={status === 'draft'}
                     onClick={() => setArticleStatus(article.id, 'draft')}
                     disabled={finished}
                   >
                     Save as draft
-                  </RowButton>
-                  <RowButton
+                  </CardActionButton>
+                  <CardActionButton
                     type="button"
                     $variant="publish"
                     $active={status === 'published'}
@@ -309,12 +329,12 @@ export default function CopilotHelpCenterPreviewWidget({
                     disabled={finished}
                   >
                     Publish
-                  </RowButton>
-                </RowActions>
+                  </CardActionButton>
+                </CardActions>
               </ArticleCard>
             )
           })}
-        </ArticleList>
+        </ArticleStack>
 
         {publishedTitles.length > 0 && agentAnswer && (
           <AgentPreview>

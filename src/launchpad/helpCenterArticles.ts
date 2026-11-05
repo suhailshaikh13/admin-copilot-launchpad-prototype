@@ -32,21 +32,21 @@ export function buildHelpCenterArticles(businessName: string): HelpCenterArticle
       id: 'shipping',
       title: `Shipping and delivery for ${brand}`,
       excerpt:
-        'Processing times, carriers, and how to track an order placed on your site — pulled from your shipping policy page.',
+        'Processing times, carriers, and how customers track an order after checkout.',
       category: 'Orders & shipping',
     },
     {
       id: 'returns',
       title: `Returns, exchanges, and warranty`,
       excerpt:
-        'Window to return items, condition requirements, and how customers start a return or warranty claim.',
+        'Return window, condition requirements, and how customers start a return or warranty claim.',
       category: 'Policies',
     },
     {
       id: 'getting-started',
       title: `Getting started with ${brand}`,
       excerpt:
-        'Account setup, payment methods you accept, and the fastest way for customers to reach support.',
+        'Account setup, accepted payment methods, and the fastest way to reach your support team.',
       category: 'Getting started',
     },
   ]
