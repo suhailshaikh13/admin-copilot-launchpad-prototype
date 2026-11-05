@@ -280,6 +280,19 @@ Your team works hand-in-hand with AI to deliver fast, accurate, and personal ser
 </suggestions>`
 }
 
+export function getTrySampleTicketResponse(_businessName: string): string {
+  return `Let's **try a sample ticket** so you can see how Copilot helps agents respond.
+
+Review the customer's message below, tweak the suggested reply if you want (or use a quick prompt), send it, then mark the ticket solved — all from here.
+
+<widget>sample-ticket</widget>
+
+<suggestions>
+<chip>Bring in your team</chip>
+<chip>Preview Help center</chip>
+</suggestions>`
+}
+
 export function getCannedResponse(message: string, businessName = 'your business'): string | undefined {
   const trimmed = message.trim()
   if (trimmed === 'Go live quickly' || trimmed.toLowerCase().includes('go live')) {
@@ -288,6 +301,10 @@ export function getCannedResponse(message: string, businessName = 'your business
 
   if (trimmed === 'Bring in your team' || trimmed.toLowerCase() === 'bring in your team') {
     return getBringInTeamResponse(businessName)
+  }
+
+  if (trimmed === 'Try a sample ticket' || trimmed.toLowerCase() === 'try a sample ticket') {
+    return getTrySampleTicketResponse(businessName)
   }
 
   if (CANNED_RESPONSES[trimmed] && CANNED_RESPONSES[trimmed] !== 'GO_LIVE_TEMPLATE') {
@@ -316,7 +333,7 @@ export function parseSuggestions(text: string): { content: string; suggestions: 
   return { content, suggestions: chips }
 }
 
-export type AssistantWidget = 'team-invite'
+export type AssistantWidget = 'team-invite' | 'sample-ticket'
 
 export function parseAssistantPayload(text: string): {
   content: string
@@ -330,7 +347,12 @@ export function parseAssistantPayload(text: string): {
   }
   const widgetId = widgetMatch[1].trim()
   const content = withWidget.replace(widgetMatch[0], '').trimEnd()
-  const widget = widgetId === 'team-invite' ? 'team-invite' : undefined
+  const widget: AssistantWidget | undefined =
+    widgetId === 'team-invite'
+      ? 'team-invite'
+      : widgetId === 'sample-ticket'
+        ? 'sample-ticket'
+        : undefined
   return { content, suggestions, widget }
 }
 

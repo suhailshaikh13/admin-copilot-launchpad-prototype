@@ -23,6 +23,7 @@ import type { AssistantWidget } from '../services/bedrock'
 import type { LaunchpadStage } from '../launchpad/types'
 import type { ChatMessage } from '../services/bedrock'
 import CopilotTeamInviteWidget from './CopilotTeamInviteWidget'
+import CopilotSampleTicketWidget from './CopilotSampleTicketWidget'
 import type { TeamInviteEntry } from '../launchpad/teamInvite'
 
 interface Message {
@@ -893,6 +894,42 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
     ])
   }, [])
 
+  const handleSampleReplySent = useCallback(() => {
+    setMessages(prev => [
+      ...prev,
+      {
+        role: 'assistant',
+        content:
+          'Reply sent. For this scenario, keep the ticket **open** until the customer confirms they can sign in — when you are ready, tap **Solve this ticket** in the card.',
+        suggestions: [],
+      },
+    ])
+  }, [])
+
+  const handleSampleTicketSolved = useCallback(() => {
+    setMessages(prev => [
+      ...prev,
+      {
+        role: 'assistant',
+        content:
+          'Ticket **#4821** is solved. You just walked through review, reply, and resolution with Copilot — the same flow works on live tickets in Agent Workspace.',
+        suggestions: ['Bring in your team', 'Connect Support Email', 'Preview Help center'],
+      },
+    ])
+  }, [])
+
+  const handleSkipSampleTicket = useCallback(() => {
+    setMessages(prev => [
+      ...prev,
+      { role: 'user', content: 'Skip for now' },
+      {
+        role: 'assistant',
+        content: 'No worries — you can practice on a sample ticket anytime. What should we tackle next?',
+        suggestions: ['Bring in your team', 'Connect Support Email'],
+      },
+    ])
+  }, [])
+
   const handleSend = useCallback((text?: string) => {
     const content = (text ?? inputValue).trim()
     if (!content || isGenerating) return
@@ -1318,6 +1355,13 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
                     <CopilotTeamInviteWidget
                       onInviteSent={handleTeamInvitesSent}
                       onSkip={handleSkipTeamInvite}
+                    />
+                  )}
+                  {msg.widget === 'sample-ticket' && !msg.isStreaming && (
+                    <CopilotSampleTicketWidget
+                      onReplySent={handleSampleReplySent}
+                      onTicketSolved={handleSampleTicketSolved}
+                      onSkip={handleSkipSampleTicket}
                     />
                   )}
                 </AssistantMessage>
