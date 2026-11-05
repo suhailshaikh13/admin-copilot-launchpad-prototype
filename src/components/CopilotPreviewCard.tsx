@@ -132,8 +132,10 @@ export default function CopilotPreviewCard({
   useEffect(() => {
     if (!isCollapsible) {
       setExpanded(false)
+      return
     }
-  }, [isCollapsible])
+    setExpanded(defaultExpanded)
+  }, [isCollapsible, defaultExpanded])
 
   return (
     <Shell>

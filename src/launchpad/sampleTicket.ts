@@ -26,3 +26,13 @@ export const REFINED_REPLIES: Record<ReplyRefinementPrompt, string> = {
   'Ask for the exact error message': `Sorry you're still having trouble signing in. Please try the latest password reset link once more. If it still fails, reply with the exact error text on screen (or a screenshot) so I can pinpoint what's blocking access.`,
   'Offer to escalate if it persists': `Sorry you're still having trouble signing in. Please use the most recent password reset link and the new password. If the error continues after one more try, reply here and I'll escalate to our account team for a deeper look.`,
 }
+
+export function sampleTicketRefinementLine(prompt: ReplyRefinementPrompt): string {
+  if (prompt === 'Make the tone warmer') {
+    return 'Got it — I will **warm up the tone** and keep the same guidance.'
+  }
+  if (prompt === 'Ask for the exact error message') {
+    return 'I will **ask for the exact error message** so we can troubleshoot faster.'
+  }
+  return 'I will **offer to escalate** if the issue continues after one more try.'
+}

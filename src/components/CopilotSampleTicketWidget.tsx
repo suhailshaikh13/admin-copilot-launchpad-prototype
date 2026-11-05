@@ -2,10 +2,8 @@ import { useCallback, useState } from 'react'
 import styled from 'styled-components'
 import { Button } from '@zendesk-ui/react-components'
 import { QuickPrompt } from '@zendesk-ui/ai-assistant-chat'
-import SparkleFillIcon from '../assets/sparkle-fill.svg?react'
 import CopilotPreviewCard from './CopilotPreviewCard'
 import {
-  REFINED_REPLIES,
   REPLY_REFINEMENT_PROMPTS,
   SAMPLE_TICKET,
   type ReplyRefinementPrompt,
@@ -97,14 +95,15 @@ const MessageBubble = styled.div<{ $variant?: 'customer' | 'agent' }>`
   border: 1px solid ${({ $variant }) => ($variant === 'agent' ? '#e4eaf6' : '#eef0f2')};
 `
 
-const Composer = styled.div`
+const Composer = styled.div<{ $inactive?: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 12px;
   border-radius: 12px;
   border: 1px solid #e4e4e2;
-  background: #fafafa;
+  background: ${({ $inactive }) => ($inactive ? '#f4f4f3' : '#fafafa')};
+  opacity: ${({ $inactive }) => ($inactive ? 0.72 : 1)};
 `
 
 const ToRow = styled.div`
@@ -144,21 +143,7 @@ const ReplyArea = styled.textarea`
 
   &:read-only {
     color: #464a48;
-  }
-`
-
-const CopilotTag = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  line-height: 16px;
-  color: #646864;
-
-  svg {
-    width: 14px;
-    height: 14px;
-    color: #9256b1;
+    cursor: default;
   }
 `
 
@@ -176,22 +161,6 @@ const ActionRow = styled.div`
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 14px;
-`
-
-const GhostButton = styled.button`
-  padding: 8px 14px;
-  border-radius: 99px;
-  border: 1px solid #dcdcda;
-  background: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 18px;
-  color: #2f3130;
-  cursor: pointer;
-
-  &:hover {
-    background: #fafafa;
-  }
 `
 
 const PostedLead = styled.p`
@@ -268,34 +237,39 @@ function TicketPreviewCard() {
 
 interface CopilotSampleTicketWidgetProps {
   phase: SampleTicketPhase
+  draftReply?: string
+  draftActive?: boolean
   postedReply?: string
+  onRefinementRequest: (prompt: ReplyRefinementPrompt) => void
   onReplyApproved: (reply: string) => void
   onTicketSolved: () => void
 }
 
 export default function CopilotSampleTicketWidget({
   phase,
+  draftReply,
+  draftActive = true,
   postedReply = SAMPLE_TICKET.defaultReply,
+  onRefinementRequest,
   onReplyApproved,
   onTicketSolved,
 }: CopilotSampleTicketWidgetProps) {
-  const [reply, setReply] = useState<string>(SAMPLE_TICKET.defaultReply)
-  const [isEditing, setIsEditing] = useState(false)
-  const [activePrompt, setActivePrompt] = useState<ReplyRefinementPrompt | null>(null)
+  const initialReply = draftReply ?? SAMPLE_TICKET.defaultReply
+  const [reply, setReply] = useState<string>(initialReply)
   const [solved, setSolved] = useState(false)
-  const [sent, setSent] = useState(false)
-
-  const applyPrompt = useCallback((prompt: ReplyRefinementPrompt) => {
-    setActivePrompt(prompt)
-    setReply(REFINED_REPLIES[prompt])
-    setIsEditing(true)
-  }, [])
 
   const handleApproveSend = useCallback(() => {
-    if (!reply.trim() || sent) return
-    setSent(true)
+    if (!draftActive || !reply.trim()) return
     onReplyApproved(reply.trim())
-  }, [onReplyApproved, reply, sent])
+  }, [draftActive, onReplyApproved, reply])
+
+  const handleRefinement = useCallback(
+    (prompt: ReplyRefinementPrompt) => {
+      if (!draftActive) return
+      onRefinementRequest(prompt)
+    },
+    [draftActive, onRefinementRequest]
+  )
 
   const handleSolve = useCallback(() => {
     if (solved) return
@@ -314,44 +288,50 @@ export default function CopilotSampleTicketWidget({
   if (phase === 'reply-draft') {
     return (
       <CopilotPreviewCard title={previewTitle(phase)} expandable="none">
-        <Composer>
+        <Composer $inactive={!draftActive}>
           <ToRow>
             <span>To</span>
             <ToChip>{SAMPLE_TICKET.customerLabel}</ToChip>
           </ToRow>
           <ReplyArea
             value={reply}
-            readOnly={!isEditing}
+            readOnly={!draftActive}
             aria-label="Suggested reply"
             onChange={event => setReply(event.target.value)}
           />
-          <CopilotTag>
-            <SparkleFillIcon aria-hidden />
-            Copilot generated reply
-          </CopilotTag>
         </Composer>
-        <PromptRow>
-          {REPLY_REFINEMENT_PROMPTS.map(prompt => (
-            <QuickPrompt key={prompt} showIcon={false} size="small" onClick={() => applyPrompt(prompt)}>
-              {prompt}
-            </QuickPrompt>
-          ))}
-        </PromptRow>
-        {activePrompt && <CopilotTag>Updated reply: {activePrompt.toLowerCase()}</CopilotTag>}
-        <ActionRow>
-          <GhostButton type="button" onClick={() => setIsEditing(editing => !editing)}>
-            {isEditing ? 'Done editing' : 'Edit reply'}
-          </GhostButton>
-          <Button size="small" isPrimary onClick={handleApproveSend} disabled={sent}>
-            Approve and send
-          </Button>
-        </ActionRow>
+        {draftActive && (
+          <>
+            <PromptRow>
+              {REPLY_REFINEMENT_PROMPTS.map(prompt => (
+                <QuickPrompt
+                  key={prompt}
+                  showIcon={false}
+                  size="small"
+                  onClick={() => handleRefinement(prompt)}
+                >
+                  {prompt}
+                </QuickPrompt>
+              ))}
+            </PromptRow>
+            <ActionRow>
+              <Button size="small" isPrimary onClick={handleApproveSend}>
+                Approve and send
+              </Button>
+            </ActionRow>
+          </>
+        )}
       </CopilotPreviewCard>
     )
   }
 
   return (
-    <CopilotPreviewCard title={previewTitle(phase)} expandable="collapsible" collapsedMaxHeight={240}>
+    <CopilotPreviewCard
+      title={previewTitle(phase)}
+      expandable="collapsible"
+      defaultExpanded
+      collapsedMaxHeight={240}
+    >
       <Eyebrow>Sample ticket #{SAMPLE_TICKET.id}</Eyebrow>
       <SubjectInThread>{SAMPLE_TICKET.subject}</SubjectInThread>
       <ThreadBlock>

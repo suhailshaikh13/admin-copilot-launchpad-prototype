@@ -28,7 +28,8 @@ import CopilotHelpCenterPreviewWidget from './CopilotHelpCenterPreviewWidget'
 import AssistantMessageFeedback from './AssistantMessageFeedback'
 import type { HelpCenterCompletionSummary } from '../launchpad/helpCenterArticles'
 import type { TeamInviteEntry } from '../launchpad/teamInvite'
-import type { SampleTicketPhase } from '../launchpad/sampleTicket'
+import type { SampleTicketPhase, ReplyRefinementPrompt } from '../launchpad/sampleTicket'
+import { REFINED_REPLIES, sampleTicketRefinementLine } from '../launchpad/sampleTicket'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -39,6 +40,8 @@ interface Message {
   widget?: AssistantWidget
   sampleTicketPhase?: SampleTicketPhase
   sampleTicketReply?: string
+  sampleTicketDraftReply?: string
+  sampleTicketDraftActive?: boolean
 }
 
 function isLastAssistantInStreak(messages: Message[], index: number): boolean {
@@ -912,18 +915,64 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
     ])
   }, [])
 
+  const handleSampleRefinement = useCallback((prompt: ReplyRefinementPrompt) => {
+    setMessages(prev => {
+      const deactivated = prev.map(message =>
+        message.sampleTicketPhase === 'reply-draft'
+          ? { ...message, sampleTicketDraftActive: false }
+          : message
+      )
+      return [
+        ...deactivated,
+        {
+          role: 'assistant' as const,
+          content: sampleTicketRefinementLine(prompt),
+        },
+      ]
+    })
+
+    window.setTimeout(() => {
+      setMessages(prev => {
+        const deactivated = prev.map(message =>
+          message.sampleTicketPhase === 'reply-draft'
+            ? { ...message, sampleTicketDraftActive: false }
+            : message
+        )
+        return [
+          ...deactivated,
+          {
+            role: 'assistant' as const,
+            content:
+              'Here is the updated reply — edit it directly or **Approve and send** when it looks good.',
+            widget: 'sample-ticket' as const,
+            sampleTicketPhase: 'reply-draft' as SampleTicketPhase,
+            sampleTicketDraftReply: REFINED_REPLIES[prompt],
+            sampleTicketDraftActive: true,
+          },
+        ]
+      })
+    }, 750)
+  }, [])
+
   const handleSampleReplyApproved = useCallback((reply: string) => {
-    setMessages(prev => [
-      ...prev,
-      {
-        role: 'assistant',
-        content:
-          'Your reply is on the ticket. Expand the preview to see the customer message and what you sent.',
-        widget: 'sample-ticket',
-        sampleTicketPhase: 'posted-thread',
-        sampleTicketReply: reply,
-      },
-    ])
+    setMessages(prev => {
+      const deactivated = prev.map(message =>
+        message.sampleTicketPhase === 'reply-draft'
+          ? { ...message, sampleTicketDraftActive: false }
+          : message
+      )
+      return [
+        ...deactivated,
+        {
+          role: 'assistant',
+          content:
+            'Your reply is on the ticket. Expand the preview to see the customer message and what you sent.',
+          widget: 'sample-ticket',
+          sampleTicketPhase: 'posted-thread',
+          sampleTicketReply: reply,
+        },
+      ]
+    })
   }, [])
 
   const handleSampleTicketSolved = useCallback(() => {
@@ -991,6 +1040,7 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
               'Here is the suggested reply. Refine it with the quick prompts in the preview, then **Approve and send** when it looks good.',
             widget: 'sample-ticket',
             sampleTicketPhase: 'reply-draft',
+            sampleTicketDraftActive: true,
           },
         ])
       }, 900)
@@ -1427,7 +1477,10 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
                   {msg.widget === 'sample-ticket' && !msg.isStreaming && (
                     <CopilotSampleTicketWidget
                       phase={msg.sampleTicketPhase ?? 'ticket-preview'}
+                      draftReply={msg.sampleTicketDraftReply}
+                      draftActive={msg.sampleTicketDraftActive ?? msg.sampleTicketPhase !== 'reply-draft'}
                       postedReply={msg.sampleTicketReply}
+                      onRefinementRequest={handleSampleRefinement}
                       onReplyApproved={handleSampleReplyApproved}
                       onTicketSolved={handleSampleTicketSolved}
                     />

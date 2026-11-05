@@ -51,7 +51,7 @@ test.describe('Launchpad trial experience', () => {
     await expect(page.getByRole('button', { name: 'Approve and send' })).toBeVisible({ timeout: 8000 })
 
     await page.getByRole('button', { name: 'Make the tone warmer' }).click()
-    await expect(page.getByLabel('Suggested reply')).toContainText('locked out')
+    await expect(page.getByLabel('Suggested reply').last()).toContainText('locked out', { timeout: 8000 })
 
     await page.getByRole('button', { name: 'Approve and send' }).click()
     await expect(page.getByText('The reply has been posted to the ticket.')).toBeVisible({ timeout: 8000 })
