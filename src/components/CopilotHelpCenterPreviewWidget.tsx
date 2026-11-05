@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import styled from 'styled-components'
 import { Button, Checkbox, Tag } from '@zendesk-ui/react-components'
 import SparkleFillIcon from '../assets/sparkle-fill.svg?react'
+import ArrowDiagonalOutIcon from '../assets/arrow-diagonal-out.svg?react'
 import {
   buildHelpCenterArticles,
   HELP_CENTER_PREVIEW_BRAND,
@@ -90,7 +91,10 @@ const ArticlePreview = styled.p`
 `
 
 const ArticleLink = styled.a`
-  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
   font-size: 14px;
   font-weight: 600;
   line-height: 20px;
@@ -100,6 +104,12 @@ const ArticleLink = styled.a`
 
   &:hover {
     text-decoration: underline;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
   }
 `
 
@@ -294,6 +304,7 @@ export default function CopilotHelpCenterPreviewWidget({
                   <ArticlePreview>{article.previewLines}</ArticlePreview>
                   <ArticleLink href={articleUrl} target="_blank" rel="noopener noreferrer">
                     View full article
+                    <ArrowDiagonalOutIcon aria-hidden />
                   </ArticleLink>
                   {isPublished && <PublishedTag>Published</PublishedTag>}
                 </ArticleContent>
