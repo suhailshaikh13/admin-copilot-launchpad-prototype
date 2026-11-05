@@ -293,6 +293,20 @@ Review the customer's message below, tweak the suggested reply if you want (or u
 </suggestions>`
 }
 
+export function getPreviewHelpCenterResponse(businessName: string): string {
+  const brand = businessName.trim() || 'your business'
+  return `I'll **preview your Help center** using content from your public website — no manual setup.
+
+For **${brand}**, I will draft three articles your AI agent can use in this trial. Review them here, publish what you want live, and see how answers change.
+
+<widget>help-center-preview</widget>
+
+<suggestions>
+<chip>Try a sample ticket</chip>
+<chip>Bring in your team</chip>
+</suggestions>`
+}
+
 export function getCannedResponse(message: string, businessName = 'your business'): string | undefined {
   const trimmed = message.trim()
   if (trimmed === 'Go live quickly' || trimmed.toLowerCase().includes('go live')) {
@@ -305,6 +319,10 @@ export function getCannedResponse(message: string, businessName = 'your business
 
   if (trimmed === 'Try a sample ticket' || trimmed.toLowerCase() === 'try a sample ticket') {
     return getTrySampleTicketResponse(businessName)
+  }
+
+  if (trimmed === 'Preview Help center' || trimmed.toLowerCase() === 'preview help center') {
+    return getPreviewHelpCenterResponse(businessName)
   }
 
   if (CANNED_RESPONSES[trimmed] && CANNED_RESPONSES[trimmed] !== 'GO_LIVE_TEMPLATE') {
@@ -333,7 +351,7 @@ export function parseSuggestions(text: string): { content: string; suggestions: 
   return { content, suggestions: chips }
 }
 
-export type AssistantWidget = 'team-invite' | 'sample-ticket'
+export type AssistantWidget = 'team-invite' | 'sample-ticket' | 'help-center-preview'
 
 export function parseAssistantPayload(text: string): {
   content: string
@@ -352,7 +370,9 @@ export function parseAssistantPayload(text: string): {
       ? 'team-invite'
       : widgetId === 'sample-ticket'
         ? 'sample-ticket'
-        : undefined
+        : widgetId === 'help-center-preview'
+          ? 'help-center-preview'
+          : undefined
   return { content, suggestions, widget }
 }
 

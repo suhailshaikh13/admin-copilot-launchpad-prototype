@@ -24,6 +24,8 @@ import type { LaunchpadStage } from '../launchpad/types'
 import type { ChatMessage } from '../services/bedrock'
 import CopilotTeamInviteWidget from './CopilotTeamInviteWidget'
 import CopilotSampleTicketWidget from './CopilotSampleTicketWidget'
+import CopilotHelpCenterPreviewWidget from './CopilotHelpCenterPreviewWidget'
+import type { HelpCenterCompletionSummary } from '../launchpad/helpCenterArticles'
 import type { TeamInviteEntry } from '../launchpad/teamInvite'
 
 interface Message {
@@ -930,6 +932,41 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
     ])
   }, [])
 
+  const handleHelpCenterComplete = useCallback((summary: HelpCenterCompletionSummary) => {
+    const published = summary.articles.filter(article => article.status === 'published')
+    const drafts = summary.articles.filter(article => article.status === 'draft')
+    const publishedLine =
+      published.length === 0
+        ? 'You kept all three as drafts — publish when you are ready for the agent to use them.'
+        : published.length === 3
+          ? 'All three articles are **published**. Your trial agent can answer from this knowledge right away.'
+          : `**${published.length}** published and **${drafts.length}** saved as draft on **${summary.siteLabel}**.`
+
+    setMessages(prev => [
+      ...prev,
+      {
+        role: 'assistant',
+        content: `Help center preview saved for **${summary.businessName}**. ${publishedLine}
+
+${published.length > 0 ? 'Try asking your agent a policy question in messaging or open **Try a sample ticket** to see replies in context.' : 'Publish at least one article to preview how the agent answers customers.'}`,
+        suggestions: ['Try a sample ticket', 'Bring in your team', 'Connect Support Email'],
+      },
+    ])
+  }, [])
+
+  const handleSkipHelpCenter = useCallback(() => {
+    setMessages(prev => [
+      ...prev,
+      { role: 'user', content: 'Skip for now' },
+      {
+        role: 'assistant',
+        content:
+          'No problem — your generated articles will stay in draft until you publish them from **Channels → Help center**.',
+        suggestions: ['Try a sample ticket', 'Bring in your team'],
+      },
+    ])
+  }, [])
+
   const handleSend = useCallback((text?: string) => {
     const content = (text ?? inputValue).trim()
     if (!content || isGenerating) return
@@ -1362,6 +1399,13 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
                       onReplySent={handleSampleReplySent}
                       onTicketSolved={handleSampleTicketSolved}
                       onSkip={handleSkipSampleTicket}
+                    />
+                  )}
+                  {msg.widget === 'help-center-preview' && !msg.isStreaming && (
+                    <CopilotHelpCenterPreviewWidget
+                      businessName={businessName}
+                      onComplete={handleHelpCenterComplete}
+                      onSkip={handleSkipHelpCenter}
                     />
                   )}
                 </AssistantMessage>

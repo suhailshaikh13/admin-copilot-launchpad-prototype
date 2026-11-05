@@ -22,6 +22,23 @@ test.describe('Launchpad trial experience', () => {
     await expect(page.getByRole('button', { name: 'Bring in your team' })).toBeVisible()
   })
 
+  test('preview help center generates articles and completes journey', async ({ page }) => {
+    await page.getByRole('button', { name: 'Go live quickly' }).click()
+    await page.getByRole('button', { name: 'Preview Help center' }).click({ timeout: 15000 })
+
+    await expect(page.getByText(/Three articles from camera-obscura\.com/i)).toBeVisible({
+      timeout: 10000,
+    })
+    await expect(page.getByText(/Shipping and delivery for Camera obscura/i)).toBeVisible()
+
+    await page.getByRole('button', { name: 'Publish all three' }).click()
+    await expect(page.getByText('Agent preview')).toBeVisible()
+    await page.getByRole('button', { name: 'Finish preview' }).click()
+
+    await expect(page.getByText(/Help center preview saved/i)).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText(/All three articles are/i)).toBeVisible()
+  })
+
   test('try a sample ticket supports reply and solve flow', async ({ page }) => {
     await page.getByRole('button', { name: 'Go live quickly' }).click()
     await page.getByRole('button', { name: 'Try a sample ticket' }).click({ timeout: 15000 })
