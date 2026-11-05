@@ -43,7 +43,7 @@ test.describe('Launchpad trial experience', () => {
     await page.getByRole('button', { name: 'Go live quickly' }).click()
     await page.getByRole('button', { name: 'Try a sample ticket' }).click({ timeout: 15000 })
 
-    await expect(page.getByRole('heading', { name: 'Sample ticket #1' })).toBeVisible({ timeout: 15000 })
+    await expect(page.getByText('Sample ticket #1')).toBeVisible({ timeout: 15000 })
     await expect(page.getByText('Unable to log in after password reset')).toBeVisible()
 
     await page.getByRole('button', { name: 'Yes, draft a reply' }).click()

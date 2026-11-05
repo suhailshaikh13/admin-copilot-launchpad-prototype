@@ -10,6 +10,7 @@ import {
   type ArticleStatus,
   type HelpCenterCompletionSummary,
 } from '../launchpad/helpCenterArticles'
+import CopilotPreviewCard from './CopilotPreviewCard'
 
 const shimmer = keyframes`
   0% { background-position: 200% 0; }
@@ -21,17 +22,13 @@ const rise = keyframes`
   to { opacity: 1; transform: translateY(0); }
 `
 
-const Card = styled.div`
-  margin-top: 12px;
-  border: 1px solid #dcdcda;
-  border-radius: 14px;
-  background: #fff;
+const Panel = styled.div`
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(47, 49, 48, 0.06);
 `
 
 const Hero = styled.div`
-  padding: 16px;
+  margin: -20px -20px 0;
+  padding: 16px 20px;
   background: linear-gradient(135deg, #f4f7fc 0%, #faf5ff 48%, #fff 100%);
   border-bottom: 1px solid #e9ebed;
   display: flex;
@@ -97,7 +94,7 @@ const ScanStep = styled.p`
 `
 
 const Body = styled.div`
-  padding: 14px 16px 16px;
+  padding: 14px 0 0;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -377,25 +374,28 @@ export default function CopilotHelpCenterPreviewWidget({
 
   if (phase === 'scanning') {
     return (
-      <Card aria-busy="true">
-        <Hero>
-          <HeroTitle>
-            <SparkleFillIcon aria-hidden />
-            Building your Help center
-          </HeroTitle>
-          <SiteChip>
-            <MonitorFillIcon aria-hidden />
-            {siteLabel}
-          </SiteChip>
-          <ScanBar />
-          <ScanStep>{SCAN_STEPS[scanIndex]}</ScanStep>
-        </Hero>
-      </Card>
+      <CopilotPreviewCard title="Help center preview">
+        <Panel aria-busy="true">
+          <Hero>
+            <HeroTitle>
+              <SparkleFillIcon aria-hidden />
+              Building your Help center
+            </HeroTitle>
+            <SiteChip>
+              <MonitorFillIcon aria-hidden />
+              {siteLabel}
+            </SiteChip>
+            <ScanBar />
+            <ScanStep>{SCAN_STEPS[scanIndex]}</ScanStep>
+          </Hero>
+        </Panel>
+      </CopilotPreviewCard>
     )
   }
 
   return (
-    <Card aria-labelledby="help-center-preview-title">
+    <CopilotPreviewCard title="Help center preview">
+      <Panel aria-labelledby="help-center-preview-title">
       <Hero>
         <HeroTitle id="help-center-preview-title">
           <SparkleFillIcon aria-hidden />
@@ -487,6 +487,7 @@ export default function CopilotHelpCenterPreviewWidget({
           </FooterActions>
         </Footer>
       </Body>
-    </Card>
+      </Panel>
+    </CopilotPreviewCard>
   )
 }

@@ -9,13 +9,9 @@ import {
   type TeamInviteEntry,
   type TeamInviteRole,
 } from '../launchpad/teamInvite'
+import CopilotPreviewCard from './CopilotPreviewCard'
 
-const Card = styled.div`
-  margin-top: 12px;
-  padding: 16px;
-  border: 1px solid #dcdcda;
-  border-radius: 12px;
-  background: #fafafa;
+const Content = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -267,8 +263,9 @@ export default function CopilotTeamInviteWidget({ onInviteSent }: CopilotTeamInv
 
   if (status === 'sent') {
     return (
-      <Card aria-live="polite">
-        <SuccessBlock>
+      <CopilotPreviewCard title="Team invites">
+        <Content aria-live="polite">
+          <SuccessBlock>
           <SuccessHeader>
             <CheckCircleFillIcon aria-hidden />
             Invites sent
@@ -281,12 +278,14 @@ export default function CopilotTeamInviteWidget({ onInviteSent }: CopilotTeamInv
             ))}
           </SuccessList>
         </SuccessBlock>
-      </Card>
+        </Content>
+      </CopilotPreviewCard>
     )
   }
 
   return (
-    <Card aria-labelledby={`${formId}-title`}>
+    <CopilotPreviewCard title="Team invites">
+      <Content aria-labelledby={`${formId}-title`}>
       <CardTitle id={`${formId}-title`}>Send email invites</CardTitle>
       <CardHint>They'll join your trial workspace and work alongside AI in Agent Workspace.</CardHint>
 
@@ -339,6 +338,7 @@ export default function CopilotTeamInviteWidget({ onInviteSent }: CopilotTeamInv
           Invite
         </Button>
       </Footer>
-    </Card>
+      </Content>
+    </CopilotPreviewCard>
   )
 }

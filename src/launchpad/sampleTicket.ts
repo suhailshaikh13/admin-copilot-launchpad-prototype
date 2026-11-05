@@ -18,6 +18,15 @@ export const REPLY_REFINEMENT_PROMPTS = [
 
 export type ReplyRefinementPrompt = (typeof REPLY_REFINEMENT_PROMPTS)[number]
 
+export type SampleTicketPhase =
+  | 'ticket-preview'
+  | 'drafting-reply'
+  | 'reply-review'
+  | 'sending'
+  | 'posted'
+  | 'solving'
+  | 'solved'
+
 export const REFINED_REPLIES: Record<ReplyRefinementPrompt, string> = {
   'Make the tone warmer': `I'm sorry you're still locked out — that sounds frustrating. Please try the most recent password reset link and sign in with the new password. If you're still stuck, send me the exact error message and we'll get this sorted together.`,
   'Ask for the exact error message': `Sorry you're still having trouble signing in. Please try the latest password reset link once more. If it still fails, reply with the exact error text on screen (or a screenshot) so I can pinpoint what's blocking access.`,

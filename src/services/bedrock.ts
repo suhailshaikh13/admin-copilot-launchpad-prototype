@@ -283,13 +283,12 @@ Your team works hand-in-hand with AI to deliver fast, accurate, and personal ser
 export function getTrySampleTicketResponse(_businessName: string): string {
   return `Let's **try a sample ticket** — I'll walk you through it step by step.
 
-First, review the ticket below. When you're ready, I can draft a reply for you to approve before we post it to the customer.
+Review the ticket preview below. When you're ready, I can draft a reply for you to approve before we post it to the customer.
 
 <widget>sample-ticket</widget>
 
 <suggestions>
-<chip>Bring in your team</chip>
-<chip>Preview Help center</chip>
+<chip>Yes, draft a reply</chip>
 </suggestions>`
 }
 

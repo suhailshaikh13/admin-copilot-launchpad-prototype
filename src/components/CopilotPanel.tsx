@@ -28,6 +28,7 @@ import CopilotHelpCenterPreviewWidget from './CopilotHelpCenterPreviewWidget'
 import AssistantMessageFeedback from './AssistantMessageFeedback'
 import type { HelpCenterCompletionSummary } from '../launchpad/helpCenterArticles'
 import type { TeamInviteEntry } from '../launchpad/teamInvite'
+import type { SampleTicketPhase } from '../launchpad/sampleTicket'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -36,6 +37,7 @@ interface Message {
   isError?: boolean
   suggestions?: string[]
   widget?: AssistantWidget
+  sampleTicketPhase?: SampleTicketPhase
 }
 
 interface SavedConversation {
@@ -896,30 +898,6 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
     ])
   }, [])
 
-  const handleSampleDraftRequested = useCallback(() => {
-    setMessages(prev => [
-      ...prev,
-      {
-        role: 'assistant',
-        content:
-          'On it — I will draft a reply based on the customer message and your account policies.',
-        suggestions: [],
-      },
-    ])
-  }, [])
-
-  const handleSampleReplyReady = useCallback(() => {
-    setMessages(prev => [
-      ...prev,
-      {
-        role: 'assistant',
-        content:
-          'Here is a suggested reply. Refine it with the quick prompts, edit the text, or **Approve and send** when it looks good.',
-        suggestions: [],
-      },
-    ])
-  }, [])
-
   const handleSampleTicketSolved = useCallback(() => {
     setMessages(prev => [
       ...prev,
@@ -959,6 +937,44 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
     if (!content || isGenerating) return
 
     setInputValue('')
+
+    if (content === 'Yes, draft a reply') {
+      setMessages(prev => {
+        const lastAssistantIdx = prev.findLastIndex(m => m.role === 'assistant')
+        const updated = [...prev]
+        if (lastAssistantIdx >= 0 && updated[lastAssistantIdx].suggestions?.length) {
+          updated[lastAssistantIdx] = { ...updated[lastAssistantIdx], suggestions: undefined }
+        }
+        const ticketIdx = updated.findLastIndex(m => m.widget === 'sample-ticket')
+        if (ticketIdx >= 0) {
+          updated[ticketIdx] = { ...updated[ticketIdx], sampleTicketPhase: 'drafting-reply' }
+        }
+        updated.push({ role: 'user', content })
+        updated.push({
+          role: 'assistant',
+          content:
+            'On it — I will draft a reply based on the customer message and your account policies.',
+        })
+        return updated
+      })
+
+      window.setTimeout(() => {
+        setMessages(prev => {
+          const ticketIdx = prev.findLastIndex(m => m.widget === 'sample-ticket')
+          const updated = [...prev]
+          if (ticketIdx >= 0) {
+            updated[ticketIdx] = { ...updated[ticketIdx], sampleTicketPhase: 'reply-review' }
+          }
+          updated.push({
+            role: 'assistant',
+            content:
+              'Here is a suggested reply. Refine it with the quick prompts, edit the text, or **Approve and send** when it looks good.',
+          })
+          return updated
+        })
+      }, 900)
+      return
+    }
 
     setMessages(prev => {
       const lastAssistantIdx = prev.findLastIndex(m => m.role === 'assistant')
@@ -1016,6 +1032,8 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
                 content: parsed.content,
                 suggestions: parsed.suggestions,
                 widget: parsed.widget,
+                sampleTicketPhase:
+                  parsed.widget === 'sample-ticket' ? ('ticket-preview' as SampleTicketPhase) : undefined,
                 isStreaming: false,
               }
             }
@@ -1383,8 +1401,15 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
                   )}
                   {msg.widget === 'sample-ticket' && !msg.isStreaming && (
                     <CopilotSampleTicketWidget
-                      onDraftRequested={handleSampleDraftRequested}
-                      onReplyReady={handleSampleReplyReady}
+                      phase={msg.sampleTicketPhase ?? 'ticket-preview'}
+                      onPhaseChange={phase => {
+                        setMessages(prevMessages => {
+                          if (i >= prevMessages.length) return prevMessages
+                          const updated = [...prevMessages]
+                          updated[i] = { ...updated[i], sampleTicketPhase: phase }
+                          return updated
+                        })
+                      }}
                       onReplySent={handleSampleReplySent}
                       onTicketSolved={handleSampleTicketSolved}
                     />
