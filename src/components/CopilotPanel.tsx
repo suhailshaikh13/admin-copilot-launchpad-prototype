@@ -18,7 +18,7 @@ import Markdown from 'react-markdown'
 import FloatIn from './FloatIn'
 import AuroraGlow from './AuroraGlow'
 import { CopilotErrorMessage } from './CopilotErrorMessage'
-import { streamChat, parseSuggestions, getCannedResponse, isGoLiveQuery } from '../services/bedrock'
+import { streamChat, parseSuggestions, getCannedResponse } from '../services/bedrock'
 import type { LaunchpadStage } from '../launchpad/types'
 import type { ChatMessage } from '../services/bedrock'
 
