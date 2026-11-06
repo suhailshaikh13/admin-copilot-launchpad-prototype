@@ -184,8 +184,9 @@ const Content = styled.div`
 
 const Title = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
   position: relative;
   z-index: 1;
 `
@@ -194,6 +195,7 @@ const SparkleIcon = styled(CopilotIcon)`
   width: 20px;
   height: 20px;
   color: #7b61c2;
+  flex-shrink: 0;
 `
 
 const Heading = styled.h2`
@@ -203,7 +205,6 @@ const Heading = styled.h2`
   letter-spacing: 0.352px;
   color: #313131;
   margin: 0;
-  width: 256px;
 `
 
 const fadeOut = keyframes`
@@ -213,7 +214,9 @@ const fadeOut = keyframes`
 
 const Suggestions = styled.div<{ $exiting?: boolean }>`
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: flex-start;
   gap: 8px;
   position: relative;
   z-index: 1;
@@ -581,6 +584,16 @@ const AssistantMessage = styled.div`
   h2 { font-size: 15px; line-height: 21px; }
   ul, ol { margin: 0 0 8px; padding-left: 20px; }
   li { margin-bottom: 2px; }
+  a {
+    color: #406cc4;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
   code { background: #f5f3f0; padding: 1px 4px; border-radius: 4px; font-size: 13px; }
   pre { background: #f5f3f0; padding: 8px 12px; border-radius: 8px; margin: 0 0 8px; overflow-x: auto;
     code { background: none; padding: 0; }
@@ -966,7 +979,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
         {
           role: 'assistant',
           content:
-            'Your reply is on the ticket. Expand the preview to see the customer message and what you sent.',
+            'Your reply is on the ticket. Review the customer message and what you sent in the preview above.',
           widget: 'sample-ticket',
           sampleTicketPhase: 'posted-thread',
           sampleTicketReply: reply,
@@ -1037,7 +1050,7 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
           {
             role: 'assistant',
             content:
-              'Here is the suggested reply. Refine it with the quick prompts in the preview, then **Approve and send** when it looks good.',
+              'Here is the suggested reply. Refine it with the quick prompts below, then **Approve and send** when it looks good.',
             widget: 'sample-ticket',
             sampleTicketPhase: 'reply-draft',
             sampleTicketDraftActive: true,
@@ -1308,11 +1321,7 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
         </IconButton>
         <TitleGroup>
           <ConversationTitle>
-            {showHistory
-              ? 'Conversations'
-              : variant === 'launchpad' && !isConversation
-                ? 'Launchpad'
-                : conversationTitle}
+            {showHistory ? 'Conversations' : isConversation ? conversationTitle : ''}
           </ConversationTitle>
           {isConversation && !showHistory && activeConversationId && (
             <IconButton
@@ -1325,11 +1334,9 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
           )}
         </TitleGroup>
         <HeaderIcons>
-          {(isConversation || showHistory) && (
-            <IconButton size="small" aria-label="New conversation" onClick={handleNewConversation} onMouseEnter={showTooltip('New conversation')} onMouseLeave={hideTooltip}>
-              <NotePencilStrokeIcon />
-            </IconButton>
-          )}
+          <IconButton size="small" aria-label="New conversation" onClick={handleNewConversation} onMouseEnter={showTooltip('New conversation')} onMouseLeave={hideTooltip}>
+            <NotePencilStrokeIcon />
+          </IconButton>
           <IconButton
             size="small"
             aria-label={isFullscreen ? 'Exit full screen' : 'View in full screen'}
@@ -1393,41 +1400,18 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
           <Content>
             <Title>
               <SparkleIcon />
-              <Heading>
-                {variant === 'launchpad' ? 'Launch your trial' : 'How can I help?'}
-              </Heading>
+              <Heading>How can I help?</Heading>
             </Title>
-            {variant === 'launchpad' && (
-              <DisclaimerText style={{ textAlign: 'center', maxWidth: 320, margin: '0 auto 8px' }}>
-                Ask how to go live—I'll configure your trial and update the preview on the left.
-              </DisclaimerText>
-            )}
             <Suggestions key={openCount} $exiting={suggestionsExiting}>
-              {variant === 'launchpad' ? (
-                <>
-                  <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Go live quickly')}>
-                    Go live quickly
-                  </QuickPrompt>
-                  <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Set up messaging for my trial')}>
-                    Set up messaging for my trial
-                  </QuickPrompt>
-                  <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Connect email channel')}>
-                    Connect email channel
-                  </QuickPrompt>
-                </>
-              ) : (
-                <>
-                  <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Route specific ticket to assignee')}>
-                    Route specific ticket to assignee
-                  </QuickPrompt>
-                  <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Create a view of pending status tickets')}>
-                    Create a view of pending status tickets
-                  </QuickPrompt>
-                  <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Explain intent')}>
-                    Explain intent
-                  </QuickPrompt>
-                </>
-              )}
+              <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Go live quickly')}>
+                Go live quickly
+              </QuickPrompt>
+              <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('What can you do?')}>
+                What can you do?
+              </QuickPrompt>
+              <QuickPrompt showIcon={false} onClick={() => handleSuggestionClick('Show me examples')}>
+                Show me examples
+              </QuickPrompt>
             </Suggestions>
           </Content>
 
@@ -1467,7 +1451,19 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
             return (
               <React.Fragment key={i}>
                 <AssistantMessage>
-                  {msg.content && <Markdown>{msg.content}</Markdown>}
+                  {msg.content && (
+                    <Markdown
+                      components={{
+                        a: ({ href, children }) => (
+                          <a href={href} target="_blank" rel="noopener noreferrer">
+                            {children}
+                          </a>
+                        ),
+                      }}
+                    >
+                      {msg.content}
+                    </Markdown>
+                  )}
                   {msg.isError && (
                     <CopilotErrorMessage onViewSetupGuide={() => onNavigateToSetupGuide?.()} />
                   )}
@@ -1480,6 +1476,12 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
                       draftReply={msg.sampleTicketDraftReply}
                       draftActive={msg.sampleTicketDraftActive ?? msg.sampleTicketPhase !== 'reply-draft'}
                       postedReply={msg.sampleTicketReply}
+                      onDraftReply={
+                        (msg.sampleTicketPhase ?? 'ticket-preview') === 'ticket-preview' &&
+                        messages.findLastIndex(m => m.widget === 'sample-ticket') === i
+                          ? () => handleSend('Yes, draft a reply')
+                          : undefined
+                      }
                       onRefinementRequest={handleSampleRefinement}
                       onReplyApproved={handleSampleReplyApproved}
                       onTicketSolved={handleSampleTicketSolved}

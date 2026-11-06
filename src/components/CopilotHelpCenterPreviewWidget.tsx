@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import styled from 'styled-components'
-import { Button, Checkbox, Tag } from '@zendesk-ui/react-components'
+import { Button, Tag } from '@zendesk-ui/react-components'
 import SparkleFillIcon from '../assets/sparkle-fill.svg?react'
 import ArrowDiagonalOutIcon from '../assets/arrow-diagonal-out.svg?react'
 import {
@@ -13,18 +13,6 @@ import {
   type HelpCenterCompletionSummary,
 } from '../launchpad/helpCenterArticles'
 import CopilotPreviewCard from './CopilotPreviewCard'
-
-const ScreenReaderOnly = styled.span`
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-`
 
 const Body = styled.div`
   display: flex;
@@ -43,25 +31,13 @@ const ArticleListShell = styled.div`
 const ArticleRow = styled.div<{ $published?: boolean }>`
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 20px;
+  padding: 12px;
   border-bottom: 1px solid #eae9e8;
   background: ${({ $published }) => ($published ? '#fafafa' : '#fff')};
-  cursor: ${({ $published }) => ($published ? 'default' : 'pointer')};
 
   &:last-child {
     border-bottom: none;
   }
-
-  &:hover {
-    background: ${({ $published }) => ($published ? '#fafafa' : '#f9f9f8')};
-  }
-`
-
-const CheckboxColumn = styled.span`
-  flex-shrink: 0;
-  width: 16px;
-  padding-top: 2px;
 `
 
 const ArticleContent = styled.div`
@@ -113,6 +89,15 @@ const ArticleLink = styled.a`
   }
 `
 
+const ArticleActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+`
+
 const PublishedTag = styled(Tag)`
   && {
     background: #edf7ed;
@@ -122,24 +107,12 @@ const PublishedTag = styled(Tag)`
 
 const Footer = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-top: 4px;
-  width: 100%;
-`
-
-const FooterActions = styled.div`
-  display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
-`
-
-const FooterHint = styled.p`
-  margin: 0;
-  font-size: 12px;
-  line-height: 16px;
-  color: #646864;
+  padding-top: 4px;
+  width: 100%;
 `
 
 const AgentPreview = styled.div`
@@ -193,50 +166,15 @@ export default function CopilotHelpCenterPreviewWidget({
 }: CopilotHelpCenterPreviewWidgetProps) {
   const articles = useMemo(() => buildHelpCenterArticles(HELP_CENTER_PREVIEW_BRAND), [])
   const [finished, setFinished] = useState(false)
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
   const [statuses, setStatuses] = useState<Record<string, ArticleStatus>>(() =>
     Object.fromEntries(articles.map(article => [article.id, 'unpublished' as ArticleStatus]))
   )
-
-  const toggleSelected = useCallback((id: string) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }, [])
 
   const unpublishedIds = useMemo(
     () =>
       articles.filter(article => statuses[article.id] === 'unpublished').map(article => article.id),
     [articles, statuses]
   )
-
-  const allUnpublishedSelected =
-    unpublishedIds.length > 0 && unpublishedIds.every(id => selectedIds.has(id))
-
-  const toggleSelectAll = useCallback(() => {
-    if (allUnpublishedSelected) {
-      setSelectedIds(new Set())
-      return
-    }
-    setSelectedIds(new Set(unpublishedIds))
-  }, [allUnpublishedSelected, unpublishedIds])
-
-  const publishSelected = useCallback(() => {
-    if (selectedIds.size === 0) return
-    setStatuses(prev => {
-      const next = { ...prev }
-      selectedIds.forEach(id => {
-        if (next[id] === 'unpublished') {
-          next[id] = 'published'
-        }
-      })
-      return next
-    })
-    setSelectedIds(new Set())
-  }, [selectedIds])
 
   const publishedCount = useMemo(
     () => articles.filter(article => statuses[article.id] === 'published').length,
@@ -256,21 +194,49 @@ export default function CopilotHelpCenterPreviewWidget({
     [publishedTitles]
   )
 
-  const selectionCount = selectedIds.size
+  const completeWithStatuses = useCallback(
+    (nextStatuses: Record<string, ArticleStatus>) => {
+      if (finished) return
+      onComplete({
+        businessName: HELP_CENTER_PREVIEW_BRAND,
+        siteLabel: HELP_CENTER_PREVIEW_SITE,
+        articles: articles.map(article => ({
+          ...article,
+          status: nextStatuses[article.id],
+        })),
+      })
+      setFinished(true)
+    },
+    [articles, finished, onComplete]
+  )
 
-  const handleFinish = useCallback(() => {
-    if (finished) return
-    onComplete({
-      businessName: HELP_CENTER_PREVIEW_BRAND,
-      siteLabel: HELP_CENTER_PREVIEW_SITE,
-      articles: articles.map(article => ({
-        ...article,
-        status: statuses[article.id],
-      })),
+  const publishArticle = useCallback(
+    (id: string) => {
+      if (finished || statuses[id] === 'published') return
+
+      const nextStatuses = { ...statuses, [id]: 'published' as ArticleStatus }
+      setStatuses(nextStatuses)
+
+      const remainingUnpublished = articles.filter(
+        article => article.id !== id && nextStatuses[article.id] === 'unpublished'
+      )
+      if (remainingUnpublished.length === 0) {
+        completeWithStatuses(nextStatuses)
+      }
+    },
+    [articles, completeWithStatuses, finished, statuses]
+  )
+
+  const publishAll = useCallback(() => {
+    if (finished || unpublishedIds.length === 0) return
+
+    const nextStatuses = { ...statuses }
+    unpublishedIds.forEach(id => {
+      nextStatuses[id] = 'published'
     })
-    setFinished(true)
-    setSelectedIds(new Set())
-  }, [articles, finished, onComplete, statuses])
+    setStatuses(nextStatuses)
+    completeWithStatuses(nextStatuses)
+  }, [completeWithStatuses, finished, statuses, unpublishedIds])
 
   return (
     <CopilotPreviewCard title="Help center preview">
@@ -278,35 +244,30 @@ export default function CopilotHelpCenterPreviewWidget({
         <ArticleListShell>
           {articles.map(article => {
             const isPublished = statuses[article.id] === 'published'
-            const isSelected = selectedIds.has(article.id)
             const articleUrl = helpCenterArticleUrl(article.slug)
-            const canSelect = !isPublished && !finished
 
             return (
-              <ArticleRow
-                key={article.id}
-                $published={isPublished}
-                onClick={event => {
-                  if (!canSelect) return
-                  if ((event.target as HTMLElement).closest('a, input, label')) return
-                  toggleSelected(article.id)
-                }}
-              >
-                <CheckboxColumn onClick={event => event.stopPropagation()}>
-                  {canSelect ? (
-                    <Checkbox checked={isSelected} onChange={() => toggleSelected(article.id)}>
-                      <ScreenReaderOnly>Select {article.title}</ScreenReaderOnly>
-                    </Checkbox>
-                  ) : null}
-                </CheckboxColumn>
+              <ArticleRow key={article.id} $published={isPublished}>
                 <ArticleContent>
                   <ArticleTitle>{article.title}</ArticleTitle>
                   <ArticlePreview>{article.previewLines}</ArticlePreview>
-                  <ArticleLink href={articleUrl} target="_blank" rel="noopener noreferrer">
-                    View full article
-                    <ArrowDiagonalOutIcon aria-hidden />
-                  </ArticleLink>
-                  {isPublished && <PublishedTag>Published</PublishedTag>}
+                  <ArticleActions>
+                    <ArticleLink href={articleUrl} target="_blank" rel="noopener noreferrer">
+                      View full article
+                      <ArrowDiagonalOutIcon aria-hidden />
+                    </ArticleLink>
+                    {isPublished ? (
+                      <PublishedTag>Published</PublishedTag>
+                    ) : (
+                      <Button
+                        size="small"
+                        disabled={finished}
+                        onClick={() => publishArticle(article.id)}
+                      >
+                        Publish
+                      </Button>
+                    )}
+                  </ArticleActions>
                 </ArticleContent>
               </ArticleRow>
             )
@@ -325,31 +286,14 @@ export default function CopilotHelpCenterPreviewWidget({
         )}
 
         <Footer>
-          <FooterHint>
-            {publishedCount > 0
-              ? `${publishedCount} published — use View full article to open the live Help center page anytime.`
-              : selectionCount > 0
-                ? `${selectionCount} selected — publish when you are ready, or finish after reviewing.`
-                : 'Read the preview, open the full article, then select and publish what you want live.'}
-          </FooterHint>
-          <FooterActions>
-            {unpublishedIds.length > 0 && !finished && (
-              <Button size="small" onClick={toggleSelectAll}>
-                {allUnpublishedSelected ? 'Clear selection' : 'Select all'}
-              </Button>
-            )}
-            <Button
-              size="small"
-              isPrimary={selectionCount > 0}
-              disabled={finished || selectionCount === 0}
-              onClick={publishSelected}
-            >
-              Publish selected
-            </Button>
-            <Button size="small" isPrimary={selectionCount === 0} disabled={finished} onClick={handleFinish}>
-              {finished ? 'Saved' : 'Finish preview'}
-            </Button>
-          </FooterActions>
+          <Button
+            size="small"
+            isPrimary
+            disabled={finished || unpublishedIds.length === 0}
+            onClick={publishAll}
+          >
+            Publish all
+          </Button>
         </Footer>
       </Body>
     </CopilotPreviewCard>

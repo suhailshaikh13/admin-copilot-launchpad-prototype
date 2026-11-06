@@ -9,8 +9,10 @@ test.describe('Launchpad trial experience', () => {
     await expect(page.getByText('Set up your trial essentials')).toBeVisible()
     await expect(page.getByText('1 of 5 completed')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Go to Agent Workspace' })).toBeVisible()
-    await expect(page.getByText('Launch your trial')).toBeVisible()
+    await expect(page.getByText('How can I help?')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Go live quickly' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'What can you do?' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Show me examples' })).toBeVisible()
   })
 
   test('go live quickly shows onboarding actions', async ({ page }) => {
@@ -31,10 +33,8 @@ test.describe('Launchpad trial experience', () => {
       timeout: 10000,
     })
 
-    await page.getByRole('button', { name: 'Select all' }).click()
-    await page.getByRole('button', { name: 'Publish selected' }).click()
+    await page.getByRole('button', { name: 'Publish all' }).click()
     await expect(page.getByText('Agent preview')).toBeVisible()
-    await page.getByRole('button', { name: 'Finish preview' }).click()
 
     await expect(page.getByText(/Help center preview saved/i)).toBeVisible({ timeout: 5000 })
     await expect(page.getByText(/All three articles are/i)).toBeVisible()
@@ -59,6 +59,25 @@ test.describe('Launchpad trial experience', () => {
 
     await page.getByRole('button', { name: 'Solve this ticket' }).click()
     await expect(page.getByText(/Ticket #1 is solved/i)).toBeVisible({ timeout: 8000 })
+  })
+
+  test('connect support email walks through gmail setup in copilot', async ({ page }) => {
+    await page.getByRole('button', { name: 'Go live quickly' }).click()
+    await page.getByRole('button', { name: 'Connect Support Email' }).click({ timeout: 15000 })
+
+    await expect(page.getByText(/Turn customer emails into tickets/i).first()).toBeVisible({
+      timeout: 10000,
+    })
+    await expect(page.getByRole('button', { name: 'Gmail connector' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Go to advanced options' })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Gmail connector' }).click()
+    await expect(page.getByText(/Give the right access to connect to Gmail/i).first()).toBeVisible({
+      timeout: 8000,
+    })
+
+    await page.getByRole('button', { name: 'Finish Gmail setup' }).click()
+    await expect(page.getByText(/Gmail connector.*ready/i).first()).toBeVisible({ timeout: 8000 })
   })
 
   test('bring in your team opens copilot-led invite flow', async ({ page }) => {

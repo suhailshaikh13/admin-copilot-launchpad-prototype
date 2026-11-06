@@ -1,4 +1,15 @@
 import { parseAllMessages, concatBuffers } from './eventstream'
+import {
+  getConnectSupportEmailIntroResponse,
+  getGmailConnectorResponse,
+  getGmailSetupCompleteResponse,
+  getMicrosoftExchangeResponse,
+  getMicrosoftExchangeCompleteResponse,
+  getForwardEmailResponse,
+  getForwardEmailCompleteResponse,
+  getZendeskEmailResponse,
+  getAdvancedEmailOptionsResponse,
+} from '../launchpad/supportEmail'
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string }
 
@@ -267,6 +278,48 @@ export function getGoLiveQuicklyResponse(_businessName: string): string {
 </suggestions>`
 }
 
+export function getHelpMeGetStartedResponse(_businessName: string): string {
+  return getGoLiveQuicklyResponse(_businessName)
+}
+
+export function getWhatCanYouDoResponse(_businessName: string): string {
+  return `I can help you set up and explore your Zendesk trial without leaving this chat. Here's what I can do:
+
+**Get live faster**
+- Preview and publish Help center articles
+- Connect support email so customer messages become tickets
+- Bring teammates into your trial
+
+**Try the product**
+- Walk through a sample ticket and draft a reply
+- Point you to Agent Workspace and AI features
+
+Ask for any of those, or tell me what you're trying to accomplish.
+
+<suggestions>
+<chip>Go live quickly</chip>
+<chip>Show me examples</chip>
+<chip>Connect Support Email</chip>
+</suggestions>`
+}
+
+export function getShowMeExamplesResponse(_businessName: string): string {
+  return `Here are a few things I can set up with you right now:
+
+- **Preview Help center** — review generated articles and publish what looks right
+- **Try a sample ticket** — draft and send a reply, then solve the ticket
+- **Connect Support Email** — choose Gmail, Exchange, forwarding, or a Zendesk email
+- **Bring in your team** — invite teammates with roles from this chat
+
+Pick one to start, or ask in your own words.
+
+<suggestions>
+<chip>Preview Help center</chip>
+<chip>Try a sample ticket</chip>
+<chip>Connect Support Email</chip>
+</suggestions>`
+}
+
 export function getBringInTeamResponse(_businessName: string): string {
   return `I'll help you **bring in your team** without leaving this chat.
 
@@ -283,13 +336,13 @@ Your team works hand-in-hand with AI to deliver fast, accurate, and personal ser
 export function getTrySampleTicketResponse(_businessName: string): string {
   return `Let's **try a sample ticket** — I'll walk you through it step by step.
 
-Review the ticket preview below. When you're ready, I can draft a reply for you to approve before we post it to the customer.
+Review the ticket preview below. When you're ready, draft a reply to approve before we post it to the customer.
 
-<widget>sample-ticket</widget>
+<widget>sample-ticket</widget>`
+}
 
-<suggestions>
-<chip>Yes, draft a reply</chip>
-</suggestions>`
+export function getConnectSupportEmailResponse(_businessName?: string): string {
+  return getConnectSupportEmailIntroResponse()
 }
 
 export function getPreviewHelpCenterResponse(_businessName: string): string {
@@ -307,8 +360,21 @@ There are **three help articles** for **Northwind Trading** on **northwindtradin
 
 export function getCannedResponse(message: string, businessName = 'your business'): string | undefined {
   const trimmed = message.trim()
-  if (trimmed === 'Go live quickly' || trimmed.toLowerCase().includes('go live')) {
-    return getGoLiveQuicklyResponse(businessName)
+  if (
+    trimmed === 'Help me get started' ||
+    trimmed.toLowerCase() === 'help me get started' ||
+    trimmed === 'Go live quickly' ||
+    trimmed.toLowerCase().includes('go live')
+  ) {
+    return getHelpMeGetStartedResponse(businessName)
+  }
+
+  if (trimmed === 'What can you do?' || trimmed.toLowerCase() === 'what can you do?') {
+    return getWhatCanYouDoResponse(businessName)
+  }
+
+  if (trimmed === 'Show me examples' || trimmed.toLowerCase() === 'show me examples') {
+    return getShowMeExamplesResponse(businessName)
   }
 
   if (trimmed === 'Bring in your team' || trimmed.toLowerCase() === 'bring in your team') {
@@ -321,6 +387,47 @@ export function getCannedResponse(message: string, businessName = 'your business
 
   if (trimmed === 'Preview Help center' || trimmed.toLowerCase() === 'preview help center') {
     return getPreviewHelpCenterResponse(businessName)
+  }
+
+  if (
+    trimmed === 'Connect Support Email' ||
+    trimmed.toLowerCase() === 'connect support email' ||
+    trimmed.toLowerCase() === 'connect email channel' ||
+    trimmed === 'Back to email options'
+  ) {
+    return getConnectSupportEmailResponse(businessName)
+  }
+
+  if (trimmed === 'Gmail connector') {
+    return getGmailConnectorResponse()
+  }
+
+  if (trimmed === 'Finish Gmail setup') {
+    return getGmailSetupCompleteResponse()
+  }
+
+  if (trimmed === 'Microsoft Exchange') {
+    return getMicrosoftExchangeResponse()
+  }
+
+  if (trimmed === "I've signed in with Microsoft") {
+    return getMicrosoftExchangeCompleteResponse()
+  }
+
+  if (trimmed === 'Forward from another email') {
+    return getForwardEmailResponse()
+  }
+
+  if (trimmed === "I've set up forwarding") {
+    return getForwardEmailCompleteResponse()
+  }
+
+  if (trimmed === 'Zendesk email') {
+    return getZendeskEmailResponse()
+  }
+
+  if (trimmed === 'Go to advanced options') {
+    return getAdvancedEmailOptionsResponse()
   }
 
   if (CANNED_RESPONSES[trimmed] && CANNED_RESPONSES[trimmed] !== 'GO_LIVE_TEMPLATE') {

@@ -5,6 +5,7 @@ import svgr from 'vite-plugin-svgr'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   return {
+    base: './',
     plugins: [react(), svgr()],
     server: {
       proxy: {

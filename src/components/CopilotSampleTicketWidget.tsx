@@ -95,36 +95,7 @@ const MessageBubble = styled.div<{ $variant?: 'customer' | 'agent' }>`
   border: 1px solid ${({ $variant }) => ($variant === 'agent' ? '#e4eaf6' : '#eef0f2')};
 `
 
-const Composer = styled.div<{ $inactive?: boolean }>`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid #e4e4e2;
-  background: ${({ $inactive }) => ($inactive ? '#f4f4f3' : '#fafafa')};
-  opacity: ${({ $inactive }) => ($inactive ? 0.72 : 1)};
-`
-
-const ToRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: #646864;
-`
-
-const ToChip = styled.span`
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: #fff;
-  border: 1px solid #e9ebed;
-  font-size: 12px;
-  font-weight: 600;
-  color: #2f3130;
-`
-
-const ReplyArea = styled.textarea`
+const ReplyArea = styled.textarea<{ $inactive?: boolean }>`
   width: 100%;
   min-height: 88px;
   box-sizing: border-box;
@@ -136,6 +107,7 @@ const ReplyArea = styled.textarea`
   color: #2f3130;
   font-family: inherit;
   background: transparent;
+  opacity: ${({ $inactive }) => ($inactive ? 0.72 : 1)};
 
   &:focus {
     outline: none;
@@ -151,7 +123,8 @@ const PromptRow = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 8px;
+  width: 100%;
 `
 
 const ActionRow = styled.div`
@@ -240,6 +213,7 @@ interface CopilotSampleTicketWidgetProps {
   draftReply?: string
   draftActive?: boolean
   postedReply?: string
+  onDraftReply?: () => void
   onRefinementRequest: (prompt: ReplyRefinementPrompt) => void
   onReplyApproved: (reply: string) => void
   onTicketSolved: () => void
@@ -250,6 +224,7 @@ export default function CopilotSampleTicketWidget({
   draftReply,
   draftActive = true,
   postedReply = SAMPLE_TICKET.defaultReply,
+  onDraftReply,
   onRefinementRequest,
   onReplyApproved,
   onTicketSolved,
@@ -281,57 +256,56 @@ export default function CopilotSampleTicketWidget({
     return (
       <CopilotPreviewCard title={previewTitle(phase)} expandable="none">
         <TicketPreviewCard />
+        {onDraftReply && (
+          <ActionRow>
+            <Button size="small" isPrimary onClick={onDraftReply}>
+              Yes, draft a reply
+            </Button>
+          </ActionRow>
+        )}
       </CopilotPreviewCard>
     )
   }
 
   if (phase === 'reply-draft') {
     return (
-      <CopilotPreviewCard title={previewTitle(phase)} expandable="none">
-        <Composer $inactive={!draftActive}>
-          <ToRow>
-            <span>To</span>
-            <ToChip>{SAMPLE_TICKET.customerLabel}</ToChip>
-          </ToRow>
+      <>
+        <CopilotPreviewCard title={previewTitle(phase)} expandable="none">
           <ReplyArea
+            $inactive={!draftActive}
             value={reply}
             readOnly={!draftActive}
             aria-label="Suggested reply"
             onChange={event => setReply(event.target.value)}
           />
-        </Composer>
-        {draftActive && (
-          <>
-            <PromptRow>
-              {REPLY_REFINEMENT_PROMPTS.map(prompt => (
-                <QuickPrompt
-                  key={prompt}
-                  showIcon={false}
-                  size="small"
-                  onClick={() => handleRefinement(prompt)}
-                >
-                  {prompt}
-                </QuickPrompt>
-              ))}
-            </PromptRow>
+          {draftActive && (
             <ActionRow>
               <Button size="small" isPrimary onClick={handleApproveSend}>
                 Approve and send
               </Button>
             </ActionRow>
-          </>
+          )}
+        </CopilotPreviewCard>
+        {draftActive && (
+          <PromptRow>
+            {REPLY_REFINEMENT_PROMPTS.map(prompt => (
+              <QuickPrompt
+                key={prompt}
+                showIcon={false}
+                size="small"
+                onClick={() => handleRefinement(prompt)}
+              >
+                {prompt}
+              </QuickPrompt>
+            ))}
+          </PromptRow>
         )}
-      </CopilotPreviewCard>
+      </>
     )
   }
 
   return (
-    <CopilotPreviewCard
-      title={previewTitle(phase)}
-      expandable="collapsible"
-      defaultExpanded
-      collapsedMaxHeight={240}
-    >
+    <CopilotPreviewCard title={previewTitle(phase)} expandable="none">
       <Eyebrow>Sample ticket #{SAMPLE_TICKET.id}</Eyebrow>
       <SubjectInThread>{SAMPLE_TICKET.subject}</SubjectInThread>
       <ThreadBlock>
