@@ -1,17 +1,21 @@
 ---
-description: Publish prototype updates to Suhail's personal GitHub repo and Pages
+description: Publish Launchpad prototype updates only to Suhail's personal GitHub repo and Pages
 alwaysApply: true
 ---
 
 # Personal publish target
 
-When the user asks to **publish**, **deploy**, **share**, or **update the link**:
+When the user asks to **publish**, **deploy**, **update the share link**, or **push changes** for this prototype:
 
-1. **Do not** push to or open a PR against `zendesk/admin-copilot-prototype` (`origin`).
-2. Commit locally if needed, then push to the **`personal`** remote:
-   - Repo: https://github.com/suhailshaikh13/admin-copilot-launchpad-prototype
-   - Remote name: `personal`
-   - Branch mapping: current work → `personal/main`
-3. Rebuild (`npm run build`) and update **GitHub Pages** on that same personal repo (`gh-pages` branch with `dist/` only).
-4. Shareable demo URL (keep this updated):
+1. **Do not** push to `origin` (`zendesk/admin-copilot-prototype`).
+2. **Do not** open a PR against the Zendesk repository.
+3. Commit locally if needed, then push to the **`personal`** remote:
+   - Remote: `https://github.com/suhailshaikh13/admin-copilot-launchpad-prototype.git`
+   - Branch mapping: current work → `personal` `main`
+4. Rebuild (`npm run build`) and update **GitHub Pages** on that same personal repo (`gh-pages` branch, dist-only).
+5. Share/update this live URL:
    - https://suhailshaikh13.github.io/admin-copilot-launchpad-prototype/
+6. Repo URL for code:
+   - https://github.com/suhailshaikh13/admin-copilot-launchpad-prototype
+
+If the `personal` remote is missing, re-add it before pushing. Never change or remove `origin`.
