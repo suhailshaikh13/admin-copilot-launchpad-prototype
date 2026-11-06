@@ -1,14 +1,12 @@
 import { useCallback, useMemo, useState } from 'react'
 import styled from 'styled-components'
 import { Button, Tag } from '@zendesk-ui/react-components'
-import SparkleFillIcon from '../assets/sparkle-fill.svg?react'
 import ArrowDiagonalOutIcon from '../assets/arrow-diagonal-out.svg?react'
 import {
   buildHelpCenterArticles,
   HELP_CENTER_PREVIEW_BRAND,
   HELP_CENTER_PREVIEW_SITE,
   helpCenterArticleUrl,
-  sampleAgentAnswer,
   type ArticleStatus,
   type HelpCenterCompletionSummary,
 } from '../launchpad/helpCenterArticles'
@@ -115,48 +113,6 @@ const Footer = styled.div`
   width: 100%;
 `
 
-const AgentPreview = styled.div`
-  padding: 12px;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #f9f5fa 0%, #fff 100%);
-  border: 1px solid #e9ebed;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
-`
-
-const AgentLabel = styled.span`
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #9256b1;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-  svg {
-    width: 14px;
-    height: 14px;
-  }
-`
-
-const AgentQuestion = styled.p`
-  margin: 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: #2f3130;
-`
-
-const AgentAnswer = styled.p`
-  margin: 0;
-  font-size: 13px;
-  line-height: 18px;
-  color: #646864;
-`
-
 interface CopilotHelpCenterPreviewWidgetProps {
   onComplete: (summary: HelpCenterCompletionSummary) => void
 }
@@ -174,24 +130,6 @@ export default function CopilotHelpCenterPreviewWidget({
     () =>
       articles.filter(article => statuses[article.id] === 'unpublished').map(article => article.id),
     [articles, statuses]
-  )
-
-  const publishedCount = useMemo(
-    () => articles.filter(article => statuses[article.id] === 'published').length,
-    [articles, statuses]
-  )
-
-  const publishedTitles = useMemo(
-    () =>
-      articles
-        .filter(article => statuses[article.id] === 'published')
-        .map(article => article.title),
-    [articles, statuses]
-  )
-
-  const agentAnswer = useMemo(
-    () => sampleAgentAnswer(HELP_CENTER_PREVIEW_BRAND, publishedTitles),
-    [publishedTitles]
   )
 
   const completeWithStatuses = useCallback(
@@ -273,17 +211,6 @@ export default function CopilotHelpCenterPreviewWidget({
             )
           })}
         </ArticleListShell>
-
-        {publishedCount > 0 && agentAnswer && (
-          <AgentPreview>
-            <AgentLabel>
-              <SparkleFillIcon aria-hidden />
-              Agent preview
-            </AgentLabel>
-            <AgentQuestion>Customer asks: &ldquo;What is your return policy?&rdquo;</AgentQuestion>
-            <AgentAnswer>{agentAnswer}</AgentAnswer>
-          </AgentPreview>
-        )}
 
         <Footer>
           <Button

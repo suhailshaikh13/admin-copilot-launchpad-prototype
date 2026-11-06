@@ -34,7 +34,6 @@ test.describe('Launchpad trial experience', () => {
     })
 
     await page.getByRole('button', { name: 'Publish all' }).click()
-    await expect(page.getByText('Agent preview')).toBeVisible()
 
     await expect(page.getByText(/Help center preview saved/i)).toBeVisible({ timeout: 5000 })
     await expect(page.getByText(/All three articles are/i)).toBeVisible()
