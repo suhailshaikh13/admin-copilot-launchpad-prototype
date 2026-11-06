@@ -39,6 +39,7 @@ import SearchSuggestions from './components/SearchSuggestions'
 import LaunchpadTrialCanvas from './components/LaunchpadTrialCanvas'
 import { SetupGuide } from './components/SetupGuide'
 import type { LaunchpadStage } from './launchpad/types'
+import { parseCaptureState, runCaptureSequence } from './launchpad/captureHarness'
 import styled from 'styled-components'
 
 const CopilotToggle = styled.button<{ $isOpen: boolean; $animateHover: boolean }>`
@@ -281,6 +282,26 @@ function App() {
     setDrawerOpen(false)
     // Panel is always mounted, so ref is available immediately
     copilotRef.current?.sendMessage(text)
+  }, [])
+
+  // Figma capture deep-links: ?captureState=<state>
+  useEffect(() => {
+    const state = parseCaptureState()
+    if (!state) return
+    let cancelled = false
+    const timer = window.setTimeout(() => {
+      if (cancelled) return
+      void runCaptureSequence(state, text => {
+        copilotRef.current?.sendMessage(text)
+      }).catch(error => {
+        console.error('capture harness failed', error)
+        document.documentElement.dataset.captureReady = 'error'
+      })
+    }, 600)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
   }, [])
 
   const handleNavigateToSetupGuide = useCallback(() => {

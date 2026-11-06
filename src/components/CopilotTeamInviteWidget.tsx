@@ -1,5 +1,5 @@
 import { useCallback, useId, useState } from 'react'
-import styled, { keyframes } from 'styled-components'
+import styled from 'styled-components'
 import { Button } from '@zendesk-ui/react-components'
 import PlusStrokeIcon from '@zendeskgarden/svg-icons/src/16/plus-stroke.svg?react'
 import CheckCircleFillIcon from '../assets/check-circle-fill.svg?react'
@@ -194,18 +194,6 @@ const ErrorText = styled.p`
   color: #c72a1a;
 `
 
-const pulse = keyframes`
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
-`
-
-const SendingNote = styled.p`
-  margin: 0;
-  font-size: 13px;
-  color: #646864;
-  animation: ${pulse} 1.2s ease-in-out infinite;
-`
-
 const SuccessHeader = styled.div`
   display: flex;
   align-items: center;
@@ -235,7 +223,10 @@ interface RowState {
 }
 
 interface CopilotTeamInviteWidgetProps {
-  onInviteSent: (entries: TeamInviteEntry[]) => void
+  /** When set, this card shows the sent confirmation instead of the form. */
+  sentEntries?: TeamInviteEntry[]
+  interactive?: boolean
+  onInviteRequest?: (entries: TeamInviteEntry[]) => void
 }
 
 function createRow(partial?: Partial<RowState>): RowState {
@@ -246,12 +237,14 @@ function createRow(partial?: Partial<RowState>): RowState {
   }
 }
 
-export default function CopilotTeamInviteWidget({ onInviteSent }: CopilotTeamInviteWidgetProps) {
+export default function CopilotTeamInviteWidget({
+  sentEntries,
+  interactive = true,
+  onInviteRequest,
+}: CopilotTeamInviteWidgetProps) {
   const formId = useId()
   const [rows, setRows] = useState<RowState[]>(() => [createRow()])
   const [error, setError] = useState<string | null>(null)
-  const [status, setStatus] = useState<'editing' | 'sending' | 'sent'>('editing')
-  const [sentEntries, setSentEntries] = useState<TeamInviteEntry[]>([])
 
   const updateRow = useCallback((id: string, patch: Partial<RowState>) => {
     setRows(prev => prev.map(row => (row.id === id ? { ...row, ...patch } : row)))
@@ -267,6 +260,8 @@ export default function CopilotTeamInviteWidget({ onInviteSent }: CopilotTeamInv
   }, [])
 
   const handleInvite = useCallback(() => {
+    if (!interactive || !onInviteRequest) return
+
     const entries: TeamInviteEntry[] = rows.map(row => ({
       email: row.email.trim(),
       role: row.role,
@@ -279,16 +274,10 @@ export default function CopilotTeamInviteWidget({ onInviteSent }: CopilotTeamInv
     }
 
     setError(null)
-    setStatus('sending')
+    onInviteRequest(entries)
+  }, [interactive, onInviteRequest, rows])
 
-    window.setTimeout(() => {
-      setSentEntries(entries)
-      setStatus('sent')
-      onInviteSent(entries)
-    }, 900)
-  }, [onInviteSent, rows])
-
-  if (status === 'sent') {
+  if (sentEntries && sentEntries.length > 0) {
     return (
       <CopilotPreviewCard title="Team invites">
         <Body aria-live="polite">
@@ -320,8 +309,8 @@ export default function CopilotTeamInviteWidget({ onInviteSent }: CopilotTeamInv
             <InviteBlock key={row.id}>
               <BlockHeader>
                 <BlockTitle>Teammate {index + 1}</BlockTitle>
-                {rows.length > 1 && (
-                  <RemoveButton type="button" onClick={() => removeRow(row.id)} disabled={status === 'sending'}>
+                {rows.length > 1 && interactive && (
+                  <RemoveButton type="button" onClick={() => removeRow(row.id)}>
                     Remove
                   </RemoveButton>
                 )}
@@ -334,7 +323,7 @@ export default function CopilotTeamInviteWidget({ onInviteSent }: CopilotTeamInv
                   autoComplete="email"
                   value={row.email}
                   aria-invalid={Boolean(error && !isValidInviteEmail(row.email))}
-                  disabled={status === 'sending'}
+                  disabled={!interactive}
                   onChange={event => updateRow(row.id, { email: event.target.value })}
                 />
               </FieldPair>
@@ -343,7 +332,7 @@ export default function CopilotTeamInviteWidget({ onInviteSent }: CopilotTeamInv
                 <Select
                   id={`${formId}-role-${row.id}`}
                   value={row.role}
-                  disabled={status === 'sending'}
+                  disabled={!interactive}
                   onChange={event => updateRow(row.id, { role: event.target.value as TeamInviteRole })}
                 >
                   {TEAM_INVITE_ROLES.map(role => (
@@ -358,21 +347,22 @@ export default function CopilotTeamInviteWidget({ onInviteSent }: CopilotTeamInv
         </InviteStack>
 
         {error && <ErrorText role="alert">{error}</ErrorText>}
-        {status === 'sending' && <SendingNote>Sending invites…</SendingNote>}
 
-        <ActionsRow>
-          {rows.length < 5 ? (
-            <AddButton type="button" onClick={addRow} disabled={status === 'sending'}>
-              <PlusStrokeIcon aria-hidden />
-              Add teammate
-            </AddButton>
-          ) : (
-            <span />
-          )}
-          <Button size="small" isPrimary onClick={handleInvite} disabled={status === 'sending'}>
-            Invite
-          </Button>
-        </ActionsRow>
+        {interactive && (
+          <ActionsRow>
+            {rows.length < 5 ? (
+              <AddButton type="button" onClick={addRow}>
+                <PlusStrokeIcon aria-hidden />
+                Add teammate
+              </AddButton>
+            ) : (
+              <span />
+            )}
+            <Button size="small" isPrimary onClick={handleInvite}>
+              Invite
+            </Button>
+          </ActionsRow>
+        )}
       </Body>
     </CopilotPreviewCard>
   )

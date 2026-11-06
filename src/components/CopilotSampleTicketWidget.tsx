@@ -1,14 +1,8 @@
 import { useCallback, useState } from 'react'
 import styled from 'styled-components'
 import { Button } from '@zendesk-ui/react-components'
-import { QuickPrompt } from '@zendesk-ui/ai-assistant-chat'
 import CopilotPreviewCard from './CopilotPreviewCard'
-import {
-  REPLY_REFINEMENT_PROMPTS,
-  SAMPLE_TICKET,
-  type ReplyRefinementPrompt,
-  type SampleTicketPhase,
-} from '../launchpad/sampleTicket'
+import { SAMPLE_TICKET, type SampleTicketPhase } from '../launchpad/sampleTicket'
 
 const TicketHeader = styled.div`
   display: flex;
@@ -119,14 +113,6 @@ const ReplyArea = styled.textarea<{ $inactive?: boolean }>`
   }
 `
 
-const PromptRow = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
-  width: 100%;
-`
-
 const ActionRow = styled.div`
   display: flex;
   align-items: center;
@@ -213,10 +199,10 @@ interface CopilotSampleTicketWidgetProps {
   draftReply?: string
   draftActive?: boolean
   postedReply?: string
+  ticketSolved?: boolean
   onDraftReply?: () => void
-  onRefinementRequest: (prompt: ReplyRefinementPrompt) => void
-  onReplyApproved: (reply: string) => void
-  onTicketSolved: () => void
+  onApproveAndSend?: (reply: string) => void
+  onSolveTicket?: () => void
 }
 
 export default function CopilotSampleTicketWidget({
@@ -224,33 +210,23 @@ export default function CopilotSampleTicketWidget({
   draftReply,
   draftActive = true,
   postedReply = SAMPLE_TICKET.defaultReply,
+  ticketSolved = false,
   onDraftReply,
-  onRefinementRequest,
-  onReplyApproved,
-  onTicketSolved,
+  onApproveAndSend,
+  onSolveTicket,
 }: CopilotSampleTicketWidgetProps) {
   const initialReply = draftReply ?? SAMPLE_TICKET.defaultReply
   const [reply, setReply] = useState<string>(initialReply)
-  const [solved, setSolved] = useState(false)
 
   const handleApproveSend = useCallback(() => {
-    if (!draftActive || !reply.trim()) return
-    onReplyApproved(reply.trim())
-  }, [draftActive, onReplyApproved, reply])
-
-  const handleRefinement = useCallback(
-    (prompt: ReplyRefinementPrompt) => {
-      if (!draftActive) return
-      onRefinementRequest(prompt)
-    },
-    [draftActive, onRefinementRequest]
-  )
+    if (!draftActive || !reply.trim() || !onApproveAndSend) return
+    onApproveAndSend(reply.trim())
+  }, [draftActive, onApproveAndSend, reply])
 
   const handleSolve = useCallback(() => {
-    if (solved) return
-    setSolved(true)
-    onTicketSolved()
-  }, [onTicketSolved, solved])
+    if (ticketSolved || !onSolveTicket) return
+    onSolveTicket()
+  }, [onSolveTicket, ticketSolved])
 
   if (phase === 'ticket-preview') {
     return (
@@ -269,38 +245,22 @@ export default function CopilotSampleTicketWidget({
 
   if (phase === 'reply-draft') {
     return (
-      <>
-        <CopilotPreviewCard title={previewTitle(phase)} expandable="none">
-          <ReplyArea
-            $inactive={!draftActive}
-            value={reply}
-            readOnly={!draftActive}
-            aria-label="Suggested reply"
-            onChange={event => setReply(event.target.value)}
-          />
-          {draftActive && (
-            <ActionRow>
-              <Button size="small" isPrimary onClick={handleApproveSend}>
-                Approve and send
-              </Button>
-            </ActionRow>
-          )}
-        </CopilotPreviewCard>
+      <CopilotPreviewCard title={previewTitle(phase)} expandable="none">
+        <ReplyArea
+          $inactive={!draftActive}
+          value={reply}
+          readOnly={!draftActive}
+          aria-label="Suggested reply"
+          onChange={event => setReply(event.target.value)}
+        />
         {draftActive && (
-          <PromptRow>
-            {REPLY_REFINEMENT_PROMPTS.map(prompt => (
-              <QuickPrompt
-                key={prompt}
-                showIcon={false}
-                size="small"
-                onClick={() => handleRefinement(prompt)}
-              >
-                {prompt}
-              </QuickPrompt>
-            ))}
-          </PromptRow>
+          <ActionRow>
+            <Button size="small" isPrimary onClick={handleApproveSend}>
+              Approve and send
+            </Button>
+          </ActionRow>
         )}
-      </>
+      </CopilotPreviewCard>
     )
   }
 
@@ -327,7 +287,7 @@ export default function CopilotSampleTicketWidget({
         View ticket #{SAMPLE_TICKET.id}
         <NewWindowIcon />
       </TicketLink>
-      {!solved && (
+      {!ticketSolved && onSolveTicket && (
         <ActionRow>
           <Button size="small" isPrimary onClick={handleSolve}>
             Solve this ticket

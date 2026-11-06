@@ -35,8 +35,9 @@ test.describe('Launchpad trial experience', () => {
 
     await page.getByRole('button', { name: 'Publish all' }).click()
 
-    await expect(page.getByText(/Help center preview saved/i)).toBeVisible({ timeout: 5000 })
-    await expect(page.getByText(/All three articles are/i)).toBeVisible()
+    await expect(page.getByText('Publish all articles for me')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText(/All three articles are/i)).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText('Published').first()).toBeVisible()
   })
 
   test('try a sample ticket supports reply and solve flow', async ({ page }) => {
@@ -47,16 +48,20 @@ test.describe('Launchpad trial experience', () => {
     await expect(page.getByText('Unable to log in after password reset')).toBeVisible()
 
     await page.getByRole('button', { name: 'Yes, draft a reply' }).click()
+    await expect(page.getByText('Yes, draft a reply')).toBeVisible({ timeout: 5000 })
     await expect(page.getByRole('button', { name: 'Approve and send' })).toBeVisible({ timeout: 8000 })
 
     await page.getByRole('button', { name: 'Make the tone warmer' }).click()
+    await expect(page.getByText('Make the tone warmer')).toBeVisible({ timeout: 5000 })
     await expect(page.getByLabel('Suggested reply').last()).toContainText('locked out', { timeout: 8000 })
 
     await page.getByRole('button', { name: 'Approve and send' }).click()
+    await expect(page.getByText('Approve and send').first()).toBeVisible({ timeout: 5000 })
     await expect(page.getByText('The reply has been posted to the ticket.')).toBeVisible({ timeout: 8000 })
     await expect(page.getByRole('link', { name: /View ticket #1/i })).toBeVisible()
 
     await page.getByRole('button', { name: 'Solve this ticket' }).click()
+    await expect(page.getByText('Solve this ticket')).toBeVisible({ timeout: 5000 })
     await expect(page.getByText(/Ticket #1 is solved/i)).toBeVisible({ timeout: 8000 })
   })
 
@@ -90,6 +95,7 @@ test.describe('Launchpad trial experience', () => {
     await expect(page.getByLabel('Email')).toHaveValue('alex@swiftfinance.io')
 
     await page.getByRole('button', { name: 'Invite' }).click()
+    await expect(page.getByText('Send these team invites')).toBeVisible({ timeout: 5000 })
     await expect(page.getByText('Invites sent')).toBeVisible({ timeout: 5000 })
     await expect(page.getByText(/You're all set/i)).toBeVisible({ timeout: 5000 })
   })

@@ -1,14 +1,13 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import styled from 'styled-components'
 import { Button, Tag } from '@zendesk-ui/react-components'
 import ArrowDiagonalOutIcon from '../assets/arrow-diagonal-out.svg?react'
 import {
   buildHelpCenterArticles,
   HELP_CENTER_PREVIEW_BRAND,
-  HELP_CENTER_PREVIEW_SITE,
   helpCenterArticleUrl,
   type ArticleStatus,
-  type HelpCenterCompletionSummary,
+  type HelpCenterArticle,
 } from '../launchpad/helpCenterArticles'
 import CopilotPreviewCard from './CopilotPreviewCard'
 
@@ -113,68 +112,28 @@ const Footer = styled.div`
   width: 100%;
 `
 
+function defaultStatuses(articles: HelpCenterArticle[]): Record<string, ArticleStatus> {
+  return Object.fromEntries(articles.map(article => [article.id, 'unpublished' as ArticleStatus]))
+}
+
 interface CopilotHelpCenterPreviewWidgetProps {
-  onComplete: (summary: HelpCenterCompletionSummary) => void
+  statuses?: Record<string, ArticleStatus>
+  interactive?: boolean
+  onPublishArticle?: (article: HelpCenterArticle) => void
+  onPublishAll?: () => void
 }
 
 export default function CopilotHelpCenterPreviewWidget({
-  onComplete,
+  statuses: statusesProp,
+  interactive = true,
+  onPublishArticle,
+  onPublishAll,
 }: CopilotHelpCenterPreviewWidgetProps) {
   const articles = useMemo(() => buildHelpCenterArticles(HELP_CENTER_PREVIEW_BRAND), [])
-  const [finished, setFinished] = useState(false)
-  const [statuses, setStatuses] = useState<Record<string, ArticleStatus>>(() =>
-    Object.fromEntries(articles.map(article => [article.id, 'unpublished' as ArticleStatus]))
-  )
-
-  const unpublishedIds = useMemo(
-    () =>
-      articles.filter(article => statuses[article.id] === 'unpublished').map(article => article.id),
-    [articles, statuses]
-  )
-
-  const completeWithStatuses = useCallback(
-    (nextStatuses: Record<string, ArticleStatus>) => {
-      if (finished) return
-      onComplete({
-        businessName: HELP_CENTER_PREVIEW_BRAND,
-        siteLabel: HELP_CENTER_PREVIEW_SITE,
-        articles: articles.map(article => ({
-          ...article,
-          status: nextStatuses[article.id],
-        })),
-      })
-      setFinished(true)
-    },
-    [articles, finished, onComplete]
-  )
-
-  const publishArticle = useCallback(
-    (id: string) => {
-      if (finished || statuses[id] === 'published') return
-
-      const nextStatuses = { ...statuses, [id]: 'published' as ArticleStatus }
-      setStatuses(nextStatuses)
-
-      const remainingUnpublished = articles.filter(
-        article => article.id !== id && nextStatuses[article.id] === 'unpublished'
-      )
-      if (remainingUnpublished.length === 0) {
-        completeWithStatuses(nextStatuses)
-      }
-    },
-    [articles, completeWithStatuses, finished, statuses]
-  )
-
-  const publishAll = useCallback(() => {
-    if (finished || unpublishedIds.length === 0) return
-
-    const nextStatuses = { ...statuses }
-    unpublishedIds.forEach(id => {
-      nextStatuses[id] = 'published'
-    })
-    setStatuses(nextStatuses)
-    completeWithStatuses(nextStatuses)
-  }, [completeWithStatuses, finished, statuses, unpublishedIds])
+  const statuses = statusesProp ?? defaultStatuses(articles)
+  const unpublishedIds = articles
+    .filter(article => statuses[article.id] !== 'published')
+    .map(article => article.id)
 
   return (
     <CopilotPreviewCard title="Help center preview">
@@ -197,13 +156,12 @@ export default function CopilotHelpCenterPreviewWidget({
                     {isPublished ? (
                       <PublishedTag>Published</PublishedTag>
                     ) : (
-                      <Button
-                        size="small"
-                        disabled={finished}
-                        onClick={() => publishArticle(article.id)}
-                      >
-                        Publish
-                      </Button>
+                      interactive &&
+                      onPublishArticle && (
+                        <Button size="small" onClick={() => onPublishArticle(article)}>
+                          Publish
+                        </Button>
+                      )
                     )}
                   </ArticleActions>
                 </ArticleContent>
@@ -212,16 +170,13 @@ export default function CopilotHelpCenterPreviewWidget({
           })}
         </ArticleListShell>
 
-        <Footer>
-          <Button
-            size="small"
-            isPrimary
-            disabled={finished || unpublishedIds.length === 0}
-            onClick={publishAll}
-          >
-            Publish all
-          </Button>
-        </Footer>
+        {interactive && unpublishedIds.length > 0 && onPublishAll && (
+          <Footer>
+            <Button size="small" isPrimary onClick={onPublishAll}>
+              Publish all
+            </Button>
+          </Footer>
+        )}
       </Body>
     </CopilotPreviewCard>
   )

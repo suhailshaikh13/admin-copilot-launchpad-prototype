@@ -26,10 +26,20 @@ import CopilotTeamInviteWidget from './CopilotTeamInviteWidget'
 import CopilotSampleTicketWidget from './CopilotSampleTicketWidget'
 import CopilotHelpCenterPreviewWidget from './CopilotHelpCenterPreviewWidget'
 import AssistantMessageFeedback from './AssistantMessageFeedback'
-import type { HelpCenterCompletionSummary } from '../launchpad/helpCenterArticles'
+import {
+  buildHelpCenterArticles,
+  HELP_CENTER_PREVIEW_BRAND,
+  HELP_CENTER_PREVIEW_SITE,
+  type ArticleStatus,
+} from '../launchpad/helpCenterArticles'
 import type { TeamInviteEntry } from '../launchpad/teamInvite'
 import type { SampleTicketPhase, ReplyRefinementPrompt } from '../launchpad/sampleTicket'
-import { REFINED_REPLIES, sampleTicketRefinementLine } from '../launchpad/sampleTicket'
+import {
+  REFINED_REPLIES,
+  REPLY_REFINEMENT_PROMPTS,
+  SAMPLE_TICKET,
+  sampleTicketRefinementLine,
+} from '../launchpad/sampleTicket'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -42,6 +52,11 @@ interface Message {
   sampleTicketReply?: string
   sampleTicketDraftReply?: string
   sampleTicketDraftActive?: boolean
+  sampleTicketSolved?: boolean
+  helpCenterStatuses?: Record<string, ArticleStatus>
+  helpCenterInteractive?: boolean
+  teamInviteEntries?: TeamInviteEntry[]
+  teamInviteInteractive?: boolean
 }
 
 function isLastAssistantInStreak(messages: Message[], index: number): boolean {
@@ -773,6 +788,8 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   const [renamingConvId, setRenamingConvId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const convMenuRef = useRef<HTMLDivElement>(null)
+  const pendingInviteEntriesRef = useRef<TeamInviteEntry[] | null>(null)
+  const pendingApprovedReplyRef = useRef<string | null>(null)
 
   const showTooltip = (text: string, align: 'center' | 'end' = 'center') => (e: React.MouseEvent<HTMLElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
@@ -912,115 +929,14 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
     }
   }, [messages, activeConversationId])
 
-  const handleTeamInvitesSent = useCallback((entries: TeamInviteEntry[]) => {
-    const summary =
-      entries.length === 1
-        ? `You're all set — **${entries[0].email}** will get an invite to join as **${entries[0].role}**. Once they accept, they'll see the same AI-powered Agent Workspace you're setting up.`
-        : `You're all set — I sent **${entries.length}** invites. Once they accept, they'll join your trial and work alongside AI in Agent Workspace.`
-
-    setMessages(prev => [
-      ...prev,
-      {
-        role: 'assistant',
-        content: summary,
-        suggestions: ['Connect Support Email', 'Preview Help center', 'Try a sample ticket'],
-      },
-    ])
-  }, [])
-
-  const handleSampleRefinement = useCallback((prompt: ReplyRefinementPrompt) => {
-    setMessages(prev => {
-      const deactivated = prev.map(message =>
-        message.sampleTicketPhase === 'reply-draft'
-          ? { ...message, sampleTicketDraftActive: false }
-          : message
-      )
-      return [
-        ...deactivated,
-        {
-          role: 'assistant' as const,
-          content: sampleTicketRefinementLine(prompt),
-        },
-      ]
-    })
-
-    window.setTimeout(() => {
-      setMessages(prev => {
-        const deactivated = prev.map(message =>
-          message.sampleTicketPhase === 'reply-draft'
-            ? { ...message, sampleTicketDraftActive: false }
-            : message
-        )
-        return [
-          ...deactivated,
-          {
-            role: 'assistant' as const,
-            content:
-              'Here is the updated reply — edit it directly or **Approve and send** when it looks good.',
-            widget: 'sample-ticket' as const,
-            sampleTicketPhase: 'reply-draft' as SampleTicketPhase,
-            sampleTicketDraftReply: REFINED_REPLIES[prompt],
-            sampleTicketDraftActive: true,
-          },
-        ]
-      })
-    }, 750)
-  }, [])
-
-  const handleSampleReplyApproved = useCallback((reply: string) => {
-    setMessages(prev => {
-      const deactivated = prev.map(message =>
-        message.sampleTicketPhase === 'reply-draft'
-          ? { ...message, sampleTicketDraftActive: false }
-          : message
-      )
-      return [
-        ...deactivated,
-        {
-          role: 'assistant',
-          content:
-            'Your reply is on the ticket. Review the customer message and what you sent in the preview above.',
-          widget: 'sample-ticket',
-          sampleTicketPhase: 'posted-thread',
-          sampleTicketReply: reply,
-        },
-      ]
-    })
-  }, [])
-
-  const handleSampleTicketSolved = useCallback(() => {
-    setMessages(prev => [
-      ...prev,
-      {
-        role: 'assistant',
-        content:
-          'Ticket **#1** is solved — nice work. Open **View ticket #1** in the preview above anytime, or continue in Agent Workspace.',
-        suggestions: ['Bring in your team', 'Connect Support Email', 'Preview Help center'],
-      },
-    ])
-  }, [])
-
-  const handleHelpCenterComplete = useCallback((summary: HelpCenterCompletionSummary) => {
-    const published = summary.articles.filter(article => article.status === 'published')
-    const unpublished = summary.articles.filter(article => article.status === 'unpublished')
-    const publishedLine =
-      published.length === 0
-        ? 'You reviewed the articles without publishing — publish anytime from Help center when you are ready.'
-        : published.length === 3
-          ? 'All three articles are **published** on your Help center. Your trial agent can answer from them right away.'
-          : `**${published.length}** article${published.length === 1 ? '' : 's'} published on **${summary.siteLabel}**${unpublished.length > 0 ? ` (${unpublished.length} left unpublished).` : '.'}`
-
-    setMessages(prev => [
-      ...prev,
-      {
-        role: 'assistant',
-        content: `Help center preview saved for **${summary.businessName}**. ${publishedLine}
-
-${published.length > 0 ? 'Try asking your agent a policy question in messaging or open **Try a sample ticket** to see replies in context.' : 'Publish at least one article when you want the agent to use this knowledge.'}`,
-        suggestions: ['Try a sample ticket', 'Bring in your team', 'Connect Support Email'],
-      },
-    ])
-  }, [])
+  const clearSuggestions = (prev: Message[]) => {
+    const updated = [...prev]
+    const lastAssistantIdx = updated.findLastIndex(m => m.role === 'assistant')
+    if (lastAssistantIdx >= 0 && updated[lastAssistantIdx].suggestions?.length) {
+      updated[lastAssistantIdx] = { ...updated[lastAssistantIdx], suggestions: undefined }
+    }
+    return updated
+  }
 
   const handleSend = useCallback((text?: string) => {
     const content = (text ?? inputValue).trim()
@@ -1028,13 +944,14 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
 
     setInputValue('')
 
+    const helpCenterArticles = buildHelpCenterArticles(HELP_CENTER_PREVIEW_BRAND)
+    const publishAllMatch = content === 'Publish all articles for me'
+    const publishOneMatch = content.match(/^Publish "(.+)"$/)
+    const isRefinement = (REPLY_REFINEMENT_PROMPTS as readonly string[]).includes(content)
+
     if (content === 'Yes, draft a reply') {
       setMessages(prev => {
-        const lastAssistantIdx = prev.findLastIndex(m => m.role === 'assistant')
-        const updated = [...prev]
-        if (lastAssistantIdx >= 0 && updated[lastAssistantIdx].suggestions?.length) {
-          updated[lastAssistantIdx] = { ...updated[lastAssistantIdx], suggestions: undefined }
-        }
+        const updated = clearSuggestions(prev)
         updated.push({ role: 'user', content })
         updated.push({
           role: 'assistant',
@@ -1050,23 +967,172 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
           {
             role: 'assistant',
             content:
-              'Here is the suggested reply. Refine it with the quick prompts below, then **Approve and send** when it looks good.',
+              'Here is the suggested reply. Use a suggestion below to refine it, or **Approve and send** when it looks good.',
             widget: 'sample-ticket',
             sampleTicketPhase: 'reply-draft',
             sampleTicketDraftActive: true,
+            suggestions: [...REPLY_REFINEMENT_PROMPTS],
           },
         ])
       }, 900)
       return
     }
 
-    setMessages(prev => {
-      const lastAssistantIdx = prev.findLastIndex(m => m.role === 'assistant')
-      if (lastAssistantIdx === -1 || !prev[lastAssistantIdx].suggestions?.length) return prev
-      const updated = [...prev]
-      updated[lastAssistantIdx] = { ...updated[lastAssistantIdx], suggestions: undefined }
-      return updated
-    })
+    if (isRefinement) {
+      const prompt = content as ReplyRefinementPrompt
+      setMessages(prev => {
+        const deactivated = clearSuggestions(prev).map(message =>
+          message.sampleTicketPhase === 'reply-draft'
+            ? { ...message, sampleTicketDraftActive: false }
+            : message
+        )
+        deactivated.push({ role: 'user', content })
+        deactivated.push({
+          role: 'assistant',
+          content: sampleTicketRefinementLine(prompt),
+        })
+        return deactivated
+      })
+
+      window.setTimeout(() => {
+        setMessages(prev => [
+          ...prev,
+          {
+            role: 'assistant',
+            content:
+              'Here is the updated reply — edit it directly, pick another suggestion, or **Approve and send** when it looks good.',
+            widget: 'sample-ticket',
+            sampleTicketPhase: 'reply-draft',
+            sampleTicketDraftReply: REFINED_REPLIES[prompt],
+            sampleTicketDraftActive: true,
+            suggestions: [...REPLY_REFINEMENT_PROMPTS],
+          },
+        ])
+      }, 750)
+      return
+    }
+
+    if (content === 'Approve and send') {
+      const reply = pendingApprovedReplyRef.current ?? SAMPLE_TICKET.defaultReply
+      pendingApprovedReplyRef.current = null
+      setMessages(prev => {
+        const deactivated = clearSuggestions(prev).map(message =>
+          message.sampleTicketPhase === 'reply-draft'
+            ? { ...message, sampleTicketDraftActive: false }
+            : message
+        )
+        deactivated.push({ role: 'user', content })
+        deactivated.push({
+          role: 'assistant',
+          content:
+            'Your reply is on the ticket. Review the customer message and what you sent in the preview above.',
+          widget: 'sample-ticket',
+          sampleTicketPhase: 'posted-thread',
+          sampleTicketReply: reply,
+        })
+        return deactivated
+      })
+      return
+    }
+
+    if (content === 'Solve this ticket') {
+      setMessages(prev => {
+        const updated = clearSuggestions(prev).map(message =>
+          message.sampleTicketPhase === 'posted-thread'
+            ? { ...message, sampleTicketSolved: true }
+            : message
+        )
+        updated.push({ role: 'user', content })
+        updated.push({
+          role: 'assistant',
+          content:
+            'Ticket **#1** is solved — nice work. Open **View ticket #1** in the preview above anytime, or continue in Agent Workspace.',
+          suggestions: ['Bring in your team', 'Connect Support Email', 'Preview Help center'],
+        })
+        return updated
+      })
+      return
+    }
+
+    if (content === 'Send these team invites') {
+      const entries = pendingInviteEntriesRef.current ?? []
+      pendingInviteEntriesRef.current = null
+      const summary =
+        entries.length === 1
+          ? `You're all set — **${entries[0].email}** will get an invite to join as **${entries[0].role}**. Once they accept, they'll see the same AI-powered Agent Workspace you're setting up.`
+          : `You're all set — I sent **${entries.length}** invites. Once they accept, they'll join your trial and work alongside AI in Agent Workspace.`
+
+      setMessages(prev => {
+        const updated = clearSuggestions(prev).map(message =>
+          message.widget === 'team-invite'
+            ? { ...message, teamInviteInteractive: false }
+            : message
+        )
+        updated.push({ role: 'user', content })
+        updated.push({
+          role: 'assistant',
+          content: summary,
+          widget: 'team-invite',
+          teamInviteEntries: entries,
+          teamInviteInteractive: false,
+          suggestions: ['Connect Support Email', 'Preview Help center', 'Try a sample ticket'],
+        })
+        return updated
+      })
+      return
+    }
+
+    if (publishAllMatch || publishOneMatch) {
+      setMessages(prev => {
+        const previousStatuses =
+          [...prev].reverse().find(message => message.widget === 'help-center-preview')
+            ?.helpCenterStatuses ??
+          Object.fromEntries(
+            helpCenterArticles.map(article => [article.id, 'unpublished' as ArticleStatus])
+          )
+
+        const nextStatuses: Record<string, ArticleStatus> = { ...previousStatuses }
+        if (publishAllMatch) {
+          helpCenterArticles.forEach(article => {
+            nextStatuses[article.id] = 'published'
+          })
+        } else if (publishOneMatch) {
+          const title = publishOneMatch[1]
+          const match = helpCenterArticles.find(article => article.title === title)
+          if (match) nextStatuses[match.id] = 'published'
+        }
+
+        const publishedCount = helpCenterArticles.filter(
+          article => nextStatuses[article.id] === 'published'
+        ).length
+        const unpublishedCount = helpCenterArticles.length - publishedCount
+        const publishedLine =
+          publishedCount === helpCenterArticles.length
+            ? 'All three articles are **published** on your Help center. Your trial agent can answer from them right away.'
+            : `**${publishedCount}** article${publishedCount === 1 ? '' : 's'} published on **${HELP_CENTER_PREVIEW_SITE}**${unpublishedCount > 0 ? ` (${unpublishedCount} left unpublished).` : '.'}`
+
+        const updated = clearSuggestions(prev).map(message =>
+          message.widget === 'help-center-preview'
+            ? { ...message, helpCenterInteractive: false }
+            : message
+        )
+        updated.push({ role: 'user', content })
+        updated.push({
+          role: 'assistant',
+          content: `Done — ${publishedLine}
+
+${publishedCount > 0 ? 'Try asking your agent a policy question in messaging or open **Try a sample ticket** to see replies in context.' : 'Publish at least one article when you want the agent to use this knowledge.'}`,
+          widget: 'help-center-preview',
+          helpCenterStatuses: nextStatuses,
+          helpCenterInteractive: unpublishedCount > 0,
+          suggestions: ['Try a sample ticket', 'Bring in your team', 'Connect Support Email'],
+        })
+        return updated
+      })
+      return
+    }
+
+    setMessages(prev => clearSuggestions(prev))
 
     const userMessage: Message = { role: 'user', content }
     const assistantMessage: Message = { role: 'assistant', content: '', isStreaming: true }
@@ -1468,7 +1534,14 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
                     <CopilotErrorMessage onViewSetupGuide={() => onNavigateToSetupGuide?.()} />
                   )}
                   {msg.widget === 'team-invite' && !msg.isStreaming && (
-                    <CopilotTeamInviteWidget onInviteSent={handleTeamInvitesSent} />
+                    <CopilotTeamInviteWidget
+                      sentEntries={msg.teamInviteEntries}
+                      interactive={msg.teamInviteInteractive ?? !msg.teamInviteEntries}
+                      onInviteRequest={entries => {
+                        pendingInviteEntriesRef.current = entries
+                        handleSend('Send these team invites')
+                      }}
+                    />
                   )}
                   {msg.widget === 'sample-ticket' && !msg.isStreaming && (
                     <CopilotSampleTicketWidget
@@ -1476,19 +1549,27 @@ ${published.length > 0 ? 'Try asking your agent a policy question in messaging o
                       draftReply={msg.sampleTicketDraftReply}
                       draftActive={msg.sampleTicketDraftActive ?? msg.sampleTicketPhase !== 'reply-draft'}
                       postedReply={msg.sampleTicketReply}
+                      ticketSolved={msg.sampleTicketSolved}
                       onDraftReply={
                         (msg.sampleTicketPhase ?? 'ticket-preview') === 'ticket-preview' &&
                         messages.findLastIndex(m => m.widget === 'sample-ticket') === i
                           ? () => handleSend('Yes, draft a reply')
                           : undefined
                       }
-                      onRefinementRequest={handleSampleRefinement}
-                      onReplyApproved={handleSampleReplyApproved}
-                      onTicketSolved={handleSampleTicketSolved}
+                      onApproveAndSend={reply => {
+                        pendingApprovedReplyRef.current = reply
+                        handleSend('Approve and send')
+                      }}
+                      onSolveTicket={() => handleSend('Solve this ticket')}
                     />
                   )}
                   {msg.widget === 'help-center-preview' && !msg.isStreaming && (
-                    <CopilotHelpCenterPreviewWidget onComplete={handleHelpCenterComplete} />
+                    <CopilotHelpCenterPreviewWidget
+                      statuses={msg.helpCenterStatuses}
+                      interactive={msg.helpCenterInteractive ?? true}
+                      onPublishArticle={article => handleSend(`Publish "${article.title}"`)}
+                      onPublishAll={() => handleSend('Publish all articles for me')}
+                    />
                   )}
                   {showFeedback && <AssistantMessageFeedback content={feedbackContent} />}
                 </AssistantMessage>
