@@ -81,7 +81,7 @@ const SEQUENCES: Record<CaptureState, Step[]> = {
     { type: 'click', name: 'Yes, draft a reply' },
     { type: 'waitText', pattern: /Approve and send/i },
     { type: 'click', name: 'Approve and send' },
-    { type: 'waitText', pattern: /reply has been posted/i },
+    { type: 'waitText', pattern: /Your reply was sent on ticket/i },
   ],
   'sample-solved': [
     { type: 'send', text: 'Go live quickly' },

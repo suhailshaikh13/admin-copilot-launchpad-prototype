@@ -57,7 +57,7 @@ test.describe('Launchpad trial experience', () => {
 
     await page.getByRole('button', { name: 'Approve and send' }).click()
     await expect(page.getByText('Approve and send').first()).toBeVisible({ timeout: 5000 })
-    await expect(page.getByText('The reply has been posted to the ticket.')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText(/Your reply was sent on ticket/i)).toBeVisible({ timeout: 8000 })
     await expect(page.getByRole('link', { name: /View ticket #1/i })).toBeVisible()
 
     await page.getByRole('button', { name: 'Solve this ticket' }).click()
@@ -97,6 +97,6 @@ test.describe('Launchpad trial experience', () => {
     await page.getByRole('button', { name: 'Invite' }).click()
     await expect(page.getByText('Send these team invites')).toBeVisible({ timeout: 5000 })
     await expect(page.getByText('Invites sent')).toBeVisible({ timeout: 5000 })
-    await expect(page.getByText(/You're all set/i)).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText(/Invite sent to/i)).toBeVisible({ timeout: 5000 })
   })
 })

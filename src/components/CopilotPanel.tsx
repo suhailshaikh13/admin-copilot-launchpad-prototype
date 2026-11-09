@@ -49,10 +49,8 @@ interface Message {
   suggestions?: string[]
   widget?: AssistantWidget
   sampleTicketPhase?: SampleTicketPhase
-  sampleTicketReply?: string
   sampleTicketDraftReply?: string
   sampleTicketDraftActive?: boolean
-  sampleTicketSolved?: boolean
   helpCenterStatuses?: Record<string, ArticleStatus>
   helpCenterInteractive?: boolean
   teamInviteEntries?: TeamInviteEntry[]
@@ -789,7 +787,6 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
   const [renameValue, setRenameValue] = useState('')
   const convMenuRef = useRef<HTMLDivElement>(null)
   const pendingInviteEntriesRef = useRef<TeamInviteEntry[] | null>(null)
-  const pendingApprovedReplyRef = useRef<string | null>(null)
 
   const showTooltip = (text: string, align: 'center' | 'end' = 'center') => (e: React.MouseEvent<HTMLElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
@@ -956,7 +953,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
         updated.push({
           role: 'assistant',
           content:
-            'On it — I will draft a reply based on the customer message and your account policies.',
+            'Drafting a reply from the customer message and account policies.',
         })
         return updated
       })
@@ -967,7 +964,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
           {
             role: 'assistant',
             content:
-              'Here is the suggested reply. Use a suggestion below to refine it, or **Approve and send** when it looks good.',
+              'Suggested reply below. Refine with a chip or **Approve and send** when it looks good.',
             widget: 'sample-ticket',
             sampleTicketPhase: 'reply-draft',
             sampleTicketDraftActive: true,
@@ -1000,7 +997,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
           {
             role: 'assistant',
             content:
-              'Here is the updated reply — edit it directly, pick another suggestion, or **Approve and send** when it looks good.',
+              'Updated reply below. Edit directly, pick another chip, or **Approve and send** when it looks good.',
             widget: 'sample-ticket',
             sampleTicketPhase: 'reply-draft',
             sampleTicketDraftReply: REFINED_REPLIES[prompt],
@@ -1013,8 +1010,6 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
     }
 
     if (content === 'Approve and send') {
-      const reply = pendingApprovedReplyRef.current ?? SAMPLE_TICKET.defaultReply
-      pendingApprovedReplyRef.current = null
       setMessages(prev => {
         const deactivated = clearSuggestions(prev).map(message =>
           message.sampleTicketPhase === 'reply-draft'
@@ -1024,11 +1019,10 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
         deactivated.push({ role: 'user', content })
         deactivated.push({
           role: 'assistant',
-          content:
-            'Your reply is on the ticket. Review the customer message and what you sent in the preview above.',
-          widget: 'sample-ticket',
-          sampleTicketPhase: 'posted-thread',
-          sampleTicketReply: reply,
+          content: `Your reply was sent on ticket **#${SAMPLE_TICKET.id}**.
+
+[View ticket #${SAMPLE_TICKET.id}](#)`,
+          suggestions: ['Solve this ticket'],
         })
         return deactivated
       })
@@ -1037,16 +1031,11 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
 
     if (content === 'Solve this ticket') {
       setMessages(prev => {
-        const updated = clearSuggestions(prev).map(message =>
-          message.sampleTicketPhase === 'posted-thread'
-            ? { ...message, sampleTicketSolved: true }
-            : message
-        )
+        const updated = clearSuggestions(prev)
         updated.push({ role: 'user', content })
         updated.push({
           role: 'assistant',
-          content:
-            'Ticket **#1** is solved — nice work. Open **View ticket #1** in the preview above anytime, or continue in Agent Workspace.',
+          content: `Ticket **#${SAMPLE_TICKET.id}** is solved. Agent Workspace stays open anytime, or continue from here.`,
           suggestions: ['Bring in your team', 'Connect Support Email', 'Preview Help center'],
         })
         return updated
@@ -1059,8 +1048,8 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
       pendingInviteEntriesRef.current = null
       const summary =
         entries.length === 1
-          ? `You're all set — **${entries[0].email}** will get an invite to join as **${entries[0].role}**. Once they accept, they'll see the same AI-powered Agent Workspace you're setting up.`
-          : `You're all set — I sent **${entries.length}** invites. Once they accept, they'll join your trial and work alongside AI in Agent Workspace.`
+          ? `Invite sent to **${entries[0].email}** as **${entries[0].role}**. After they accept, they join the same AI-powered Agent Workspace.`
+          : `**${entries.length}** invites sent. After they accept, they join the trial and work alongside AI in Agent Workspace.`
 
       setMessages(prev => {
         const updated = clearSuggestions(prev).map(message =>
@@ -1108,7 +1097,7 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
         const unpublishedCount = helpCenterArticles.length - publishedCount
         const publishedLine =
           publishedCount === helpCenterArticles.length
-            ? 'All three articles are **published** on your Help center. Your trial agent can answer from them right away.'
+            ? 'All three articles are **published** on the Help center. The trial agent can answer from them right away.'
             : `**${publishedCount}** article${publishedCount === 1 ? '' : 's'} published on **${HELP_CENTER_PREVIEW_SITE}**${unpublishedCount > 0 ? ` (${unpublishedCount} left unpublished).` : '.'}`
 
         const updated = clearSuggestions(prev).map(message =>
@@ -1119,9 +1108,9 @@ const CopilotPanel = forwardRef<CopilotPanelHandle, CopilotPanelProps>(function 
         updated.push({ role: 'user', content })
         updated.push({
           role: 'assistant',
-          content: `Done — ${publishedLine}
+          content: `${publishedLine}
 
-${publishedCount > 0 ? 'Try asking your agent a policy question in messaging or open **Try a sample ticket** to see replies in context.' : 'Publish at least one article when you want the agent to use this knowledge.'}`,
+${publishedCount > 0 ? 'Ask the agent a policy question in messaging or open **Try a sample ticket** to see replies in context.' : 'Publish at least one article when the agent should use this knowledge.'}`,
           widget: 'help-center-preview',
           helpCenterStatuses: nextStatuses,
           helpCenterInteractive: unpublishedCount > 0,
@@ -1548,19 +1537,13 @@ ${publishedCount > 0 ? 'Try asking your agent a policy question in messaging or 
                       phase={msg.sampleTicketPhase ?? 'ticket-preview'}
                       draftReply={msg.sampleTicketDraftReply}
                       draftActive={msg.sampleTicketDraftActive ?? msg.sampleTicketPhase !== 'reply-draft'}
-                      postedReply={msg.sampleTicketReply}
-                      ticketSolved={msg.sampleTicketSolved}
                       onDraftReply={
                         (msg.sampleTicketPhase ?? 'ticket-preview') === 'ticket-preview' &&
                         messages.findLastIndex(m => m.widget === 'sample-ticket') === i
                           ? () => handleSend('Yes, draft a reply')
                           : undefined
                       }
-                      onApproveAndSend={reply => {
-                        pendingApprovedReplyRef.current = reply
-                        handleSend('Approve and send')
-                      }}
-                      onSolveTicket={() => handleSend('Solve this ticket')}
+                      onApproveAndSend={() => handleSend('Approve and send')}
                     />
                   )}
                   {msg.widget === 'help-center-preview' && !msg.isStreaming && (

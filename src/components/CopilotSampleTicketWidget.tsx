@@ -79,14 +79,14 @@ const ThreadLabel = styled.div`
   margin-bottom: 8px;
 `
 
-const MessageBubble = styled.div<{ $variant?: 'customer' | 'agent' }>`
+const MessageBubble = styled.div`
   padding: 12px 14px;
   border-radius: 12px;
   font-size: 13px;
   line-height: 18px;
   color: #2f3130;
-  background: ${({ $variant }) => ($variant === 'agent' ? '#f4f7fc' : '#f8f9f9')};
-  border: 1px solid ${({ $variant }) => ($variant === 'agent' ? '#e4eaf6' : '#eef0f2')};
+  background: #f8f9f9;
+  border: 1px solid #eef0f2;
 `
 
 const ReplyArea = styled.textarea<{ $inactive?: boolean }>`
@@ -122,53 +122,8 @@ const ActionRow = styled.div`
   margin-top: 14px;
 `
 
-const PostedLead = styled.p`
-  margin: 0 0 10px;
-  font-size: 14px;
-  line-height: 20px;
-  color: #2f3130;
-`
-
-const TicketLink = styled.a`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  width: fit-content;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 20px;
-  color: #406cc4;
-  text-decoration: none;
-  margin-bottom: 14px;
-
-  &:hover {
-    text-decoration: underline;
-  }
-
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-`
-
-function NewWindowIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden>
-      <path
-        fill="currentColor"
-        d="M5.833 4.167a.833.833 0 0 0-.833.833v10a.833.833 0 0 0 .833.833h10a.833.833 0 0 0 .833-.833v-3.334a.833.833 0 0 1 1.666 0v3.334A2.5 2.5 0 0 1 15.833 17.5h-10a2.5 2.5 0 0 1-2.5-2.5v-10a2.5 2.5 0 0 1 2.5-2.5h3.333a.833.833 0 0 1 0 1.666H5.833ZM11.667 3.333h5a.833.833 0 0 1 .833.833v5a.833.833 0 0 1-1.666 0V6.345l-6.488 6.488a.833.833 0 0 1-1.178-1.178L14.655 5.167H11.667a.833.833 0 0 1 0-1.666Z"
-      />
-    </svg>
-  )
-}
-
-const SubjectInThread = styled(Subject)`
-  margin: 0 0 14px;
-`
-
 function previewTitle(phase: SampleTicketPhase): string {
   if (phase === 'reply-draft') return 'Suggested reply'
-  if (phase === 'posted-thread') return 'Reply on ticket'
   return 'Ticket preview'
 }
 
@@ -198,22 +153,16 @@ interface CopilotSampleTicketWidgetProps {
   phase: SampleTicketPhase
   draftReply?: string
   draftActive?: boolean
-  postedReply?: string
-  ticketSolved?: boolean
   onDraftReply?: () => void
   onApproveAndSend?: (reply: string) => void
-  onSolveTicket?: () => void
 }
 
 export default function CopilotSampleTicketWidget({
   phase,
   draftReply,
   draftActive = true,
-  postedReply = SAMPLE_TICKET.defaultReply,
-  ticketSolved = false,
   onDraftReply,
   onApproveAndSend,
-  onSolveTicket,
 }: CopilotSampleTicketWidgetProps) {
   const initialReply = draftReply ?? SAMPLE_TICKET.defaultReply
   const [reply, setReply] = useState<string>(initialReply)
@@ -222,26 +171,6 @@ export default function CopilotSampleTicketWidget({
     if (!draftActive || !reply.trim() || !onApproveAndSend) return
     onApproveAndSend(reply.trim())
   }, [draftActive, onApproveAndSend, reply])
-
-  const handleSolve = useCallback(() => {
-    if (ticketSolved || !onSolveTicket) return
-    onSolveTicket()
-  }, [onSolveTicket, ticketSolved])
-
-  if (phase === 'ticket-preview') {
-    return (
-      <CopilotPreviewCard title={previewTitle(phase)} expandable="none">
-        <TicketPreviewCard />
-        {onDraftReply && (
-          <ActionRow>
-            <Button size="small" isPrimary onClick={onDraftReply}>
-              Yes, draft a reply
-            </Button>
-          </ActionRow>
-        )}
-      </CopilotPreviewCard>
-    )
-  }
 
   if (phase === 'reply-draft') {
     return (
@@ -266,31 +195,11 @@ export default function CopilotSampleTicketWidget({
 
   return (
     <CopilotPreviewCard title={previewTitle(phase)} expandable="none">
-      <Eyebrow>Sample ticket #{SAMPLE_TICKET.id}</Eyebrow>
-      <SubjectInThread>{SAMPLE_TICKET.subject}</SubjectInThread>
-      <ThreadBlock>
-        <ThreadLabel>
-          <span>{SAMPLE_TICKET.customerLabel}</span>
-          <span>{SAMPLE_TICKET.timestamp}</span>
-        </ThreadLabel>
-        <MessageBubble>{SAMPLE_TICKET.customerMessage}</MessageBubble>
-      </ThreadBlock>
-      <ThreadBlock>
-        <ThreadLabel>
-          <span>You</span>
-          <span>Just now</span>
-        </ThreadLabel>
-        <MessageBubble $variant="agent">{postedReply}</MessageBubble>
-      </ThreadBlock>
-      <PostedLead>The reply has been posted to the ticket.</PostedLead>
-      <TicketLink href="#" onClick={event => event.preventDefault()}>
-        View ticket #{SAMPLE_TICKET.id}
-        <NewWindowIcon />
-      </TicketLink>
-      {!ticketSolved && onSolveTicket && (
+      <TicketPreviewCard />
+      {onDraftReply && (
         <ActionRow>
-          <Button size="small" isPrimary onClick={handleSolve}>
-            Solve this ticket
+          <Button size="small" isPrimary onClick={onDraftReply}>
+            Yes, draft a reply
           </Button>
         </ActionRow>
       )}

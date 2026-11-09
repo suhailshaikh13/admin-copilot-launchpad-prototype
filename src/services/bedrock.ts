@@ -268,7 +268,7 @@ Intent values are continuously improved by Zendesk's AI models and are specific 
 }
 
 export function getGoLiveQuicklyResponse(_businessName: string): string {
-  return `The fastest way to go live is using the onboarding **Checklist**. I can actually configure these settings for you right here in our chat.
+  return `The fastest way to go live is the onboarding **Checklist**. Run any of these from chat.
 
 <suggestions>
 <chip>Preview Help center</chip>
@@ -283,18 +283,18 @@ export function getHelpMeGetStartedResponse(_businessName: string): string {
 }
 
 export function getWhatCanYouDoResponse(_businessName: string): string {
-  return `I can help you set up and explore your Zendesk trial without leaving this chat. Here's what I can do:
+  return `Setup and trial exploration stay in this chat. A few things to run from here:
 
 **Get live faster**
 - Preview and publish Help center articles
 - Connect support email so customer messages become tickets
-- Bring teammates into your trial
+- Bring teammates into the trial
 
 **Try the product**
 - Walk through a sample ticket and draft a reply
-- Point you to Agent Workspace and AI features
+- Open Agent Workspace and AI features
 
-Ask for any of those, or tell me what you're trying to accomplish.
+Ask for any of those, or describe the goal in your own words.
 
 <suggestions>
 <chip>Go live quickly</chip>
@@ -304,14 +304,14 @@ Ask for any of those, or tell me what you're trying to accomplish.
 }
 
 export function getShowMeExamplesResponse(_businessName: string): string {
-  return `Here are a few things I can set up with you right now:
+  return `A few flows to run from here:
 
-- **Preview Help center** — review generated articles and publish what looks right
-- **Try a sample ticket** — draft and send a reply, then solve the ticket
-- **Connect Support Email** — choose Gmail, Exchange, forwarding, or a Zendesk email
-- **Bring in your team** — invite teammates with roles from this chat
+- **Preview Help center**: review generated articles and publish what looks right
+- **Try a sample ticket**: draft and send a reply, then solve the ticket
+- **Connect Support Email**: choose Gmail, Exchange, forwarding, or a Zendesk email
+- **Bring in your team**: invite teammates with roles from this chat
 
-Pick one to start, or ask in your own words.
+Pick one, or ask in your own words.
 
 <suggestions>
 <chip>Preview Help center</chip>
@@ -321,9 +321,9 @@ Pick one to start, or ask in your own words.
 }
 
 export function getBringInTeamResponse(_businessName: string): string {
-  return `I'll help you **bring in your team** without leaving this chat.
+  return `**Bring in your team** from this chat.
 
-Your team works hand-in-hand with AI to deliver fast, accurate, and personal service to customers. Add their emails below, pick a role for each person, and I'll send the invites.
+Add emails below, pick a role for each person, and invites go out from here.
 
 <widget>team-invite</widget>
 
@@ -334,9 +334,9 @@ Your team works hand-in-hand with AI to deliver fast, accurate, and personal ser
 }
 
 export function getTrySampleTicketResponse(_businessName: string): string {
-  return `Let's **try a sample ticket** — I'll walk you through it step by step.
+  return `**Try a sample ticket** step by step.
 
-Review the ticket preview below. When you're ready, draft a reply to approve before we post it to the customer.
+Review the ticket preview below. When ready, draft a reply and approve before it posts to the customer.
 
 <widget>sample-ticket</widget>`
 }
@@ -346,16 +346,11 @@ export function getConnectSupportEmailResponse(_businessName?: string): string {
 }
 
 export function getPreviewHelpCenterResponse(_businessName: string): string {
-  return `I'll **preview your Help center** with articles that were already generated for your trial.
+  return `Three Help center articles for **Northwind Trading** on **northwindtrading.com**.
 
-There are **three help articles** for **Northwind Trading** on **northwindtrading.com**. Read the preview in the card, open **View full article** for the live page, select what you want, and **Publish selected**—then **Finish preview** when you are done.
+Open **View full article** for the full page, then **Publish** one at a time or **Publish all**.
 
-<widget>help-center-preview</widget>
-
-<suggestions>
-<chip>Try a sample ticket</chip>
-<chip>Bring in your team</chip>
-</suggestions>`
+<widget>help-center-preview</widget>`
 }
 
 export function getCannedResponse(message: string, businessName = 'your business'): string | undefined {

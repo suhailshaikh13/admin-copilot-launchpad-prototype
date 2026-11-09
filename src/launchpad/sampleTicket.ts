@@ -7,7 +7,7 @@ export const SAMPLE_TICKET = {
   customerLabel: 'Customer',
   timestamp: 'Nov 04 02:41',
   customerMessage: `Hi, I reset my password earlier today, but I'm still not able to log in. I keep getting an error message when I try, and I've already attempted it a couple of times. Could someone please take a look? I need to get into my account as soon as possible.`,
-  defaultReply: `Sorry you're still having trouble signing in. Please try the most recent password reset link and use the new password to sign in. If the error continues, reply with the exact message you're seeing and I'll help investigate.`,
+  defaultReply: `Sign-in still fails after the reset. Try the most recent password reset link and the new password. If the error continues, reply with the exact message on screen for a closer look.`,
 } as const
 
 export const REPLY_REFINEMENT_PROMPTS = [
@@ -19,20 +19,20 @@ export const REPLY_REFINEMENT_PROMPTS = [
 export type ReplyRefinementPrompt = (typeof REPLY_REFINEMENT_PROMPTS)[number]
 
 /** Which preview card to render — each phase is a separate message/widget instance. */
-export type SampleTicketPhase = 'ticket-preview' | 'reply-draft' | 'posted-thread'
+export type SampleTicketPhase = 'ticket-preview' | 'reply-draft'
 
 export const REFINED_REPLIES: Record<ReplyRefinementPrompt, string> = {
-  'Make the tone warmer': `I'm sorry you're still locked out — that sounds frustrating. Please try the most recent password reset link and sign in with the new password. If you're still stuck, send me the exact error message and we'll get this sorted together.`,
-  'Ask for the exact error message': `Sorry you're still having trouble signing in. Please try the latest password reset link once more. If it still fails, reply with the exact error text on screen (or a screenshot) so I can pinpoint what's blocking access.`,
-  'Offer to escalate if it persists': `Sorry you're still having trouble signing in. Please use the most recent password reset link and the new password. If the error continues after one more try, reply here and I'll escalate to our account team for a deeper look.`,
+  'Make the tone warmer': `Still locked out after the reset — that is frustrating. Try the most recent password reset link and sign in with the new password. If you're still stuck, send the exact error message and the account team will follow up.`,
+  'Ask for the exact error message': `Sign-in still fails after the reset. Try the latest password reset link once more. If it still fails, reply with the exact error text on screen (or a screenshot) so the cause is easier to pinpoint.`,
+  'Offer to escalate if it persists': `Sign-in still fails after the reset. Use the most recent password reset link and the new password. If the error continues after one more try, reply here and the account team takes a deeper look.`,
 }
 
 export function sampleTicketRefinementLine(prompt: ReplyRefinementPrompt): string {
   if (prompt === 'Make the tone warmer') {
-    return 'Got it — I will **warm up the tone** and keep the same guidance.'
+    return 'Got it. **Warming up the tone** with the same guidance.'
   }
   if (prompt === 'Ask for the exact error message') {
-    return 'I will **ask for the exact error message** so we can troubleshoot faster.'
+    return 'Next draft will **ask for the exact error message** for a faster fix.'
   }
-  return 'I will **offer to escalate** if the issue continues after one more try.'
+  return 'Next draft will **offer to escalate** if it still fails after one more try.'
 }
